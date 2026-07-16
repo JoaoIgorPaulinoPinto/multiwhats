@@ -1,0 +1,86 @@
+import express from 'express';
+import pkg from 'whatsapp-web.js';
+import qrcode from 'qrcode-terminal';
+import axios from 'axios';
+
+const { Client, LocalAuth } = pkg;
+const app = express();
+app.use(express.json());
+
+const PORT = 3000;
+// URL da sua API ASP.NET que vai processar e salvar as mensagens recebidas
+const ASPNET_WEBHOOK_URL = 'http://localhost:5000/api/webhook/whatsapp'; 
+
+// ==========================================
+// 1. INICIALIZAÇÃO DO WHATSAPP-WEB.JS
+// ==========================================
+const client = new Client({
+    authStrategy: new LocalAuth(), // Salva a sessão localmente para não deslogar
+    puppeteer: {
+        args: ['--no-sandbox', '--disable-setuid-sandbox'] // Evita problemas em servidores Linux
+    }
+});
+
+// Gera o QR Code no terminal para você escanear na primeira vez
+client.on('qr', (qr) => {
+    console.log('Escaneie o QR Code abaixo para conectar:');
+    qrcode.generate(qr, { small: true });
+});
+
+client.on('ready', () => {
+    console.log('Conexão com o WhatsApp estabelecida com sucesso!');
+});
+
+// ENDPOINT 1: Escuta as mensagens e envia para o ASP.NET
+client.on('message', async (msg) => {
+    // Ignora mensagens de grupos (opcional, remova se quiser escutar grupos também)
+    if (msg.from.includes('@g.us')) return; 
+
+    console.log(`Mensagem recebida de ${msg.from}: ${msg.body}`);
+
+    try {
+        // Envia o payload da mensagem diretamente para o seu ASP.NET
+        await axios.post(ASPNET_WEBHOOK_URL, {
+            from: msg.from,
+            body: msg.body,
+            timestamp: msg.timestamp,
+            notifyName: msg._data?.notifyName // Nome do contato no WhatsApp
+        });
+    } catch (error) {
+        console.error('Erro ao enviar mensagem para o ASP.NET:', error.message);
+    }
+});
+
+client.initialize();
+
+// ==========================================
+// 2. ENDPOINT PARA O ASP.NET ENVIAR MENSAGENS
+// ==========================================
+app.post('/api/enviar', async (req, res) => {
+    const { numero, mensagem } = req.body;
+
+    if (!numero || !mensagem) {
+        return res.status(400).json({ error: 'Número e mensagem são obrigatórios.' });
+    }
+
+    try {
+        // Formata o número para o padrão que o whatsapp-web.js espera (ex: 5511999999999@c.us)
+        // Remove caracteres especiais se houver
+        const numeroFormatado = `${numero.replace(/\D/g, '')}@c.us`; 
+
+        // Envia a mensagem
+        const resposta = await client.sendMessage(numeroFormatado, mensagem);
+
+        return res.status(200).json({ 
+            sucesso: true, 
+            messageId: resposta.id._serialized 
+        });
+    } catch (error) {
+        console.error('Erro ao enviar mensagem pelo WhatsApp:', error);
+        return res.status(500).json({ error: 'Falha ao enviar a mensagem.' });
+    }
+});
+
+app.listen(PORT, () => {
+    console.log(`Servidor Node de comunicação WhatsApp rodando na porta ${PORT}`);
+});

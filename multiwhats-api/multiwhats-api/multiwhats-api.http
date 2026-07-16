@@ -1,0 +1,11 @@
+@multiwhats_api_HostAddress = http://localhost:5000
+
+POST {{multiwhats_api_HostAddress}}/whatsapp
+Content-Type: application/json
+
+{
+  "from": "5515996083255@c.us",
+  "body": "Testando o recebimento do webhook no ASP.NET!",
+  "timestamp": 1718556423,
+  "notifyName": "Fulano de Tal"
+}
