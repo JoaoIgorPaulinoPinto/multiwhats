@@ -8,7 +8,6 @@ public class WebhookController : ControllerBase
 {
     private readonly IHubContext<WhatsappHub> _hubContext;
 
-    // Injetamos o Hub aqui
     public WebhookController(IHubContext<WhatsappHub> hubContext)
     {
         _hubContext = hubContext;

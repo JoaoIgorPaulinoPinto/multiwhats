@@ -123,3 +123,15 @@ C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net1
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.pdb
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.genruntimeconfig.cache
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\ref\multiwhats-api.dll
+C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.csproj.AssemblyReference.cache
+C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.AssemblyInfoInputs.cache
+C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.AssemblyInfo.cs
+C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.csproj.CoreCompileInputs.cache
+C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.sourcelink.json
+C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.dll
+C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\obj\Debug\net10.0\refint\multiwhats-api.dll
+C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.pdb

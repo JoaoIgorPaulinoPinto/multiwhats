@@ -8,4 +8,9 @@ public class AppDbContext : DbContext
     {
     }
     public DbSet<Mensagem> MessageLogs { get; set; }
+    public DbSet<Contato> Contatos { get; set; }
+    public DbSet<Grupo> Grupos { get; set; }
+    public DbSet<Ocorrencia> Ocorrencias { get; set; }
+    public DbSet<Usuario> Usuarios { get; set; }
+    public DbSet<Status> Status { get; set; }
 }

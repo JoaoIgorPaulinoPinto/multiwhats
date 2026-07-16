@@ -10,10 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="src\NovaPasta\**" />
-    <Content Remove="src\NovaPasta\**" />
-    <EmbeddedResource Remove="src\NovaPasta\**" />
-    <None Remove="src\NovaPasta\**" />
+    <Compile Remove="src\repostories\**" />
+    <Content Remove="src\repostories\**" />
+    <EmbeddedResource Remove="src\repostories\**" />
+    <None Remove="src\repostories\**" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -34,8 +34,9 @@
 		<PackageReference Include="Scalar.AspNetCore" Version="2.16.14" />
 	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="src\repostories\" />
-  </ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Properties\" />
+	  <Folder Include="src\repositories\repositories\" />
+	</ItemGroup>
 
 </Project>
