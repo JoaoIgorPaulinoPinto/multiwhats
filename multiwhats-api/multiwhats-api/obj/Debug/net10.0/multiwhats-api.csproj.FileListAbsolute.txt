@@ -1,3 +1,12 @@
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.csproj.AssemblyReference.cache
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.AssemblyInfoInputs.cache
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.AssemblyInfo.cs
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.csproj.CoreCompileInputs.cache
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.sourcelink.json
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\appsettings.Development.json
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\appsettings.json
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\messageria\package-lock.json
@@ -27,7 +36,7 @@ C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net1
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Mono.TextTemplating.dll
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\MySqlConnector.dll
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Pomelo.EntityFrameworkCore.MySql.dll
-C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Scalar.AspNetCore.dll
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\System.CodeDom.dll
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\System.Composition.AttributedModel.dll
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\System.Composition.Convention.dll
@@ -99,14 +108,6 @@ C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net1
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\tr\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.csproj.AssemblyReference.cache
-C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\rpswa.dswa.cache.json
-C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.AssemblyInfoInputs.cache
-C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.AssemblyInfo.cs
-C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.csproj.CoreCompileInputs.cache
-C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.MvcApplicationPartsAssemblyInfo.cs
-C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\multiwhats-api.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\rjimswa.dswa.cache.json
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json

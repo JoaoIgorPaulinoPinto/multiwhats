@@ -10,15 +10,32 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.3" />
+    <Compile Remove="src\NovaPasta\**" />
+    <Content Remove="src\NovaPasta\**" />
+    <EmbeddedResource Remove="src\NovaPasta\**" />
+    <None Remove="src\NovaPasta\**" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<!-- Forçando TUDO do Entity Framework para a versão 9.0.0 -->
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.0" />
+
+		<!-- Pomelo MySql alinhado na versão 9 -->
+		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
+
+		<!-- Atualizado para sumir com o aviso de vulnerabilidade -->
+		<PackageReference Include="Microsoft.OpenApi" Version="2.0.1" />
+		<PackageReference Include="Scalar.AspNetCore" Version="2.16.14" />
+	</ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="src\repostories\" />
   </ItemGroup>
 
 </Project>
