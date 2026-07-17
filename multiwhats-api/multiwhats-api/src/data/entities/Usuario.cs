@@ -14,18 +14,18 @@ public class Usuario
     [Required(ErrorMessage = "O nome é obrigatório")]
     [MaxLength(200)]
     [Column("nome")]
-    public string Nome { get; private set; }
+    public string Nome { get; private set; } = null!;
 
     [Required(ErrorMessage = "O e-mail é obrigatório")]
     [MaxLength(200)]
     [EmailAddress(ErrorMessage = "E-mail inválido")]
     [Column("email")]
-    public string Email { get; private set; }
+    public string Email { get; private set; } = null!;
 
     [Required(ErrorMessage = "A senha é obrigatória")]
     [MinLength(6, ErrorMessage = "A senha deve ter no mínimo 6 caracteres")]
     [Column("senha")]
-    public string Senha { get; private set; }
+    public string Senha { get; private set; } = null!;
 
     [MaxLength(20)]
     [Column("telefone")]

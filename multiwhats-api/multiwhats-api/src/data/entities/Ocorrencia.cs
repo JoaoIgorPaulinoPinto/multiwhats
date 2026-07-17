@@ -14,29 +14,29 @@ public class Ocorrencia
     [Required(ErrorMessage = "O nome da ocorrência é obrigatório")]
     [MaxLength(200)]
     [Column("nome")]
-    public string Nome { get; private set; }
+    public string Nome { get; private set; } = null!;
 
     [MaxLength(1000)]
     [Column("descricao")]
     public string? Descricao { get; private set; }
 
     [Column("status_id")]
-    public string? StatusId { get; private set; }
+    public int? StatusId { get; private set; }
 
     [Required]
     [Column("created_at")]
     public DateTime CreatedAt { get; private set; }
 
-    [Required]
-    [Column("created_at")]
-    public Status status { get; private set; } 
+    [ForeignKey(nameof(StatusId))]
+    public Status? Status { get; private set; }
 
     private Ocorrencia() { }
 
-    public Ocorrencia(string nome, string? descricao)
+    public Ocorrencia(string nome, string? descricao, int? statusId = null)
     {
         Nome = nome ?? throw new ArgumentNullException(nameof(nome));
         Descricao = descricao;
+        StatusId = statusId;
         CreatedAt = DateTime.UtcNow;
     }
 }

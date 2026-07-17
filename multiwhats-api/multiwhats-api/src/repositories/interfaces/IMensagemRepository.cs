@@ -1,7 +1,12 @@
-﻿namespace multiwhats_api.src.repositories.interfaces
+﻿using multiwhats_api.src.data.entities;
+
+namespace multiwhats_api.src.repositories.interfaces;
+
+public interface IMensagemRepository
 {
-    public interface IMensagemRepository
-    {
-        public bool SalvarMensagemEnviada(string mensagem, string numero, string idMensagem);
-    }
+    Task<List<Mensagem>> GetAllAsync();
+    Task<Mensagem?> GetByIdAsync(int id);
+    Task<Mensagem> AddAsync(Mensagem mensagem);
+    Task DeleteAsync(int id);
+    Task<List<Mensagem>> GetByContatoAsync(int contatoId);
 }

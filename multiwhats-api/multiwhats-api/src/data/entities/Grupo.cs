@@ -14,19 +14,19 @@ public class Grupo
     [Required(ErrorMessage = "O nome do grupo é obrigatório")]
     [MaxLength(200)]
     [Column("nome")]
-    public string Nome { get; private set; }
+    public string Nome { get; private set; } = null!;
 
     [MaxLength(500)]
     [Column("descricao")]
-    public string Descricao { get; private set; }
+    public string? Descricao { get; private set; }
 
     public ICollection<Contato> Membros { get; private set; } = new List<Contato>();
 
     private Grupo() { }
 
-    public Grupo(string nome, string descricao)
+    public Grupo(string nome, string? descricao = null)
     {
         Nome = nome ?? throw new ArgumentNullException(nameof(nome));
-        Descricao = descricao ?? throw new ArgumentNullException(nameof(descricao));
+        Descricao = descricao;
     }
 }

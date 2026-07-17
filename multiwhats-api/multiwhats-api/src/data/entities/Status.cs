@@ -1,23 +1,31 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace multiwhats_api.src.data.entities
+namespace multiwhats_api.src.data.entities;
+
+[Table("Status")]
+public class Status
 {
-    public class Status
-    {
-        [Column("id")]
-        public int Id; 
-        [Column("descricao")]
-        public string? Descricao { get; private set; }
-        [Column("ativo")]
-        public bool Ativo { get; private set; }
-        public ICollection<Ocorrencia> ocorrencias { get; private set; } = new List<Ocorrencia>();
-        public Status() { }
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Column("id")]
+    public int Id { get; private set; }
 
-        public Status(int id, string? descricao, bool ativo)
-        {
-            Id = id;
-            Descricao = descricao;
-            Ativo = ativo;
-        }
+    [MaxLength(200)]
+    [Column("descricao")]
+    public string? Descricao { get; private set; }
+
+    [Required]
+    [Column("ativo")]
+    public bool Ativo { get; private set; }
+
+    public ICollection<Ocorrencia> Ocorrencias { get; private set; } = new List<Ocorrencia>();
+
+    private Status() { }
+
+    public Status(string? descricao, bool ativo)
+    {
+        Descricao = descricao;
+        Ativo = ativo;
     }
 }
