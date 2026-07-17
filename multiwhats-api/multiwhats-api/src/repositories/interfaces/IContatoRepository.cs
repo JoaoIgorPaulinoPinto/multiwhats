@@ -9,7 +9,7 @@ public interface IContatoRepository
     Task<Contato?> GetByNumberAsync(string number);
     Task<Contato> AddAsync(Contato contato);
     Task<Contato> UpdateAsync(Contato contato);
-    Task DeleteAsync(int id);
+    Task<bool> DeleteAsync(int id);
     Task<List<Contato>> GetByGrupoAsync(int grupoId);
     Task<List<Mensagem>> GetMensagensAsync(int contatoId);
 }

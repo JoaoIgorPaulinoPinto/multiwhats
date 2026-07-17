@@ -55,13 +55,18 @@ public class ContatoRepository : IContatoRepository
         return contato;
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
         var contato = await _context.Contatos.FindAsync(id);
         if (contato is not null)
         {
             _context.Contatos.Remove(contato);
             await _context.SaveChangesAsync();
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
 

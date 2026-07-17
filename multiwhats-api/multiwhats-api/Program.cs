@@ -50,8 +50,9 @@ builder.Services.AddScoped<IMensagemRepository, MensagemRepository>();
 // Use Cases
 builder.Services.AddHttpClient<IEnviarMensagemUseCase, EnviarMensagemUseCase>();
 builder.Services.AddScoped<ISalvarMensagemRecebidaUseCase, SalvarMensagemRecebidaUseCase>();
-builder.Services.AddScoped<IPegarContatos, PegarContatoPorNumero>();
+builder.Services.AddScoped<IPegarContatos, PegarContatos>();
 builder.Services.AddScoped<ICriarContatoUseCase, CriarContatoUseCase>();
+builder.Services.AddScoped<IDeletarContatoUseCase, DeletarContatoUseCase>();
 
 // Auth
 builder.Services.AddSingleton<TokenBlacklistService>();

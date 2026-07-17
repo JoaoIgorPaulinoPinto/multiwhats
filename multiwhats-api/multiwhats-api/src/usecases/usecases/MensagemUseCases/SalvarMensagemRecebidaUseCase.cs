@@ -11,7 +11,7 @@ namespace multiwhats_api.src.usecases.usecases.MensagemUseCases
     public class SalvarMensagemRecebidaUseCase : ISalvarMensagemRecebidaUseCase
     {
         private readonly IMensagemRepository _mensagemRepository;
-        private readonly IPegarContatos _pegarContatoPorNumero;
+        private readonly IPegarContatos _pegarContatos;
         private readonly ICriarContatoUseCase _criarContatoUseCase;
 
         public SalvarMensagemRecebidaUseCase(
@@ -21,12 +21,12 @@ namespace multiwhats_api.src.usecases.usecases.MensagemUseCases
         {
             _criarContatoUseCase = criarContatoUseCase;
             _mensagemRepository = repository;
-            _pegarContatoPorNumero = pegarContatoPorNumero;
+            _pegarContatos = pegarContatoPorNumero;
         }
 
         public async Task<bool> Execute(WhatsappMessageDto payload, int usuarioId)
         {
-            ContatoResponse? contato = await _pegarContatoPorNumero.Execute(usuarioId, payload.From);
+            ContatoResponse? contato = await _pegarContatos.Execute(payload.From, usuarioId);
 
             if (contato == null)
             {

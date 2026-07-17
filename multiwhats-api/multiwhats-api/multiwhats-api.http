@@ -1,23 +1,70 @@
-@multiwhats_api_HostAddress = http://localhost:5000
-@acces_token = {{eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwianRpIjoiNmM5ZjkwMDItOGIzYy00ZGJlLTgxYTMtZWM5N2JhYTk3MzYzIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6IkpvYW8gSWdvciIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlVzZXIiLCJleHAiOjE3ODQzMTk5MTQsImlzcyI6Ik1pbmhhQXBpRW1pc3NvciIsImF1ZCI6Ik1ldUFwcENsaWVudGUifQ.aFBqRIrKdmcb5q5kcaD8aoPQVaiy-l9TK8wNMwrAAO4}}
-### Enviar Mensagem (ASP.NET -> Node.js -> WhatsApp)
-POST {{multiwhats_api_HostAddress}}/send
-Content-Type: application/json
-  {
-  "numero": "551532851914",
-  "conteudo": "teste envio de mensagem!"
-}
-### Auth
+@multiwhats_api_HostAddress = http://localhost:51563
+
+### Registrar Usuário
 POST {{multiwhats_api_HostAddress}}/api/auth/register
 Content-Type: application/json
+
 {
   "nome": "Joao Igor",
-  "Senha":"123123"
+  "senha": "123123"
 }
-### Auth
+
+### Login
+# @name login
 POST {{multiwhats_api_HostAddress}}/api/auth/login
 Content-Type: application/json
+
 {
   "nome": "Joao Igor",
-  "Senha":"123123"
+  "senha": "123123"
+}
+
+### Logout
+POST {{multiwhats_api_HostAddress}}/api/auth/logout
+Authorization: Bearer {{login.response.body.token}}
+
+### Criar Contato
+# @name criarContato
+POST {{multiwhats_api_HostAddress}}/criar
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "nome": "Maria Silva",
+  "numero": "5515987654321",
+  "grupoId": null,
+  "ocorrenciaAtualId": null
+}
+
+### Listar todos os Contatos
+GET {{multiwhats_api_HostAddress}}/pegar/todos
+Authorization: Bearer {{login.response.body.token}}
+
+### Buscar Contato por ID
+GET {{multiwhats_api_HostAddress}}/pegar/1
+Authorization: Bearer {{login.response.body.token}}
+
+### Enviar Mensagem (ASP.NET -> Node.js -> WhatsApp)
+POST {{multiwhats_api_HostAddress}}/api/send
+Content-Type: application/json
+
+{
+  "numero": "5515996880359",
+  "conteudo": "O multi-whats está funcionando!!"
+}
+
+### Deletar Contato
+DELETE {{multiwhats_api_HostAddress}}/delete/1
+Authorization: Bearer {{login.response.body.token}}
+
+### Webhook - Receber Mensagem
+POST {{multiwhats_api_HostAddress}}/api/webhook/whatsapp
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "from": "5515987654321",
+  "body": "Olá, tudo bem?",
+  "timestamp": 1712345678,
+  "notifyName": "Maria Silva"
 }
