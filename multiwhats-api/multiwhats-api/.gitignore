@@ -6,7 +6,8 @@
 *.suo
 *.userosscache
 *.sln.docstates
-
+*.wwebjs_auth/
+*.wwebjs_cache/
 # =========================
 # Build
 # =========================
@@ -86,3 +87,4 @@ artifacts/
 # =========================
 _ReSharper*/
 *.DotSettings.user
+

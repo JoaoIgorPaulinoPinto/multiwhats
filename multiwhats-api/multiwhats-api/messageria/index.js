@@ -15,9 +15,13 @@ const ASPNET_WEBHOOK_URL = 'http://localhost:5000/api/webhook/whatsapp';
 // 1. INICIALIZAÇÃO DO WHATSAPP-WEB.JS
 // ==========================================
 const client = new Client({
-    authStrategy: new LocalAuth(), // Salva a sessão localmente para não deslogar
+    authStrategy: new LocalAuth(),
     puppeteer: {
-        args: ['--no-sandbox', '--disable-setuid-sandbox'] // Evita problemas em servidores Linux
+        executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+        args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox"
+        ]
     }
 });
 
