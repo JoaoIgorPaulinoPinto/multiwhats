@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using multiwhats_api.src.data.db;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace multiwhats_api.src.data.entities;
@@ -22,14 +23,14 @@ public class Contato
     public string Numero { get; private set; } = null!;
 
     [Column("grupo_id")]
-    public int GrupoId { get; private set; }
+    public int? GrupoId { get; private set; } = null;
 
     [Column("ocorrencia_atual_id")]
     public int? OcorrenciaAtualId { get; private set; }
 
     [Required]
     [Column("created_at")]
-    public DateTime CreatedAt { get; private set; }
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
     [ForeignKey(nameof(OcorrenciaAtualId))]
     public Ocorrencia? OcorrenciaAtual { get; private set; }
@@ -48,5 +49,13 @@ public class Contato
         GrupoId = grupoId;
         OcorrenciaAtualId = ocorrenciaAtualId;
         CreatedAt = DateTime.UtcNow;
+    }
+
+    public Contato(string nome, string numero, int? grupoId, int? ocorrenciaAtualId)
+    {
+        Nome = nome;
+        Numero = numero;
+        GrupoId = grupoId;
+        OcorrenciaAtualId = ocorrenciaAtualId;
     }
 }

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace multiwhats_api.src.data.entities;
 
 [Table("Status")]
-public class Status
+public class Status : BaseEntity
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -19,6 +19,9 @@ public class Status
     [Column("ativo")]
     public bool Ativo { get; private set; }
 
+    [Required]
+    [Column("created_at")]
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public ICollection<Ocorrencia> Ocorrencias { get; private set; } = new List<Ocorrencia>();
 
     private Status() { }

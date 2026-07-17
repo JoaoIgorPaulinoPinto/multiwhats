@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace multiwhats_api.src.data.entities;
 
 [Table("Ocorrencias")]
-public class Ocorrencia
+public class Ocorrencia : BaseEntity
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -25,7 +25,10 @@ public class Ocorrencia
 
     [Required]
     [Column("created_at")]
-    public DateTime CreatedAt { get; private set; }
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+    [Required]
+    [Column("last_update")]
+    public DateTime LastUpdate { get; private set; }
 
     [ForeignKey(nameof(StatusId))]
     public Status? Status { get; private set; }

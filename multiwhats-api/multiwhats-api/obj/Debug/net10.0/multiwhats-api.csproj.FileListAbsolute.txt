@@ -251,3 +251,17 @@ C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\obj\Debug\n
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\obj\Debug\net10.0\ref\multiwhats-api.dll
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\package-lock.json
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\package.json
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\launchSettings.json
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\messageria\launchSettings.json
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\package-lock.json
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\package.json
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Microsoft.Bcl.Cryptography.dll
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt

@@ -1,11 +1,9 @@
 @multiwhats_api_HostAddress = http://localhost:5000
 
-POST {{multiwhats_api_HostAddress}}/whatsapp
+### Enviar Mensagem (ASP.NET -> Node.js -> WhatsApp)
+POST {{multiwhats_api_HostAddress}}/send
 Content-Type: application/json
-
-{
-  "from": "5515996083255@c.us",
-  "body": "Testando o recebimento do webhook no ASP.NET!",
-  "timestamp": 1718556423,
-  "notifyName": "Fulano de Tal"
+  {
+  "numero": "551532851914",
+  "conteudo": "Teste para n dar badreq"
 }

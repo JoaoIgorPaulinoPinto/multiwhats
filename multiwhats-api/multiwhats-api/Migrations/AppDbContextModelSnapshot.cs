@@ -35,7 +35,7 @@ namespace multiwhats_api.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_at");
 
-                    b.Property<int>("GrupoId")
+                    b.Property<int?>("GrupoId")
                         .HasColumnType("int")
                         .HasColumnName("grupo_id");
 
@@ -235,9 +235,7 @@ namespace multiwhats_api.Migrations
                 {
                     b.HasOne("multiwhats_api.src.data.entities.Grupo", "Grupo")
                         .WithMany("Membros")
-                        .HasForeignKey("GrupoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("GrupoId");
 
                     b.HasOne("multiwhats_api.src.data.entities.Ocorrencia", "OcorrenciaAtual")
                         .WithMany()

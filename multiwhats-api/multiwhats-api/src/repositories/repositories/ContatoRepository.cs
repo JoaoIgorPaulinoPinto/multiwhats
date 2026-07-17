@@ -32,7 +32,15 @@ public class ContatoRepository : IContatoRepository
             .Include(c => c.Mensagens)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
-
+    public async Task<Contato?> GetByNumberAsync(string number)
+    {
+        return await _context.Contatos
+            .AsNoTracking()
+            .Include(c => c.Grupo)
+            .Include(c => c.OcorrenciaAtual)
+            .Include(c => c.Mensagens)
+            .FirstOrDefaultAsync(c => c.Numero == number);
+    }
     public async Task<Contato> AddAsync(Contato contato)
     {
         _context.Contatos.Add(contato);

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace multiwhats_api.src.data.entities;
 
 [Table("mensagens")]
-public class Mensagem
+public class Mensagem : BaseEntity
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

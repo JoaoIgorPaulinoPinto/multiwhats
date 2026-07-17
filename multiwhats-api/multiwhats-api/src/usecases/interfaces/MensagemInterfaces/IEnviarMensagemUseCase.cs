@@ -1,6 +1,6 @@
-﻿using multiwhats_api.src.data.dtos;
+﻿using multiwhats_api.src.data.dtos.Requests;
 
-namespace multiwhats_api.src.usecases.interfaces
+namespace multiwhats_api.src.usecases.interfaces.MensagemInterfaces
 {
     public interface IEnviarMensagemUseCase
     {

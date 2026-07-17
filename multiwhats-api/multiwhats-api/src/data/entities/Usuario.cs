@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace multiwhats_api.src.data.entities;
 
 [Table("Usuarios")]
-public class Usuario
+public class Usuario : BaseEntity
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -33,7 +33,7 @@ public class Usuario
 
     [Required]
     [Column("created_at")]
-    public DateTime CreatedAt { get; private set; }
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
     private Usuario() { }
 

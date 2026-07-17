@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using multiwhats_api.src.data.dtos;
-using multiwhats_api.src.usecases.interfaces;
+using multiwhats_api.src.data.dtos.Requests;
+using multiwhats_api.src.usecases.interfaces.MensagemInterfaces;
 
 namespace multiwhats_api.src.controllers;
 
@@ -16,6 +16,7 @@ public class MensagensController : ControllerBase
     }
 
     [HttpPost("/send")]
+
     public async Task<IActionResult> Send([FromBody] EnviarMensagemRequest req)
     {
         var result = await _enviarMensagemUseCase.Execute(req);

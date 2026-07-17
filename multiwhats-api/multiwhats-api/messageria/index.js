@@ -37,8 +37,13 @@ client.on('ready', () => {
 
 // ENDPOINT 1: Escuta as mensagens e envia para o ASP.NET
 client.on('message', async (msg) => {
+    console.log("RECEBIDO");
     // Ignora mensagens de grupos (opcional, remova se quiser escutar grupos também)
-    if (msg.from.includes('@g.us')) return; 
+    // if (msg.from.includes('@g.us') || msg.from.includes('@newsletter') || msg.from.includes('@lid')) {
+    //     return;
+    // }
+    // // Filtro para não duplicar o que você envia para terceiros
+    if (msg.fromMe && msg.to !== msg.from) return;
 
     console.log(`Mensagem recebida de ${msg.from}: ${msg.body}`);
 
@@ -68,23 +73,34 @@ app.post('/api/enviar', async (req, res) => {
     }
 
     try {
-        // Formata o número para o padrão que o whatsapp-web.js espera (ex: 5511999999999@c.us)
-        // Remove caracteres especiais se houver
-        const numeroFormatado = `${numero.replace(/\D/g, '')}@c.us`; 
+        let numeroLimpo = numero.replace(/\D/g, '');
+        const numeroFormatado = `${numeroLimpo}@c.us`;
 
-        // Envia a mensagem
-        const resposta = await client.sendMessage(numeroFormatado, mensagem);
+        console.log(`[WhatsApp] Tentando enviar mensagem para: ${numeroFormatado}`);
 
-        return res.status(200).json({ 
-            sucesso: true, 
-            messageId: resposta.id._serialized 
+        const chat = await client.getChatById(numeroFormatado).catch(() => null);
+
+        let resposta;
+        if (chat) {
+            resposta = await chat.sendMessage(mensagem);
+        } else {
+            resposta = await client.sendMessage(numeroFormatado, mensagem);
+        }
+
+        const messageId = (resposta && resposta.id && resposta.id._serialized)
+            ? resposta.id._serialized
+            : `fallback-id-${Date.now()}`;
+
+        return res.status(200).json({
+            sucesso: true,
+            messageId: messageId
         });
+
     } catch (error) {
-        console.error('Erro ao enviar mensagem pelo WhatsApp:', error);
-        return res.status(500).json({ error: 'Falha ao enviar a mensagem.' });
+        console.error('❌ ERRO REAL AO ENVIAR NO WHATSAPP-WEB.JS:', error);
+        return res.status(500).json({ error: `Falha ao enviar a mensagem: ${error.message}` });
     }
 });
-
 app.listen(PORT, () => {
     console.log(`Servidor Node de comunicação WhatsApp rodando na porta ${PORT}`);
 });

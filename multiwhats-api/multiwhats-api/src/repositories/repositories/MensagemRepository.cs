@@ -14,7 +14,7 @@ public class MensagemRepository : IMensagemRepository
         _context = context;
     }
 
-    public async Task<List<Mensagem>> GetAllAsync()
+    public async Task<List<Mensagem>> PegarTodosAsync()
     {
         return await _context.Mensagens
             .AsNoTracking()
@@ -22,18 +22,18 @@ public class MensagemRepository : IMensagemRepository
             .ToListAsync();
     }
 
-    public async Task<Mensagem?> GetByIdAsync(int id)
+    public async Task<Mensagem?> PegarPorIdAsync(int id)
     {
         return await _context.Mensagens
             .AsNoTracking()
             .FirstOrDefaultAsync(m => m.Id == id);
     }
 
-    public async Task<Mensagem> AddAsync(Mensagem mensagem)
+    public async Task<bool> AdicionarAsync(Mensagem mensagem)
     {
         _context.Mensagens.Add(mensagem);
         await _context.SaveChangesAsync();
-        return mensagem;
+        return true;
     }
 
     public async Task DeleteAsync(int id)

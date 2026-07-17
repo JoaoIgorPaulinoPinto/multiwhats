@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace multiwhats_api.src.data.entities;
 
 [Table("Grupos")]
-public class Grupo
+public class Grupo : BaseEntity
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -15,7 +15,9 @@ public class Grupo
     [MaxLength(200)]
     [Column("nome")]
     public string Nome { get; private set; } = null!;
-
+    [Required]
+    [Column("created_at")]
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     [MaxLength(500)]
     [Column("descricao")]
     public string? Descricao { get; private set; }
