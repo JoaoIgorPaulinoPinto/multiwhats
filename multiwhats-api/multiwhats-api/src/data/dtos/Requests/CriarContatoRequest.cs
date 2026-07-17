@@ -11,8 +11,6 @@ public record CriarContatoRequest
     [Required(ErrorMessage = "O número é obrigatório")]
     [MaxLength(20)]
     public string Numero { get; init; } = null!;
-
     public int? GrupoId { get; init; }
-
     public int? OcorrenciaAtualId { get; init; }
 }

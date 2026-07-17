@@ -23,15 +23,15 @@ public class LogarUsuarioUseCase : ILogarUsuarioUseCase
 
     public async Task<LoginResponse> Execute(LoginRequest request)
     {
-        var usuario = await _usuarioRepository.GetByEmailAsync(request.Email);
+        var usuario = await _usuarioRepository.GetByNomeAsync(request.Nome);
         if (usuario == null)
-            throw new UnauthorizedAccessException("E-mail ou senha inválidos.");
+            throw new UnauthorizedAccessException("Nome de usuário ou senha inválidos.");
 
         var result = _passwordHasher.VerifyHashedPassword(usuario, usuario.Senha, request.Senha);
         if (result == PasswordVerificationResult.Failed)
-            throw new UnauthorizedAccessException("E-mail ou senha inválidos.");
+            throw new UnauthorizedAccessException("Usuario ou senha inválidos.");
 
-        var token = _tokenService.GenerateToken(usuario.Id, usuario.Nome, usuario.Email);
+        var token = _tokenService.GenerateToken(usuario.Id, usuario.Nome);
 
         return new LoginResponse
         {
@@ -40,8 +40,6 @@ public class LogarUsuarioUseCase : ILogarUsuarioUseCase
             {
                 Id = usuario.Id,
                 Nome = usuario.Nome,
-                Email = usuario.Email,
-                Telefone = usuario.Telefone,
                 CreatedAt = usuario.CreatedAt
             }
         };

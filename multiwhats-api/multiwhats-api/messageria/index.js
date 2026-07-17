@@ -39,9 +39,9 @@ client.on('ready', () => {
 client.on('message', async (msg) => {
     console.log("RECEBIDO");
     // Ignora mensagens de grupos (opcional, remova se quiser escutar grupos também)
-    // if (msg.from.includes('@g.us') || msg.from.includes('@newsletter') || msg.from.includes('@lid')) {
-    //     return;
-    // }
+    if (msg.from.includes('@g.us') || msg.from.includes('@newsletter') || msg.from.includes('@lid')) {
+        return;
+    }
     // // Filtro para não duplicar o que você envia para terceiros
     if (msg.fromMe && msg.to !== msg.from) return;
 

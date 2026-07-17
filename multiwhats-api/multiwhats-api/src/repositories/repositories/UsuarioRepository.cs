@@ -24,10 +24,6 @@ public class UsuarioRepository : IUsuarioRepository
         return await _context.Usuarios.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
     }
 
-    public async Task<Usuario?> GetByEmailAsync(string email)
-    {
-        return await _context.Usuarios.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email);
-    }
 
     public async Task<Usuario> AddAsync(Usuario usuario)
     {
@@ -51,5 +47,10 @@ public class UsuarioRepository : IUsuarioRepository
             _context.Usuarios.Remove(usuario);
             await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task<Usuario?> GetByNomeAsync(string nome)
+    {
+        return await _context.Usuarios.AsNoTracking().FirstOrDefaultAsync(u => u.Nome == nome);
     }
 }

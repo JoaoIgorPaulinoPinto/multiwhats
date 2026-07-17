@@ -1,9 +1,23 @@
 @multiwhats_api_HostAddress = http://localhost:5000
-
+@acces_token = {{eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwianRpIjoiNmM5ZjkwMDItOGIzYy00ZGJlLTgxYTMtZWM5N2JhYTk3MzYzIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6IkpvYW8gSWdvciIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlVzZXIiLCJleHAiOjE3ODQzMTk5MTQsImlzcyI6Ik1pbmhhQXBpRW1pc3NvciIsImF1ZCI6Ik1ldUFwcENsaWVudGUifQ.aFBqRIrKdmcb5q5kcaD8aoPQVaiy-l9TK8wNMwrAAO4}}
 ### Enviar Mensagem (ASP.NET -> Node.js -> WhatsApp)
 POST {{multiwhats_api_HostAddress}}/send
 Content-Type: application/json
   {
   "numero": "551532851914",
-  "conteudo": "Teste para n dar badreq"
+  "conteudo": "teste envio de mensagem!"
+}
+### Auth
+POST {{multiwhats_api_HostAddress}}/api/auth/register
+Content-Type: application/json
+{
+  "nome": "Joao Igor",
+  "Senha":"123123"
+}
+### Auth
+POST {{multiwhats_api_HostAddress}}/api/auth/login
+Content-Type: application/json
+{
+  "nome": "Joao Igor",
+  "Senha":"123123"
 }

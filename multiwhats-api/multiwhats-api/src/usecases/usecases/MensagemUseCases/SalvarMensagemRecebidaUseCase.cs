@@ -11,12 +11,12 @@ namespace multiwhats_api.src.usecases.usecases.MensagemUseCases
     public class SalvarMensagemRecebidaUseCase : ISalvarMensagemRecebidaUseCase
     {
         private readonly IMensagemRepository _mensagemRepository;
-        private readonly IPegarContatoPorNumeroUseCase _pegarContatoPorNumero;
+        private readonly IPegarContatos _pegarContatoPorNumero;
         private readonly ICriarContatoUseCase _criarContatoUseCase;
 
         public SalvarMensagemRecebidaUseCase(
             IMensagemRepository repository,
-            IPegarContatoPorNumeroUseCase pegarContatoPorNumero,
+            IPegarContatos pegarContatoPorNumero,
             ICriarContatoUseCase criarContatoUseCase)
         {
             _criarContatoUseCase = criarContatoUseCase;
@@ -24,19 +24,21 @@ namespace multiwhats_api.src.usecases.usecases.MensagemUseCases
             _pegarContatoPorNumero = pegarContatoPorNumero;
         }
 
-        public async Task<bool> Execute(WhatsappMessageDto payload)
+        public async Task<bool> Execute(WhatsappMessageDto payload, int usuarioId)
         {
-            ContatoResponse? contato = await _pegarContatoPorNumero.Execute(payload.From);
+            ContatoResponse? contato = await _pegarContatoPorNumero.Execute(usuarioId, payload.From);
 
             if (contato == null)
             {
-                int contatoId = await _criarContatoUseCase.Execute(new CriarContatoRequest
-                {
-                    Nome = payload.NotifyName ?? payload.From,
-                    Numero = payload.From,
-                    GrupoId = null,
-                    OcorrenciaAtualId = null
-                });
+                contato = await _criarContatoUseCase.Execute(new CriarContatoRequest
+                    {
+                        Nome = payload.NotifyName ?? payload.From,
+                        Numero = payload.From,
+                        GrupoId = null,
+                        OcorrenciaAtualId = null, 
+                },
+                   usuarioId
+                );
             }
 
             Mensagem msg = new Mensagem(

@@ -27,9 +27,7 @@ public class Mensagem : BaseEntity
     [Column("nome_notificacao")]
     public string? NotifyName { get; private set; }
 
-    [Required]
-    [Column("created_at")]
-    public DateTime CreatedAt { get; private set; }
+    
 
     [Column("contato_id")]
     public int? ContatoId { get; private set; }

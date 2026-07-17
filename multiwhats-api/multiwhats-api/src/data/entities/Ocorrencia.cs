@@ -24,9 +24,6 @@ public class Ocorrencia : BaseEntity
     public int? StatusId { get; private set; }
 
     [Required]
-    [Column("created_at")]
-    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
-    [Required]
     [Column("last_update")]
     public DateTime LastUpdate { get; private set; }
 

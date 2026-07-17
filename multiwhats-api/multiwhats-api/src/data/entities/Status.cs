@@ -19,9 +19,6 @@ public class Status : BaseEntity
     [Column("ativo")]
     public bool Ativo { get; private set; }
 
-    [Required]
-    [Column("created_at")]
-    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public ICollection<Ocorrencia> Ocorrencias { get; private set; } = new List<Ocorrencia>();
 
     private Status() { }

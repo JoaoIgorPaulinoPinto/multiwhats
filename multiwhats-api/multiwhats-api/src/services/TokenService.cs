@@ -13,7 +13,7 @@ public class TokenService
         _configuration = configuration;
     }
 
-    public string GenerateToken(int userId, string nome, string email, string role = "User")
+    public string GenerateToken(int userId, string nome, string role = "User")
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = new SymmetricSecurityKey(
@@ -23,7 +23,6 @@ public class TokenService
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(ClaimTypes.Name, nome),
             new Claim(ClaimTypes.Role, role)

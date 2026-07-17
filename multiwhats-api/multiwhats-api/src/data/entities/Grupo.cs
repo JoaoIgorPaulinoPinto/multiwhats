@@ -15,9 +15,7 @@ public class Grupo : BaseEntity
     [MaxLength(200)]
     [Column("nome")]
     public string Nome { get; private set; } = null!;
-    [Required]
-    [Column("created_at")]
-    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+   
     [MaxLength(500)]
     [Column("descricao")]
     public string? Descricao { get; private set; }

@@ -11,13 +11,16 @@ public class AuthController : ControllerBase
 {
     private readonly IRegistrarUsuarioUseCase _registrarUsuarioUseCase;
     private readonly ILogarUsuarioUseCase _logarUsuarioUseCase;
+    private readonly ILogoutUseCase _logoutUseCase;
 
     public AuthController(
         IRegistrarUsuarioUseCase registrarUsuarioUseCase,
-        ILogarUsuarioUseCase logarUsuarioUseCase)
+        ILogarUsuarioUseCase logarUsuarioUseCase,
+        ILogoutUseCase logoutUseCase)
     {
         _registrarUsuarioUseCase = registrarUsuarioUseCase;
         _logarUsuarioUseCase = logarUsuarioUseCase;
+        _logoutUseCase = logoutUseCase;
     }
 
     [HttpPost("register")]
@@ -46,5 +49,17 @@ public class AuthController : ControllerBase
         {
             return Unauthorized(new { message = ex.Message });
         }
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout()
+    {
+        var token = Request.Headers.Authorization.FirstOrDefault()?.Replace("Bearer ", "");
+        if (string.IsNullOrEmpty(token))
+            return BadRequest(new { message = "Token não fornecido." });
+
+        await _logoutUseCase.Execute(User, token);
+        return Ok(new { message = "Logout realizado com sucesso." });
     }
 }

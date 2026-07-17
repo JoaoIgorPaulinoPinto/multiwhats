@@ -20,22 +20,20 @@ public class RegistrarUsuarioUseCase : IRegistrarUsuarioUseCase
 
     public async Task<UsuarioResponse> Execute(RegistrarUsuarioRequest request)
     {
-        var existing = await _usuarioRepository.GetByEmailAsync(request.Email);
+        var existing = await _usuarioRepository.GetByNomeAsync(request.Nome);
         if (existing != null)
             throw new InvalidOperationException("Já existe um usuário com este e-mail.");
 
-        var tempUsuario = new Usuario(request.Nome, request.Email, request.Senha, request.Telefone);
+        var tempUsuario = new Usuario(request.Nome, request.Senha);
         var hashedSenha = _passwordHasher.HashPassword(tempUsuario, request.Senha);
 
-        var usuario = new Usuario(request.Nome, request.Email, hashedSenha, request.Telefone);
+        var usuario = new Usuario(request.Nome, hashedSenha);
         var created = await _usuarioRepository.AddAsync(usuario);
 
         return new UsuarioResponse
         {
             Id = created.Id,
             Nome = created.Nome,
-            Email = created.Email,
-            Telefone = created.Telefone,
             CreatedAt = created.CreatedAt
         };
     }

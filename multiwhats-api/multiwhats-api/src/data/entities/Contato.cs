@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace multiwhats_api.src.data.entities;
 
 [Table("Contatos")]
-public class Contato
+public class Contato : BaseEntity
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -28,10 +28,8 @@ public class Contato
     [Column("ocorrencia_atual_id")]
     public int? OcorrenciaAtualId { get; private set; }
 
-    [Required]
-    [Column("created_at")]
-    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
-
+    [Column("criado_por")]
+    public int CriadoPor { get; private set; }
     [ForeignKey(nameof(OcorrenciaAtualId))]
     public Ocorrencia? OcorrenciaAtual { get; private set; }
 
@@ -51,11 +49,12 @@ public class Contato
         CreatedAt = DateTime.UtcNow;
     }
 
-    public Contato(string nome, string numero, int? grupoId, int? ocorrenciaAtualId)
+    public Contato(string nome, string numero, int? grupoId, int? ocorrenciaAtualId, int criadoPor)
     {
         Nome = nome;
         Numero = numero;
         GrupoId = grupoId;
+        CriadoPor = criadoPor;
         OcorrenciaAtualId = ocorrenciaAtualId;
     }
 }

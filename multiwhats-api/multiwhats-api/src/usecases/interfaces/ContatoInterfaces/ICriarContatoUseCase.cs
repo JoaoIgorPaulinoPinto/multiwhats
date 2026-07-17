@@ -1,9 +1,9 @@
 ﻿using multiwhats_api.src.data.dtos.Requests;
+using multiwhats_api.src.data.dtos.Responses;
 
-namespace multiwhats_api.src.usecases.interfaces.ContatoInterfaces
+namespace multiwhats_api.src.usecases.interfaces.ContatoInterfaces;
+
+public interface ICriarContatoUseCase
 {
-    public interface ICriarContatoUseCase
-    {
-        public Task<int> Execute(CriarContatoRequest dto);
-    }
+    Task<ContatoResponse> Execute(CriarContatoRequest request, int usuarioId);
 }

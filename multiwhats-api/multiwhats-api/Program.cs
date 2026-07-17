@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using multiwhats_api.src.data.db;
@@ -49,13 +50,15 @@ builder.Services.AddScoped<IMensagemRepository, MensagemRepository>();
 // Use Cases
 builder.Services.AddHttpClient<IEnviarMensagemUseCase, EnviarMensagemUseCase>();
 builder.Services.AddScoped<ISalvarMensagemRecebidaUseCase, SalvarMensagemRecebidaUseCase>();
-builder.Services.AddScoped<IPegarContatoPorNumeroUseCase, PegarContatoPorNumero>();
+builder.Services.AddScoped<IPegarContatos, PegarContatoPorNumero>();
 builder.Services.AddScoped<ICriarContatoUseCase, CriarContatoUseCase>();
 
 // Auth
+builder.Services.AddSingleton<TokenBlacklistService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IRegistrarUsuarioUseCase, RegistrarUsuarioUseCase>();
 builder.Services.AddScoped<ILogarUsuarioUseCase, LogarUsuarioUseCase>();
+builder.Services.AddScoped<ILogoutUseCase, LogoutUseCase>();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = Encoding.ASCII.GetBytes(jwtSettings["Secret"]!);
@@ -78,6 +81,19 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings["Audience"],
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero // Remove o atraso padrão de 5 minutos na expiração
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
+            var blacklist = context.HttpContext.RequestServices.GetRequiredService<TokenBlacklistService>();
+            var jti = context.Principal?.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+            if (jti != null && blacklist.IsRevoked(jti))
+            {
+                context.Fail("Token foi revogado.");
+            }
+            return Task.CompletedTask;
+        }
     };
 }); 
 builder.Services.AddAuthorization();

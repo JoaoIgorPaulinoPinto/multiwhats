@@ -264,4 +264,3 @@ C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net1
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
-C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
