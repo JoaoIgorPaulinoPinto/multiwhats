@@ -1,4 +1,18 @@
-@multiwhats_api_HostAddress = http://localhost:51563
+@multiwhats_api_HostAddress = http://localhost:51562
+
+###
+
+# @name login
+POST {{multiwhats_api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "nome": "Joao Igor",
+  "senha": "123123"
+}
+#######################################################
+### AUTENTICAÇÃO
+#######################################################
 
 ### Registrar Usuário
 POST {{multiwhats_api_HostAddress}}/api/auth/register
@@ -9,9 +23,10 @@ Content-Type: application/json
   "senha": "123123"
 }
 
-### Login
+###
+
 # @name login
-POST {{multiwhats_api_HostAddress}}/api/auth/login
+POST {{multiwhats_api_HostAddress}}/api/Auth/login
 Content-Type: application/json
 
 {
@@ -19,9 +34,17 @@ Content-Type: application/json
   "senha": "123123"
 }
 
+###
+
 ### Logout
 POST {{multiwhats_api_HostAddress}}/api/auth/logout
 Authorization: Bearer {{login.response.body.token}}
+
+#######################################################
+### CONTATOS
+#######################################################
+
+###
 
 ### Criar Contato
 # @name criarContato
@@ -36,35 +59,53 @@ Authorization: Bearer {{login.response.body.token}}
   "ocorrenciaAtualId": null
 }
 
-### Listar todos os Contatos
+###
+
+### Listar Contatos
 GET {{multiwhats_api_HostAddress}}/pegar/todos
 Authorization: Bearer {{login.response.body.token}}
+
+###
 
 ### Buscar Contato por ID
 GET {{multiwhats_api_HostAddress}}/pegar/1
 Authorization: Bearer {{login.response.body.token}}
 
-### Enviar Mensagem (ASP.NET -> Node.js -> WhatsApp)
-POST {{multiwhats_api_HostAddress}}/api/send
-Content-Type: application/json
-
-{
-  "numero": "5515996880359",
-  "conteudo": "O multi-whats está funcionando!!"
-}
+###
 
 ### Deletar Contato
 DELETE {{multiwhats_api_HostAddress}}/delete/1
 Authorization: Bearer {{login.response.body.token}}
 
-### Webhook - Receber Mensagem
-POST {{multiwhats_api_HostAddress}}/api/webhook/whatsapp
+#######################################################
+### WHATSAPP
+#######################################################
+
+###
+
+### Enviar Mensagem (ASP.NET -> Node -> WhatsApp)
+POST {{multiwhats_api_HostAddress}}/send
 Content-Type: application/json
 Authorization: Bearer {{login.response.body.token}}
 
 {
-  "from": "5515987654321",
-  "body": "Olá, tudo bem?",
+  "numero": "5515996880359",
+  "conteudo": "O MultiWhats está funcionando! 🚀"
+}
+
+#######################################################
+### WEBHOOK
+#######################################################
+
+###
+
+### Simular mensagem recebida do WhatsApp
+POST {{multiwhats_api_HostAddress}}/api/webhook/whatsapp
+Content-Type: application/json
+
+{
+  "from": "5515996880359",
+  "body": "Olá! Esta é uma mensagem de teste.",
   "timestamp": 1712345678,
   "notifyName": "Maria Silva"
 }

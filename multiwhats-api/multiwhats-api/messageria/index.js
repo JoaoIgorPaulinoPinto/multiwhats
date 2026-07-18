@@ -2,14 +2,14 @@ import express from 'express';
 import pkg from 'whatsapp-web.js';
 import qrcode from 'qrcode-terminal';
 import axios from 'axios';
-
+import https from 'https';
 const { Client, LocalAuth } = pkg;
 const app = express();
 app.use(express.json());
 
 const PORT = 3000;
 // URL da sua API ASP.NET que vai processar e salvar as mensagens recebidas
-const ASPNET_WEBHOOK_URL = 'http://localhost:5000/api/webhook/whatsapp'; 
+const ASPNET_WEBHOOK_URL = "http://localhost:51563/api/webhook/whatsapp";
 
 // ==========================================
 // 1. INICIALIZAÇÃO DO WHATSAPP-WEB.JS
@@ -35,31 +35,64 @@ client.on('ready', () => {
     console.log('Conexão com o WhatsApp estabelecida com sucesso!');
 });
 
-// ENDPOINT 1: Escuta as mensagens e envia para o ASP.NET
-client.on('message', async (msg) => {
-    console.log("RECEBIDO");
-    // Ignora mensagens de grupos (opcional, remova se quiser escutar grupos também)
-    if (msg.from.includes('@g.us') || msg.from.includes('@newsletter') || msg.from.includes('@lid')) {
-        return;
-    }
-    // // Filtro para não duplicar o que você envia para terceiros
-    if (msg.fromMe && msg.to !== msg.from) return;
-
-    console.log(`Mensagem recebida de ${msg.from}: ${msg.body}`);
-
-    try {
-        // Envia o payload da mensagem diretamente para o seu ASP.NET
-        await axios.post(ASPNET_WEBHOOK_URL, {
-            from: msg.from,
-            body: msg.body,
-            timestamp: msg.timestamp,
-            notifyName: msg._data?.notifyName // Nome do contato no WhatsApp
-        });
-    } catch (error) {
-        console.error('Erro ao enviar mensagem para o ASP.NET:', error.message);
-    }
+client.on("authenticated", () => {
+    console.log("✅ Autenticado");
 });
 
+client.on("loading_screen", (percent, message) => {
+    console.log(percent, message);
+});
+
+client.on("change_state", state => {
+    console.log("Estado:", state);
+});
+client.on("message_create", async (msg) => {
+    console.log("Mensagem!");
+    console.log(msg.body);
+});
+client.on("ready", async () => {
+    console.log("Conectado!");
+
+    const info = client.info;
+    console.log(info);
+});
+// ENDPOINT 1: Escuta as mensagens e envia para o ASP.NET
+client.on("message_create", async (msg) => {
+
+    if (msg.from.includes("@newsletter")) return;
+    if (msg.fromMe && msg.to !== msg.from) return;
+
+    try {
+        // 1. Busca o contato de forma assíncrona (resolve tanto @c.us quanto @lid)
+        const contato = await msg.getContact();
+
+        // 2. Aqui você pega o número de telefone real e limpo (ex: 5511999999999)
+        const numeroReal = contato.number;
+
+        console.log("==================================");
+        console.log("Nova mensagem recebida");
+        console.log("Nome (WhatsApp):", msg._data?.notifyName || contato.pushname);
+        console.log("Nome Salvo na Agenda:", contato.name || "Não salvo");
+        console.log("JID Original:", msg.from);
+        console.log("Número Real Extraído:", numeroReal);
+        console.log("==================================");
+
+        // 3. Envia o número correto e tratado para a sua API ASP.NET
+        const response = await axios.post(ASPNET_WEBHOOK_URL, {
+            from: msg.from, // Mantém o JID se precisar responder depois
+            phoneNumber: numeroReal, // <--- O número limpo para salvar no banco
+            body: msg.body,
+            timestamp: msg.timestamp,
+            notifyName: msg._data?.notifyName || contato.pushname,
+            usuarioId: 1 // (Seu ID de controle que configuramos antes)
+        }, { httpsAgent });
+
+        console.log("Webhook respondeu:", response.status);
+
+    } catch (error) {
+        console.error("Erro ao processar mensagem ou enviar webhook:", error.message);
+    }
+});
 client.initialize();
 
 // ==========================================
@@ -91,6 +124,7 @@ app.post('/api/enviar', async (req, res) => {
             ? resposta.id._serialized
             : `fallback-id-${Date.now()}`;
 
+        console.log("Mensagem enviada ao wppw-js!", messageId)
         return res.status(200).json({
             sucesso: true,
             messageId: messageId

@@ -5,7 +5,7 @@ using multiwhats_api.src.usecases.interfaces.MensagemInterfaces;
 namespace multiwhats_api.src.controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/mensagem")]
 public class MensagensController : ControllerBase
 {
     private readonly IEnviarMensagemUseCase _enviarMensagemUseCase;
@@ -15,7 +15,7 @@ public class MensagensController : ControllerBase
         _enviarMensagemUseCase = enviarMensagemUseCase;
     }
 
-    [HttpPost("/send")]
+    [HttpPost("/criar")]
 
     public async Task<IActionResult> Send([FromBody] EnviarMensagemRequest req)
     {

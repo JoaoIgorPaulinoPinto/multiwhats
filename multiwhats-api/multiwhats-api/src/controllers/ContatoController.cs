@@ -7,7 +7,7 @@ using System.Security.Claims;
 namespace multiwhats_api.src.controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/contato")]
 public class ContatoController : ControllerBase
 {
     private readonly ICriarContatoUseCase _criarContatoUseCase;
@@ -68,7 +68,7 @@ public class ContatoController : ControllerBase
     }
     [HttpDelete("/delete/{id}")]
     [Authorize]
-    public async Task<IActionResult> DeletarContato([FromBody] int contatoId)
+    public async Task<IActionResult> DeletarContato([FromQuery] int contatoId)
     {
         try
         {

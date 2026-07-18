@@ -6,7 +6,7 @@ using multiwhats_api.src.usecases.interfaces.AuthInterfaces;
 namespace multiwhats_api.src.controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/auth")]
 public class AuthController : ControllerBase
 {
     private readonly IRegistrarUsuarioUseCase _registrarUsuarioUseCase;

@@ -24,9 +24,9 @@ namespace multiwhats_api.src.usecases.usecases.MensagemUseCases
             _pegarContatos = pegarContatoPorNumero;
         }
 
-        public async Task<bool> Execute(WhatsappMessageDto payload, int usuarioId)
+        public async Task<bool> Execute(WhatsappMessageDto payload)
         {
-            ContatoResponse? contato = await _pegarContatos.Execute(payload.From, usuarioId);
+            ContatoResponse? contato = await _pegarContatos.Execute(payload.From);
 
             if (contato == null)
             {
@@ -36,8 +36,7 @@ namespace multiwhats_api.src.usecases.usecases.MensagemUseCases
                         Numero = payload.From,
                         GrupoId = null,
                         OcorrenciaAtualId = null, 
-                },
-                   usuarioId
+                }
                 );
             }
 

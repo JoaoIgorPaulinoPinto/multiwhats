@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using multiwhats_api.src.data.dtos.Webhook;
 using multiwhats_api.src.usecases.interfaces.MensagemInterfaces;
@@ -18,11 +19,12 @@ public class WebhookController : ControllerBase
     }
 
     [HttpPost("whatsapp")]
+    [AllowAnonymous]
     public async Task<IActionResult> ReceiveMessage([FromBody] WhatsappMessageDto payload)
     {
-        if (UsuarioId == null) throw new UnauthorizedAccessException();
+        
         await _hubContext.Clients.All.SendAsync("ReceberNovaMensagem", payload);
-        await _salvarMensagemRecebidaUseCase.Execute(payload, int.Parse(UsuarioId));
+        await _salvarMensagemRecebidaUseCase.Execute(payload);
         return Ok(new { message = "Notificação enviada para a Web!" });
     }
 }
