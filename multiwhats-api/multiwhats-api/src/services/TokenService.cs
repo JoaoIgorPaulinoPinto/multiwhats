@@ -1,6 +1,8 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using multiwhats_api.src.data.entities;
 
 namespace multiwhats_api.src.services;
 
@@ -13,30 +15,28 @@ public class TokenService
         _configuration = configuration;
     }
 
-    public string GenerateToken(int userId, string nome, string role = "User")
+    public string GenerateToken(User user)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
-        var secretKey = new SymmetricSecurityKey(
-            System.Text.Encoding.ASCII.GetBytes(jwtSettings["Secret"]!));
-        var credentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
+        var secretKey = Encoding.ASCII.GetBytes(jwtSettings["Secret"]!);
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.Name),
+            new Claim(ClaimTypes.Role, user.Role.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(ClaimTypes.Name, nome),
-            new Claim(ClaimTypes.Role, role)
+            new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
         };
-
-        var expiry = DateTime.UtcNow.AddMinutes(
-            Convert.ToDouble(jwtSettings["ExpiryInMinutes"] ?? "60"));
 
         var token = new JwtSecurityToken(
             issuer: jwtSettings["Issuer"],
             audience: jwtSettings["Audience"],
             claims: claims,
-            expires: expiry,
-            signingCredentials: credentials
+            expires: DateTime.UtcNow.AddHours(8),
+            signingCredentials: new SigningCredentials(
+                new SymmetricSecurityKey(secretKey),
+                SecurityAlgorithms.HmacSha256)
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);

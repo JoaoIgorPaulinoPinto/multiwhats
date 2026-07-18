@@ -2,14 +2,15 @@ import express from 'express';
 import pkg from 'whatsapp-web.js';
 import qrcode from 'qrcode-terminal';
 import axios from 'axios';
-import https from 'https';
+
+
 const { Client, LocalAuth } = pkg;
 const app = express();
 app.use(express.json());
 
 const PORT = 3000;
 // URL da sua API ASP.NET que vai processar e salvar as mensagens recebidas
-const ASPNET_WEBHOOK_URL = "http://localhost:51563/api/webhook/whatsapp";
+const ASPNET_WEBHOOK_URL = "http://127.0.0.1:51563/api/webhook/whatsapp";
 
 // ==========================================
 // 1. INICIALIZAÇÃO DO WHATSAPP-WEB.JS
@@ -77,20 +78,51 @@ client.on("message_create", async (msg) => {
         console.log("Número Real Extraído:", numeroReal);
         console.log("==================================");
 
-        // 3. Envia o número correto e tratado para a sua API ASP.NET
+        // 3. Detecta tipo e mídia
+        let messageType = "text";
+        let hasMedia = false;
+        let mediaUrl = null;
+        let mediaMimeType = null;
+        let mediaFilename = null;
+        let mediaSize = null;
+
+        if (msg.hasMedia) {
+            hasMedia = true;
+            const media = await msg.downloadMedia().catch(() => null);
+            if (media) {
+                messageType = media.mimetype?.startsWith("image") ? "image"
+                    : media.mimetype?.startsWith("audio") ? "audio"
+                    : media.mimetype?.startsWith("video") ? "video"
+                    : "document";
+                mediaUrl = media.data ? `data:${media.mimetype};base64,${media.data}` : null;
+                mediaMimeType = media.mimetype;
+                mediaFilename = media.filename || null;
+                mediaSize = media.filesize ? parseInt(media.filesize) : null;
+            }
+        }
+
+        // 4. Envia para a API ASP.NET
         const response = await axios.post(ASPNET_WEBHOOK_URL, {
-            from: msg.from, // Mantém o JID se precisar responder depois
-            phoneNumber: numeroReal, // <--- O número limpo para salvar no banco
+            from: msg.from,
+            phoneNumber: numeroReal,
             body: msg.body,
             timestamp: msg.timestamp,
             notifyName: msg._data?.notifyName || contato.pushname,
-            usuarioId: 1 // (Seu ID de controle que configuramos antes)
-        }, { httpsAgent });
+            messageType: messageType,
+            hasMedia: hasMedia,
+            mediaUrl: mediaUrl,
+            mediaMimeType: mediaMimeType,
+            mediaFilename: mediaFilename,
+            mediaSize: mediaSize,
+            messageId: msg.id?._serialized || null,
+            isForwarded: msg.hasQuotedMsg || false,
+            userId: 1
+        });
 
         console.log("Webhook respondeu:", response.status);
 
     } catch (error) {
-        console.error("Erro ao processar mensagem ou enviar webhook:", error.message);
+        console.error("Erro ao processar mensagem ou enviar webhook:", error);
     }
 });
 client.initialize();

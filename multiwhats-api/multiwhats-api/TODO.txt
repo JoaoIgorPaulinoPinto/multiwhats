@@ -1,21 +1,286 @@
--- ADICIONAR CAMPO DE TELEFONE AS MENSAGENS 
--- CADASTRAR CONTATO AO ENVIAR A MENSAGEM
--- IMPLEMENTAR O LOGOUT 
--- IMPLEMENTAR LOGICA DE MENSAGEM TER SIDO LIDA
--- IMPLEMENTAR LOGICA DE EDITAR MENSAGEM
--- DEPOIS QUE UM CONTATO FOR SALVO, TODAS  AS MENSAGENS ENVIADAS POR ELE DEVEM SER ATUALIZADAS PARA O contato_id DELE
--- PEGAR O NUMERO DE QUEM ESTÁ ENVIANDO A MENSAGEM
+================================================================================
+  MULTIWHATS API - DOCUMENTAÇÃO DA ARQUITETURA
+================================================================================
 
+  STACK:
+  - ASP.NET Core 10 (Web API + SignalR)
+  - MySQL (Railway via Pomelo EF Core)
+  - Node.js (messageria/) - WhatsApp Web.js + Express (porta 3000)
+  - JWT Bearer Auth
 
+================================================================================
+  ENTIDADES E RELACIONAMENTOS
+================================================================================
 
+  Client (Empresa/Cliente)
+  ├── Id (PK)
+  ├── Name (obrigatório)
+  ├── MainPhoneNumber
+  ├── Status (ClientStatus: Active | Inactive)
+  ├── CreatedAt, LastUpdate, IsDeleted, CreatedByUserId, LastUpdatedByUserId
+  ├── ← Contacts[] (1:N - um cliente tem vários números)
+  └── ← ClientTasks[] (1:N - demandas da empresa)
 
-#
-#
-#
-#
-#					CRIAR SCHEMA QUE PEGA TODOS OS DADOS POSSIVEIS DA MENSAGEM E DE QUEM MANDOU E SALVA TUDO NO BANCO
-#														DEPOIS VOCÊ TRABALHA COM ELE
-#
-#
-#
+  Contact (Número de WhatsApp)
+  ├── Id (PK)
+  ├── Jid (5511999999999@c.us) [UNIQUE]
+  ├── PhoneNumber (5511999999999)
+  ├── Name (nome salvo na agenda)
+  ├── PushName (nome do perfil WhatsApp)
+  ├── ProfilePicUrl
+  ├── IsBlocked, IsGroup
+  ├── LastMessageAt
+  ├── ClientId? → Client (FK - atrelável/desatrelável via PATCH)
+  ├── GroupId? → Group
+  ├── CreatedByUserId → User
+  ├── CreatedAt, LastUpdate, IsDeleted
+  ├── ← Messages[] (1:N)
+  └── ← Occurrences[] (1:N - chamados)
 
+  Message (Mensagem)
+  ├── Id (PK)
+  ├── MessageId (ID serializado do WhatsApp, para dedup)
+  ├── FromJid, ToJid?, PhoneNumber, Body?
+  ├── Direction (Incoming | Outgoing)
+  ├── Type (Text | Image | Audio | Video | Document | Sticker | Contact | Location | Unknown)
+  ├── Timestamp (Unix) + SentAt (DateTime)
+  ├── NotifyName?
+  ├── HasMedia, MediaUrl?, MediaMimeType?, MediaFilename?, MediaSize?, MediaCaption?
+  ├── DeliveryStatus (Pending | Sent | Delivered | Read | Failed)
+  ├── IsForwarded
+  ├── ContactId? → Contact
+  ├── UserId? → User (quem enviou/recebeu)
+  ├── OccurrenceId? → Occurrence (vínculo opcional com chamado)
+  ├── ReplyToId? → Message (resposta a)
+  ├── CreatedAt, LastUpdate, IsDeleted
+
+  Occurrence (Chamado do número)
+  ├── Id (PK)
+  ├── Title, Description?
+  ├── Status (Open | InProgress | Resolved | Closed)
+  ├── Priority (Low | Medium | High | Urgent)
+  ├── ContactId → Contact (FK obrigatório)
+  ├── AssignedToUserId? → User
+  ├── CreatedByUserId → User
+  ├── CreatedAt, LastUpdate, IsDeleted
+  └── ← Messages[]
+
+  ClientTask (Demanda da empresa)
+  ├── Id (PK)
+  ├── Title, Description?
+  ├── Status (Open | InProgress | Completed | Cancelled)
+  ├── Priority (Low | Medium | High | Urgent)
+  ├── DueDate?
+  ├── ClientId → Client (FK)
+  ├── AssignedToUserId? → User
+  ├── CreatedByUserId → User
+  ├── CreatedAt, LastUpdate, IsDeleted
+
+  Group
+  ├── Id (PK)
+  ├── Name, Description?
+  ├── WhatsAppGroupId?
+  ├── CreatedAt, LastUpdate, IsDeleted
+  └── ← Members (Contact[])
+
+  User
+  ├── Id (PK)
+  ├── Name [UNIQUE]
+  ├── Password
+  ├── Role (Support | Dev | Admin)
+  ├── IsActive
+  ├── CreatedAt, LastUpdate, IsDeleted
+
+  AuditLog
+  ├── Id (PK)
+  ├── UserId?, UserName?, UserRole?
+  ├── EntityType (ex: "Contact", "Message")
+  ├── EntityId?
+  ├── Action ("Created" | "Updated" | "Deleted")
+  ├── Description ("Created Contact #5 - Maria - 5511999999999")
+  ├── OldValues? (JSON)
+  ├── NewValues? (JSON)
+  ├── Timestamp
+
+================================================================================
+  ENUMS
+================================================================================
+
+  MessageDirection  → Incoming | Outgoing
+  MessageType       → Text | Image | Audio | Video | Document | Sticker | Contact | Location | Unknown
+  DeliveryStatus    → Pending | Sent | Delivered | Read | Failed
+  OccurrenceStatus  → Open | InProgress | Resolved | Closed
+  ClientTaskStatus  → Open | InProgress | Completed | Cancelled
+  Priority          → Low | Medium | High | Urgent
+  ClientStatus      → Active | Inactive
+  UserRole          → Support | Dev | Admin
+
+================================================================================
+  ROTAS DA API
+================================================================================
+
+  ─── AUTH ────────────────────────────────────────────────────────────────────
+  POST   /api/auth/register        [anon]  Registrar usuário
+  POST   /api/auth/login           [anon]  Login (retorna JWT + user)
+  POST   /api/auth/logout          [auth]  Revoga token
+
+  ─── CLIENTS ─────────────────────────────────────────────────────────────────
+  POST   /api/clients              [auth]  Criar cliente
+  GET    /api/clients              [auth]  Listar todos
+  GET    /api/clients/{id}         [auth]  Buscar por ID
+  PUT    /api/clients/{id}         [auth]  Atualizar
+  DELETE /api/clients/{id}         [auth]  Deletar (soft delete)
+  GET    /api/clients/{id}/contacts  [auth]  Contatos do cliente
+
+  ─── CONTACTS ────────────────────────────────────────────────────────────────
+  POST   /api/contacts             [auth]  Criar contato
+  GET    /api/contacts             [auth]  Listar todos
+  GET    /api/contacts/{id}        [auth]  Buscar por ID
+  PUT    /api/contacts/{id}        [auth]  Atualizar (nome, pushName, blocked)
+  DELETE /api/contacts/{id}        [auth]  Deletar
+  PATCH  /api/contacts/{id}/assign   [auth]  Atrelar a um cliente
+  PATCH  /api/contacts/{id}/unassign [auth]  Desatrelar do cliente
+  GET    /api/contacts/{id}/messages [auth]  Mensagens do contato
+
+  ─── MESSAGES ────────────────────────────────────────────────────────────────
+  POST   /api/messages/send        [auth]  Enviar mensagem WhatsApp
+
+  ─── OCCURRENCES ─────────────────────────────────────────────────────────────
+  POST   /api/occurrences          [auth]  Criar ocorrência
+  GET    /api/occurrences          [auth]  Listar todas
+  GET    /api/occurrences/{id}     [auth]  Buscar por ID
+  PUT    /api/occurrences/{id}     [auth]  Atualizar
+  DELETE /api/occurrences/{id}     [auth]  Deletar
+
+  ─── TASKS ───────────────────────────────────────────────────────────────────
+  POST   /api/tasks                [auth]  Criar tarefa
+  GET    /api/tasks                [auth]  Listar todas
+  GET    /api/tasks/{id}           [auth]  Buscar por ID
+  PUT    /api/tasks/{id}           [auth]  Atualizar
+  DELETE /api/tasks/{id}           [auth]  Deletar
+  PATCH  /api/tasks/{id}/status    [Admin,Dev]  Alterar status
+
+  ─── WEBHOOK ─────────────────────────────────────────────────────────────────
+  POST   /api/webhook/whatsapp     [anon]  Webhook do Node.js
+
+================================================================================
+  PAYLOADS
+================================================================================
+
+  ─── POST /api/auth/register ─────────────────────────────────────────────────
+  { "name": "Joao", "password": "123123" }
+
+  ─── POST /api/auth/login ────────────────────────────────────────────────────
+  { "name": "Joao", "password": "123123" }
+  → { "token": "...", "user": { "id": 1, "name": "Joao", "role": "Support", ... } }
+
+  ─── POST /api/clients ──────────────────────────────────────────────────────
+  { "name": "Timontec", "mainPhoneNumber": "5515999999999" }
+
+  ─── POST /api/contacts ──────────────────────────────────────────────────────
+  { "jid": "5515987654321@c.us", "phoneNumber": "5515987654321",
+    "name": "Maria", "pushName": "Maria" }
+
+  ─── PATCH /api/contacts/{id}/assign ────────────────────────────────────────
+  { "clientId": 1 }
+
+  ─── POST /api/messages/send ────────────────────────────────────────────────
+  { "phoneNumber": "5515996880359", "text": "olá" }
+
+  ─── POST /api/occurrences ──────────────────────────────────────────────────
+  { "title": "Problema boleto", "description": "...", "priority": "High",
+    "contactId": 1 }
+
+  ─── POST /api/tasks ────────────────────────────────────────────────────────
+  { "title": "Relatório custos", "description": "...", "priority": "Medium",
+    "clientId": 1 }
+
+  ─── PATCH /api/tasks/{id}/status ──────────────────────────────────────────
+  { "status": "InProgress" }  [SÓ Admin/Dev]
+
+  ─── POST /api/webhook/whatsapp ─────────────────────────────────────────────
+  { "from": "551...@c.us", "phoneNumber": "551...", "body": "...",
+    "timestamp": 1712345678, "notifyName": "Maria",
+    "messageType": "text", "hasMedia": false,
+    "messageId": "true_abc123", "isForwarded": false, "userId": 1 }
+
+================================================================================
+  AUTORIZAÇÃO
+================================================================================
+
+  Role     | PATCH /api/tasks/{id}/status | Demais endpoints
+  ─────────┼──────────────────────────────┼──────────────────
+  Admin    | ✅ Sim                       | ✅ Sim
+  Dev      | ✅ Sim                       | ✅ Sim
+  Support  | ❌ Não                       | ✅ Sim
+
+  Regra no JWT: claim "role" = "Admin" | "Dev" | "Support"
+  Implementado via: [Authorize(Roles = "Admin,Dev")]
+
+================================================================================
+  AUDITORIA
+================================================================================
+
+  Acionada automaticamente ao final de requisições POST/PUT/PATCH/DELETE.
+
+  1. Interceptor (AppDbContext.ApplyAudit):
+     - Seta CreatedByUserId / LastUpdatedByUserId nas entidades
+     - Converte软 delete em IsDeleted = true (nunca remove de fato)
+
+  2. AuditService (middleware em Program.cs):
+     - Gera logs com: quem fez, o que fez, valores antigos/novos (JSON)
+     - Salva na tabela AuditLogs
+     - Escreve no console com cor:
+       [AUDIT] 12:34:56 | User "Joao" (Admin) | Created Contact #5 | ...
+       [AUDIT] 12:35:10 | User "Maria" (Support) | Updated Occurrence #3 | ...
+
+================================================================================
+  ARQUITETURA (FLUXO DE DADOS)
+================================================================================
+
+  Frontend / .http
+       │
+       ▼
+  ASP.NET Core API  (localhost:5261)
+       │
+       ├── Controllers  →  Use Cases  →  Repositories  →  DbContext  →  MySQL
+       │
+       ├── SignalR Hub (/whatsappHub)  →  notifica web em tempo real
+       │
+       └── POST http://localhost:3000/api/enviar  →  Node.js (messageria)
+                                                          │
+                                                          ▼
+                                                    WhatsApp Web (Puppeteer)
+
+  Mensagens recebidas do WhatsApp:
+    Node.js → POST /api/webhook/whatsapp → ASP.NET salva + emite SignalR
+
+================================================================================
+  COMANDOS
+================================================================================
+
+  dotnet run                     → Sobe API em http://localhost:5261
+  cd messageria && npm start     → Sobe Node.js em http://localhost:3000
+  dotnet ef migrations add Nome  → Cria migration
+  dotnet ef database update      → Aplica migration no MySQL
+
+================================================================================
+  WEBHOOK DTO (alinhado Node.js → ASP.NET)
+================================================================================
+
+  {
+    "from": "5511999999999@c.us",     // JID completo
+    "phoneNumber": "5511999999999",    // número limpo
+    "body": "mensagem",
+    "timestamp": 1712345678,
+    "notifyName": "Nome do Contato",
+    "messageType": "text",            // text, image, audio, video, document
+    "hasMedia": false,
+    "mediaUrl": null,                 // base64 da mídia
+    "mediaMimeType": null,
+    "mediaFilename": null,
+    "mediaSize": null,
+    "messageId": "true_...",          // ID único do WhatsApp
+    "isForwarded": false,
+    "userId": 1                       // ID do usuário dono da conexão
+  }

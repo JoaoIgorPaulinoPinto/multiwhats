@@ -9,27 +9,27 @@ namespace multiwhats_api.src.controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
-    private readonly IRegistrarUsuarioUseCase _registrarUsuarioUseCase;
-    private readonly ILogarUsuarioUseCase _logarUsuarioUseCase;
+    private readonly IRegisterUserUseCase _registerUserUseCase;
+    private readonly ILoginUseCase _loginUseCase;
     private readonly ILogoutUseCase _logoutUseCase;
 
     public AuthController(
-        IRegistrarUsuarioUseCase registrarUsuarioUseCase,
-        ILogarUsuarioUseCase logarUsuarioUseCase,
+        IRegisterUserUseCase registerUserUseCase,
+        ILoginUseCase loginUseCase,
         ILogoutUseCase logoutUseCase)
     {
-        _registrarUsuarioUseCase = registrarUsuarioUseCase;
-        _logarUsuarioUseCase = logarUsuarioUseCase;
+        _registerUserUseCase = registerUserUseCase;
+        _loginUseCase = loginUseCase;
         _logoutUseCase = logoutUseCase;
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegistrarUsuarioRequest request)
+    public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
     {
         try
         {
-            var usuario = await _registrarUsuarioUseCase.Execute(request);
-            return Created("", new { message = "Usuário criado com sucesso.", usuario });
+            var user = await _registerUserUseCase.Execute(request);
+            return Created("", new { message = "Usuário criado com sucesso.", user });
         }
         catch (InvalidOperationException ex)
         {
@@ -42,7 +42,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var response = await _logarUsuarioUseCase.Execute(request);
+            var response = await _loginUseCase.Execute(request);
             return Ok(response);
         }
         catch (UnauthorizedAccessException ex)

@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.AuthInterfaces;
@@ -16,13 +15,10 @@ public class LogoutUseCase : ILogoutUseCase
 
     public Task Execute(ClaimsPrincipal user, string token)
     {
-        var handler = new JwtSecurityTokenHandler();
-        var jwtToken = handler.ReadJwtToken(token);
-
-        var jti = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+        var jti = user.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti)?.Value;
         if (jti != null)
         {
-            _blacklist.Revoke(jti, jwtToken.ValidTo);
+            _blacklist.Revoke(jti, DateTime.UtcNow.AddHours(8));
         }
 
         return Task.CompletedTask;

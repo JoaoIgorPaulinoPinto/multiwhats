@@ -22,7 +22,7 @@ namespace multiwhats_api.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("multiwhats_api.src.data.entities.Contato", b =>
+            modelBuilder.Entity("multiwhats_api.src.data.entities.AuditLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -31,46 +31,64 @@ namespace multiwhats_api.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("CriadoPor")
-                        .HasColumnType("int")
-                        .HasColumnName("criado_por");
-
-                    b.Property<int?>("GrupoId")
-                        .HasColumnType("int")
-                        .HasColumnName("grupo_id");
-
-                    b.Property<DateTime>("LastUpdate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Nome")
+                    b.Property<string>("Action")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("varchar(150)")
-                        .HasColumnName("nome");
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("action");
 
-                    b.Property<string>("Numero")
+                    b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("numero");
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("description");
 
-                    b.Property<int?>("OcorrenciaAtualId")
+                    b.Property<int?>("EntityId")
                         .HasColumnType("int")
-                        .HasColumnName("ocorrencia_atual_id");
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("entity_type");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("longtext")
+                        .HasColumnName("new_values");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("longtext")
+                        .HasColumnName("old_values");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("timestamp");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("user_name");
+
+                    b.Property<string>("UserRole")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("user_role");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GrupoId");
+                    b.HasIndex("EntityType");
 
-                    b.HasIndex("OcorrenciaAtualId");
+                    b.HasIndex("Timestamp");
 
-                    b.ToTable("Contatos");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
-            modelBuilder.Entity("multiwhats_api.src.data.entities.Grupo", b =>
+            modelBuilder.Entity("multiwhats_api.src.data.entities.Client", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -82,26 +100,243 @@ namespace multiwhats_api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Descricao")
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
-                        .HasColumnName("descricao");
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("LastUpdate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Nome")
+                    b.Property<int?>("LastUpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MainPhoneNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("main_phone_number");
+
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)")
-                        .HasColumnName("nome");
+                        .HasColumnName("name");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Grupos");
+                    b.ToTable("Clients", (string)null);
                 });
 
-            modelBuilder.Entity("multiwhats_api.src.data.entities.Mensagem", b =>
+            modelBuilder.Entity("multiwhats_api.src.data.entities.ClientTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AssignedToUserId")
+                        .HasColumnType("int")
+                        .HasColumnName("assigned_to_user_id");
+
+                    b.Property<int>("ClientId")
+                        .HasColumnType("int")
+                        .HasColumnName("client_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("due_date");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("LastUpdate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("LastUpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("priority");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("title");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedToUserId");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.ToTable("ClientTasks", (string)null);
+                });
+
+            modelBuilder.Entity("multiwhats_api.src.data.entities.Contact", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("int")
+                        .HasColumnName("client_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("GroupId")
+                        .HasColumnType("int")
+                        .HasColumnName("group_id");
+
+                    b.Property<bool>("IsBlocked")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_blocked");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsGroup")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_group");
+
+                    b.Property<string>("Jid")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("jid");
+
+                    b.Property<DateTime?>("LastMessageAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("last_message_at");
+
+                    b.Property<DateTime>("LastUpdate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("LastUpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("phone_number");
+
+                    b.Property<string>("ProfilePicUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("profile_pic_url");
+
+                    b.Property<string>("PushName")
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("push_name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("GroupId");
+
+                    b.HasIndex("Jid")
+                        .IsUnique();
+
+                    b.HasIndex("PhoneNumber");
+
+                    b.ToTable("Contacts", (string)null);
+                });
+
+            modelBuilder.Entity("multiwhats_api.src.data.entities.Group", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("LastUpdate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("LastUpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("WhatsAppGroupId")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("whatsapp_group_id");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Groups", (string)null);
+                });
+
+            modelBuilder.Entity("multiwhats_api.src.data.entities.Message", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -111,43 +346,205 @@ namespace multiwhats_api.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Body")
-                        .IsRequired()
                         .HasColumnType("longtext")
-                        .HasColumnName("corpo");
+                        .HasColumnName("body");
 
-                    b.Property<int?>("ContatoId")
+                    b.Property<int?>("ContactId")
                         .HasColumnType("int")
-                        .HasColumnName("contato_id");
+                        .HasColumnName("contact_id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("From")
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DeliveryStatus")
+                        .HasColumnType("int")
+                        .HasColumnName("delivery_status");
+
+                    b.Property<int>("Direction")
+                        .HasColumnType("int")
+                        .HasColumnName("direction");
+
+                    b.Property<string>("FromJid")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("remetente");
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("from_jid");
+
+                    b.Property<bool>("HasMedia")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("has_media");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsForwarded")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_forwarded");
 
                     b.Property<DateTime>("LastUpdate")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<int?>("LastUpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MediaCaption")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("media_caption");
+
+                    b.Property<string>("MediaFilename")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("media_filename");
+
+                    b.Property<string>("MediaMimeType")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("media_mime_type");
+
+                    b.Property<long?>("MediaSize")
+                        .HasColumnType("bigint")
+                        .HasColumnName("media_size");
+
+                    b.Property<string>("MediaUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("media_url");
+
+                    b.Property<string>("MessageId")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("message_id");
+
                     b.Property<string>("NotifyName")
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)")
-                        .HasColumnName("nome_notificacao");
+                        .HasColumnName("notify_name");
+
+                    b.Property<int?>("OccurrenceId")
+                        .HasColumnType("int")
+                        .HasColumnName("occurrence_id");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("phone_number");
+
+                    b.Property<int?>("ReplyToId")
+                        .HasColumnType("int")
+                        .HasColumnName("reply_to_id");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("sent_at");
 
                     b.Property<long>("Timestamp")
                         .HasColumnType("bigint")
                         .HasColumnName("timestamp");
 
+                    b.Property<string>("ToJid")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("to_jid");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int")
+                        .HasColumnName("type");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("user_id");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ContatoId");
+                    b.HasIndex("ContactId");
 
-                    b.ToTable("mensagens", (string)null);
+                    b.HasIndex("MessageId");
+
+                    b.HasIndex("OccurrenceId");
+
+                    b.HasIndex("PhoneNumber");
+
+                    b.HasIndex("ReplyToId");
+
+                    b.HasIndex("Timestamp");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Messages", (string)null);
                 });
 
-            modelBuilder.Entity("multiwhats_api.src.data.entities.Ocorrencia", b =>
+            modelBuilder.Entity("multiwhats_api.src.data.entities.Occurrence", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AssignedToUserId")
+                        .HasColumnType("int")
+                        .HasColumnName("assigned_to_user_id");
+
+                    b.Property<int>("ContactId")
+                        .HasColumnType("int")
+                        .HasColumnName("contact_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("LastUpdate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("LastUpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("priority");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("title");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedToUserId");
+
+                    b.HasIndex("ContactId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.ToTable("Occurrences", (string)null);
+                });
+
+            modelBuilder.Entity("multiwhats_api.src.data.entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -159,138 +556,165 @@ namespace multiwhats_api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Descricao")
-                        .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)")
-                        .HasColumnName("descricao");
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
 
-                    b.Property<DateTime>("LastUpdate")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("last_update");
-
-                    b.Property<string>("Nome")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("nome");
-
-                    b.Property<int?>("StatusId")
-                        .HasColumnType("int")
-                        .HasColumnName("status_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StatusId");
-
-                    b.ToTable("Ocorrencias");
-                });
-
-            modelBuilder.Entity("multiwhats_api.src.data.entities.Status", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Ativo")
+                    b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)")
-                        .HasColumnName("ativo");
+                        .HasColumnName("is_active");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Descricao")
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("descricao");
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("LastUpdate")
                         .HasColumnType("datetime(6)");
 
-                    b.HasKey("Id");
+                    b.Property<int?>("LastUpdatedByUserId")
+                        .HasColumnType("int");
 
-                    b.ToTable("Status");
-                });
-
-            modelBuilder.Entity("multiwhats_api.src.data.entities.Usuario", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime>("LastUpdate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Nome")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)")
-                        .HasColumnName("nome");
+                        .HasColumnName("name");
 
-                    b.Property<string>("Senha")
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("longtext")
-                        .HasColumnName("senha");
+                        .HasColumnName("password");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("role");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Usuarios");
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("multiwhats_api.src.data.entities.Contato", b =>
+            modelBuilder.Entity("multiwhats_api.src.data.entities.ClientTask", b =>
                 {
-                    b.HasOne("multiwhats_api.src.data.entities.Grupo", "Grupo")
-                        .WithMany("Membros")
-                        .HasForeignKey("GrupoId");
-
-                    b.HasOne("multiwhats_api.src.data.entities.Ocorrencia", "OcorrenciaAtual")
+                    b.HasOne("multiwhats_api.src.data.entities.User", "AssignedTo")
                         .WithMany()
-                        .HasForeignKey("OcorrenciaAtualId");
+                        .HasForeignKey("AssignedToUserId");
 
-                    b.Navigation("Grupo");
+                    b.HasOne("multiwhats_api.src.data.entities.Client", "Client")
+                        .WithMany("Tasks")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("OcorrenciaAtual");
+                    b.HasOne("multiwhats_api.src.data.entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId");
+
+                    b.Navigation("AssignedTo");
+
+                    b.Navigation("Client");
+
+                    b.Navigation("CreatedBy");
                 });
 
-            modelBuilder.Entity("multiwhats_api.src.data.entities.Mensagem", b =>
+            modelBuilder.Entity("multiwhats_api.src.data.entities.Contact", b =>
                 {
-                    b.HasOne("multiwhats_api.src.data.entities.Contato", "Contato")
-                        .WithMany("Mensagens")
-                        .HasForeignKey("ContatoId");
+                    b.HasOne("multiwhats_api.src.data.entities.Client", "Client")
+                        .WithMany("Contacts")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Contato");
+                    b.HasOne("multiwhats_api.src.data.entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId");
+
+                    b.HasOne("multiwhats_api.src.data.entities.Group", "Group")
+                        .WithMany("Members")
+                        .HasForeignKey("GroupId");
+
+                    b.Navigation("Client");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Group");
                 });
 
-            modelBuilder.Entity("multiwhats_api.src.data.entities.Ocorrencia", b =>
+            modelBuilder.Entity("multiwhats_api.src.data.entities.Message", b =>
                 {
-                    b.HasOne("multiwhats_api.src.data.entities.Status", "Status")
-                        .WithMany("Ocorrencias")
-                        .HasForeignKey("StatusId");
+                    b.HasOne("multiwhats_api.src.data.entities.Contact", "Contact")
+                        .WithMany("Messages")
+                        .HasForeignKey("ContactId");
 
-                    b.Navigation("Status");
+                    b.HasOne("multiwhats_api.src.data.entities.Occurrence", "Occurrence")
+                        .WithMany("Messages")
+                        .HasForeignKey("OccurrenceId");
+
+                    b.HasOne("multiwhats_api.src.data.entities.Message", "ReplyTo")
+                        .WithMany()
+                        .HasForeignKey("ReplyToId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("multiwhats_api.src.data.entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Contact");
+
+                    b.Navigation("Occurrence");
+
+                    b.Navigation("ReplyTo");
+
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("multiwhats_api.src.data.entities.Contato", b =>
+            modelBuilder.Entity("multiwhats_api.src.data.entities.Occurrence", b =>
                 {
-                    b.Navigation("Mensagens");
+                    b.HasOne("multiwhats_api.src.data.entities.User", "AssignedTo")
+                        .WithMany()
+                        .HasForeignKey("AssignedToUserId");
+
+                    b.HasOne("multiwhats_api.src.data.entities.Contact", "Contact")
+                        .WithMany("Occurrences")
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("multiwhats_api.src.data.entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId");
+
+                    b.Navigation("AssignedTo");
+
+                    b.Navigation("Contact");
+
+                    b.Navigation("CreatedBy");
                 });
 
-            modelBuilder.Entity("multiwhats_api.src.data.entities.Grupo", b =>
+            modelBuilder.Entity("multiwhats_api.src.data.entities.Client", b =>
                 {
-                    b.Navigation("Membros");
+                    b.Navigation("Contacts");
+
+                    b.Navigation("Tasks");
                 });
 
-            modelBuilder.Entity("multiwhats_api.src.data.entities.Status", b =>
+            modelBuilder.Entity("multiwhats_api.src.data.entities.Contact", b =>
                 {
-                    b.Navigation("Ocorrencias");
+                    b.Navigation("Messages");
+
+                    b.Navigation("Occurrences");
+                });
+
+            modelBuilder.Entity("multiwhats_api.src.data.entities.Group", b =>
+                {
+                    b.Navigation("Members");
+                });
+
+            modelBuilder.Entity("multiwhats_api.src.data.entities.Occurrence", b =>
+                {
+                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }

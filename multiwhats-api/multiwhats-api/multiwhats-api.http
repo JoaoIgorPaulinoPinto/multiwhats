@@ -1,111 +1,235 @@
-@multiwhats_api_HostAddress = http://localhost:51562
-
-###
-
-# @name login
-POST {{multiwhats_api_HostAddress}}/api/auth/login
-Content-Type: application/json
-
-{
-  "nome": "Joao Igor",
-  "senha": "123123"
-}
-#######################################################
-### AUTENTICAÇÃO
-#######################################################
+@host = http://localhost:51563
+# Cole o token gerado aqui para ser usado em todas as requisições automaticamente
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiSm9hbyBJZ29yIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiU3VwcG9ydCIsImp0aSI6IjM5NmZmMTI0LTcyN2YtNGJiZi05NGYwLWI5NjJhOTM1MmE0ZiIsImlhdCI6IjE3ODQzOTU4MDQiLCJleHAiOjE3ODQ0MjQ2MDQsImlzcyI6Ik1pbmhhQXBpRW1pc3NvciIsImF1ZCI6Ik1ldUFwcENsaWVudGUifQ.kDM-D31sc6Aj2Q8qqBasAjaz69AU1OA8XzpWoVALJ6Y
 
 ### Registrar Usuário
-POST {{multiwhats_api_HostAddress}}/api/auth/register
+POST {{host}}/api/auth/register
 Content-Type: application/json
 
 {
-  "nome": "Joao Igor",
-  "senha": "123123"
+  "name": "Joao Igor",
+  "password": "123123"
 }
 
-###
-
+### Login
 # @name login
-POST {{multiwhats_api_HostAddress}}/api/Auth/login
+POST {{host}}/api/auth/login
 Content-Type: application/json
 
 {
-  "nome": "Joao Igor",
-  "senha": "123123"
+  "name": "Joao Igor",
+  "password": "123123"
 }
-
-###
 
 ### Logout
-POST {{multiwhats_api_HostAddress}}/api/auth/logout
-Authorization: Bearer {{login.response.body.token}}
+POST {{host}}/api/auth/logout
+Authorization: Bearer {{token}}
 
-#######################################################
-### CONTATOS
-#######################################################
+### ==================== CLIENTS ====================
 
-###
+### Criar Cliente
+POST {{host}}/api/clients
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Rosangela LTDA",
+  "mainPhoneNumber": "222286065975335"
+}
+
+### Listar Clientes
+GET {{host}}/api/clients
+Authorization: Bearer {{token}}
+
+### Buscar Cliente por ID
+GET {{host}}/api/clients/1
+Authorization: Bearer {{token}}
+
+### Atualizar Cliente
+PUT {{host}}/api/clients/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Timontec Atualizada",
+  "mainPhoneNumber": "5515888888888",
+  "status": "Active"  
+}
+
+### Deletar Cliente
+DELETE {{host}}/api/clients/1
+Authorization: Bearer {{token}}
+
+### Contatos do Cliente
+GET {{host}}/api/clients/1/contacts
+Authorization: Bearer {{token}}
+
+### ==================== CONTACTS ====================
 
 ### Criar Contato
-# @name criarContato
-POST {{multiwhats_api_HostAddress}}/criar
+POST {{host}}/api/contacts
 Content-Type: application/json
-Authorization: Bearer {{login.response.body.token}}
+Authorization: Bearer {{token}}
 
 {
-  "nome": "Maria Silva",
-  "numero": "5515987654321",
-  "grupoId": null,
-  "ocorrenciaAtualId": null
+  "jid": "5515987654321@c.us",
+  "phoneNumber": "5515987654321",
+  "name": "Maria Silva",
+  "pushName": "Maria"
 }
-
-###
 
 ### Listar Contatos
-GET {{multiwhats_api_HostAddress}}/pegar/todos
-Authorization: Bearer {{login.response.body.token}}
-
-###
+GET {{host}}/api/contacts
+Authorization: Bearer {{token}}
 
 ### Buscar Contato por ID
-GET {{multiwhats_api_HostAddress}}/pegar/1
-Authorization: Bearer {{login.response.body.token}}
+GET {{host}}/api/contacts/7
+Authorization: Bearer {{token}}
 
-###
-
-### Deletar Contato
-DELETE {{multiwhats_api_HostAddress}}/delete/1
-Authorization: Bearer {{login.response.body.token}}
-
-#######################################################
-### WHATSAPP
-#######################################################
-
-###
-
-### Enviar Mensagem (ASP.NET -> Node -> WhatsApp)
-POST {{multiwhats_api_HostAddress}}/send
+### Atualizar Contato
+PUT {{host}}/api/contacts/1
 Content-Type: application/json
-Authorization: Bearer {{login.response.body.token}}
+Authorization: Bearer {{token}}
 
 {
-  "numero": "5515996880359",
-  "conteudo": "O MultiWhats está funcionando! 🚀"
+  "name": "Maria Souza",
+  "pushName": "Maria",
+  "isBlocked": false
 }
 
-#######################################################
-### WEBHOOK
-#######################################################
+### Deletar Contato
+DELETE {{host}}/api/contacts/1
+Authorization: Bearer {{token}}
 
-###
+### Atribuir Contato ao Cliente
+PATCH {{host}}/api/contacts/1/assign
+Content-Type: application/json
+Authorization: Bearer {{token}}
 
-### Simular mensagem recebida do WhatsApp
-POST {{multiwhats_api_HostAddress}}/api/webhook/whatsapp
+{
+  "clientId": 1
+}
+
+### Desatrelar Contato do Cliente
+PATCH {{host}}/api/contacts/1/unassign
+Authorization: Bearer {{token}}
+
+### Mensagens do Contato
+GET {{host}}/api/contacts/1/messages
+Authorization: Bearer {{token}}
+
+### ==================== MESSAGES ====================
+
+### Enviar Mensagem
+POST {{host}}/api/messages/send
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "phoneNumber": "5515996880359",
+  "text": "O multi-whats está funcionando!!"
+}
+
+### ==================== OCCURRENCES ====================
+
+### Criar Ocorrência (chamado do número)
+POST {{host}}/api/occurrences
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Problema com boleto",
+  "description": "Cliente não recebeu o boleto por email",
+  "priority": "High",
+  "contactId": 1
+}
+
+### Listar Ocorrências
+GET {{host}}/api/occurrences
+Authorization: Bearer {{token}}
+
+### Buscar Ocorrência por ID
+GET {{host}}/api/occurrences/1
+Authorization: Bearer {{token}}
+
+### Atualizar Ocorrência
+PUT {{host}}/api/occurrences/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Problema com boleto - resolvido",
+  "description": "Cliente recebeu o boleto",
+  "status": "Resolved",
+  "priority": "Medium"
+}
+
+### Deletar Ocorrência
+DELETE {{host}}/api/occurrences/1
+Authorization: Bearer {{token}}
+
+### ==================== TASKS ====================
+
+### Criar Tarefa (demanda da empresa)
+POST {{host}}/api/tasks
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Modificar relatório de custos diários",
+  "description": "Empresa Timontec precisa de ajustes no relatório",
+  "priority": "Medium",
+  "clientId": 1
+}
+
+### Listar Tarefas
+GET {{host}}/api/tasks
+Authorization: Bearer {{token}}
+
+### Buscar Tarefa por ID
+GET {{host}}/api/tasks/1
+Authorization: Bearer {{token}}
+
+### Atualizar Tarefa
+PUT {{host}}/api/tasks/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Modificar relatório de custos diários - revisado",
+  "description": "Escopo alterado",
+  "priority": "High",
+  "dueDate": "2026-08-01T00:00:00Z"
+}
+
+### Atualizar Status da Tarefa (só Admin/Dev)
+PATCH {{host}}/api/tasks/1/status
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "status": "InProgress"
+}
+
+### Deletar Tarefa
+DELETE {{host}}/api/tasks/1
+Authorization: Bearer {{token}}
+
+### ==================== WEBHOOK ====================
+
+### Webhook - Receber Mensagem
+POST {{host}}/api/webhook/whatsapp
 Content-Type: application/json
 
 {
-  "from": "5515996880359",
-  "body": "Olá! Esta é uma mensagem de teste.",
+  "from": "5515987654321@c.us",
+  "phoneNumber": "5515987654321",
+  "body": "Olá, tudo bem?",
   "timestamp": 1712345678,
-  "notifyName": "Maria Silva"
+  "notifyName": "Maria Silva",
+  "messageType": "text",
+  "hasMedia": false,
+  "messageId": "true_abc123",
+  "isForwarded": false,
+  "userId": 1
 }
