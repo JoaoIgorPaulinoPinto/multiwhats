@@ -1,6 +1,7 @@
 using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.data.entities;
+using multiwhats_api.src.helpers;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.usecases.interfaces.ContactInterfaces;
 
@@ -23,7 +24,7 @@ public class CreateContactUseCase : ICreateContactUseCase
 
         var contact = new Contact(
             request.Jid,
-            request.PhoneNumber,
+            PhoneNumberHelper.Sanitize(request.PhoneNumber),
             request.Name,
             request.PushName,
             userId,

@@ -71,6 +71,7 @@ builder.Services.AddScoped<IAssignContactUseCase, AssignContactUseCase>();
 // Message Use Cases
 builder.Services.AddHttpClient<ISendMessageUseCase, SendMessageUseCase>();
 builder.Services.AddScoped<ISaveIncomingMessageUseCase, SaveIncomingMessageUseCase>();
+builder.Services.AddScoped<IGetMessagesUseCase, GetMessagesUseCase>();
 
 // Client Use Cases
 builder.Services.AddScoped<ICreateClientUseCase, CreateClientUseCase>();

@@ -1,0 +1,122 @@
+.chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--chat);
+}
+
+.chatHeader {
+  height: 72px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 0 20px;
+}
+
+.chatHeader img {
+  width: 44px;
+  border-radius: 50%;
+}
+
+.chatHeader strong {
+  color: var(--text);
+}
+
+.chatHeader small {
+  color: var(--text-secondary);
+}
+
+.data {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 5px;
+}
+
+.messages {
+  flex: 1;
+  overflow: auto;
+  padding: 30px;
+  background: var(--chat);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.received {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.sent {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.bubble {
+  background: var(--message-received);
+  color: var(--text);
+  padding: 12px 16px;
+  border-radius: 14px;
+  max-width: 350px;
+}
+
+.sent .bubble {
+  background: var(--message-sent);
+}
+
+.inputArea {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  width: 100%;
+}
+
+.inputArea input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: var(--input);
+  color: var(--text);
+  padding: 14px;
+  border-radius: 30px;
+  width: auto;
+}
+
+.inputArea input::placeholder {
+  color: var(--text-muted);
+}
+
+.inputArea button {
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.send {
+  background: var(--primary) !important;
+  color: white !important;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  transition: background .2s;
+}
+
+.send:hover {
+  background: var(--primary-hover) !important;
+}

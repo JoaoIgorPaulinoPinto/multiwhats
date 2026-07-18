@@ -120,6 +120,22 @@ Authorization: Bearer {{token}}
 
 ### ==================== MESSAGES ====================
 
+### Listar Mensagens
+GET {{host}}/api/messages
+Authorization: Bearer {{token}}
+
+### Buscar Mensagem por ID
+GET {{host}}/api/messages/1
+Authorization: Bearer {{token}}
+
+### Mensagens por Contato
+GET {{host}}/api/messages/contact/7
+Authorization: Bearer {{token}}
+
+### Mensagens por Número de Telefone
+GET {{host}}/api/messages/phone/5515996880359
+Authorization: Bearer {{token}}
+
 ### Enviar Mensagem
 POST {{host}}/api/messages/send
 Content-Type: application/json

@@ -2,6 +2,7 @@ using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.data.dtos.Webhook;
 using multiwhats_api.src.data.enums;
 using multiwhats_api.src.data.entities;
+using multiwhats_api.src.helpers;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.usecases.interfaces.ContactInterfaces;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
@@ -26,13 +27,14 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
 
     public async Task<bool> Execute(WhatsAppWebhookDto payload)
     {
-        var contact = await _contactRepository.GetByPhoneNumberAsync(payload.PhoneNumber);
+        var phoneNumber = PhoneNumberHelper.Sanitize(payload.PhoneNumber);
+        var contact = await _contactRepository.GetByPhoneNumberAsync(phoneNumber);
 
         if (contact == null)
         {
             var newContact = new Contact(
                 payload.From,
-                payload.PhoneNumber,
+                phoneNumber,
                 payload.NotifyName,
                 payload.NotifyName
             );
@@ -56,7 +58,7 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
 
         var message = new Message(
             fromJid: payload.From,
-            phoneNumber: payload.PhoneNumber,
+            phoneNumber: phoneNumber,
             body: payload.Body,
             direction: MessageDirection.Incoming,
             type: messageType,

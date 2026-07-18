@@ -11,12 +11,16 @@ namespace multiwhats_api.src.controllers;
 public class MessagesController : ControllerBase
 {
     private readonly ISendMessageUseCase _sendMessageUseCase;
+    private readonly IGetMessagesUseCase _getMessagesUseCase;
 
     private int UserId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-    public MessagesController(ISendMessageUseCase sendMessageUseCase)
+    public MessagesController(
+        ISendMessageUseCase sendMessageUseCase,
+        IGetMessagesUseCase getMessagesUseCase)
     {
         _sendMessageUseCase = sendMessageUseCase;
+        _getMessagesUseCase = getMessagesUseCase;
     }
 
     [HttpPost("send")]
@@ -28,5 +32,39 @@ public class MessagesController : ControllerBase
             return Ok(new { message = "Mensagem enviada com sucesso" });
 
         return BadRequest(new { message = "Falha ao enviar mensagem" });
+    }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetAll()
+    {
+        var messages = await _getMessagesUseCase.ExecuteAll();
+        return Ok(messages);
+    }
+
+    [HttpGet("{id}")]
+    [Authorize]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var message = await _getMessagesUseCase.ExecuteById(id);
+        if (message == null)
+            return NotFound(new { message = "Mensagem não encontrada." });
+        return Ok(message);
+    }
+
+    [HttpGet("contact/{contactId}")]
+    [Authorize]
+    public async Task<IActionResult> GetByContact(int contactId)
+    {
+        var messages = await _getMessagesUseCase.ExecuteByContact(contactId);
+        return Ok(messages);
+    }
+
+    [HttpGet("phone/{phoneNumber}")]
+    [Authorize]
+    public async Task<IActionResult> GetByPhoneNumber(string phoneNumber)
+    {
+        var messages = await _getMessagesUseCase.ExecuteByPhoneNumber(phoneNumber);
+        return Ok(messages);
     }
 }

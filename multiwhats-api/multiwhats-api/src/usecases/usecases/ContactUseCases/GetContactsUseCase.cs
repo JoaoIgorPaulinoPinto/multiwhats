@@ -1,4 +1,5 @@
 using multiwhats_api.src.data.dtos.Responses;
+using multiwhats_api.src.helpers;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.usecases.interfaces.ContactInterfaces;
 
@@ -27,7 +28,7 @@ public class GetContactsUseCase : IGetContactsUseCase
 
     public async Task<ContactResponse?> ExecuteByPhoneNumber(string phoneNumber)
     {
-        var contact = await _contactRepository.GetByPhoneNumberAsync(phoneNumber);
+        var contact = await _contactRepository.GetByPhoneNumberAsync(PhoneNumberHelper.Sanitize(phoneNumber));
         return contact != null ? CreateContactUseCase.MapToResponse(contact) : null;
     }
 }

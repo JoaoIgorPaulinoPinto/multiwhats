@@ -1,0 +1,18 @@
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  flex-shrink: 0;
+  user-select: none;
+  text-transform: uppercase;
+}
+
+.circle {
+  border-radius: 50%;
+}
+
+.square {
+  border-radius: 10px;
+}

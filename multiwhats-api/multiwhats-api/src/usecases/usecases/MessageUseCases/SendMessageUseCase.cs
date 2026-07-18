@@ -4,6 +4,7 @@ using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.data.enums;
 using multiwhats_api.src.data.entities;
+using multiwhats_api.src.helpers;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
 
@@ -29,9 +30,11 @@ public class SendMessageUseCase : ISendMessageUseCase
     {
         try
         {
+            var phoneNumber = PhoneNumberHelper.Sanitize(request.PhoneNumber);
+
             var payloadNode = new
             {
-                numero = request.PhoneNumber,
+                numero = phoneNumber,
                 mensagem = request.Text
             };
 
@@ -51,12 +54,12 @@ public class SendMessageUseCase : ISendMessageUseCase
             var raw = JsonSerializer.Deserialize<JsonElement>(responseBody);
             var messageId = raw.TryGetProperty("messageId", out var mid) ? mid.GetString() : null;
 
-            var contact = await _contactRepository.GetByPhoneNumberAsync(request.PhoneNumber);
+            var contact = await _contactRepository.GetByPhoneNumberAsync(phoneNumber);
             var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             var message = new Message(
-                fromJid: request.PhoneNumber + "@c.us",
-                phoneNumber: request.PhoneNumber,
+                fromJid: phoneNumber + "@c.us",
+                phoneNumber: phoneNumber,
                 body: request.Text,
                 direction: MessageDirection.Outgoing,
                 type: MessageType.Text,
