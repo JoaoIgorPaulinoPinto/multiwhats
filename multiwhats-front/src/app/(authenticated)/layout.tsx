@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "../../contexts/auth-context"
+import { useAuthStore } from "../../stores/auth-store"
 import { NavBarView } from "../../components/nav-bar/nav-bar.view"
 import styles from "./layout.module.css"
 
@@ -11,7 +11,8 @@ export default function AuthenticatedLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { user, loading } = useAuth()
+  const user = useAuthStore((s) => s.user)
+  const loading = useAuthStore((s) => s.loading)
   const router = useRouter()
 
   useEffect(() => {

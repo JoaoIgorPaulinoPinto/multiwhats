@@ -2,10 +2,11 @@
 
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
-import { useAuth } from "../contexts/auth-context"
+import { useAuthStore } from "../stores/auth-store"
 
 export default function Home() {
-  const { user, loading } = useAuth()
+  const user = useAuthStore((s) => s.user)
+  const loading = useAuthStore((s) => s.loading)
   const router = useRouter()
 
   useEffect(() => {

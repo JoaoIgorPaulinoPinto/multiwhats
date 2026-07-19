@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "../../contexts/auth-context"
+import { useEffect } from "react"
 import { LoginView } from "../../components/auth/login.view"
+import { useAuthStore } from "../../stores/auth-store"
 
 export default function LoginPage() {
-  const { user, loading } = useAuth()
+  const user = useAuthStore((s) => s.user)
+  const loading = useAuthStore((s) => s.loading)
   const router = useRouter()
 
   useEffect(() => {

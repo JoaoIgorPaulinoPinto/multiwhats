@@ -3,13 +3,14 @@
 import { LogOut, User } from "lucide-react"
 import { ThemeToggleView } from "../theme-toggle/theme-toggle.view"
 import { useProfilePopover } from "./profile-popover.logic"
-import { useAuth } from "../../contexts/auth-context"
+import { useAuthStore } from "../../stores/auth-store"
 import { AvatarView } from "../avatar/avatar.view"
 import styles from "./profile-popover.module.css"
 
 export function ProfilePopoverView() {
   const { open, toggle, close } = useProfilePopover()
-  const { user, logout } = useAuth()
+  const user = useAuthStore((s) => s.user)
+  const logout = useAuthStore((s) => s.logout)
 
   return (
     <div className={styles.wrapper}>

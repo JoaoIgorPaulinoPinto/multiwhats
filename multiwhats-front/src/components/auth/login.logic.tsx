@@ -1,10 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { useAuth } from "../../contexts/auth-context"
+import { useAuthStore } from "../../stores/auth-store"
 
 export function useLogin() {
-  const { login, register, loading } = useAuth()
+  const login = useAuthStore((s) => s.login)
+  const register = useAuthStore((s) => s.register)
+  const loading = useAuthStore((s) => s.loading)
   const [mode, setMode] = useState<"login" | "register">("login")
   const [name, setName] = useState("")
   const [password, setPassword] = useState("")

@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react"
+import { create } from "zustand"
 import { api, type LoginResponse } from "../services/api"
 
 interface UserInfo {
@@ -9,7 +9,7 @@ interface UserInfo {
   role: string
 }
 
-interface AuthContextType {
+interface AuthState {
   user: UserInfo | null
   token: string | null
   loading: boolean
@@ -17,8 +17,6 @@ interface AuthContextType {
   register: (name: string, password: string) => Promise<void>
   logout: () => Promise<void>
 }
-
-const AuthContext = createContext<AuthContextType | null>(null)
 
 function getStoredUser(): UserInfo | null {
   if (typeof window === "undefined") return null
@@ -31,32 +29,30 @@ function getStoredToken(): string | null {
   return localStorage.getItem("token")
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserInfo | null>(getStoredUser)
-  const [token, setToken] = useState<string | null>(getStoredToken)
-  const [loading, setLoading] = useState(false)
+export const useAuthStore = create<AuthState>((set) => ({
+  user: getStoredUser(),
+  token: getStoredToken(),
+  loading: false,
 
-  const login = useCallback(async (name: string, password: string) => {
+  login: async (name: string, password: string) => {
     console.log(`[Auth] login: "${name}"`)
-    setLoading(true)
+    set({ loading: true })
     try {
       const res = await api.post<LoginResponse>("/api/auth/login", { name, password })
       console.log(`[Auth] login OK — user: ${res.user.name}, role: ${res.user.role}`)
       localStorage.setItem("token", res.token)
       localStorage.setItem("user", JSON.stringify(res.user))
-      setToken(res.token)
-      setUser(res.user)
+      set({ token: res.token, user: res.user, loading: false })
     } catch (e) {
       console.error(`[Auth] login falhou:`, e)
+      set({ loading: false })
       throw e
-    } finally {
-      setLoading(false)
     }
-  }, [])
+  },
 
-  const register = useCallback(async (name: string, password: string) => {
+  register: async (name: string, password: string) => {
     console.log(`[Auth] register: "${name}"`)
-    setLoading(true)
+    set({ loading: true })
     try {
       await api.post("/api/auth/register", { name, password })
       console.log(`[Auth] register OK`)
@@ -64,11 +60,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error(`[Auth] register falhou:`, e)
       throw e
     } finally {
-      setLoading(false)
+      set({ loading: false })
     }
-  }, [])
+  },
 
-  const logout = useCallback(async () => {
+  logout: async () => {
     console.log(`[Auth] logout`)
     try {
       await api.post("/api/auth/logout")
@@ -78,19 +74,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     localStorage.removeItem("token")
     localStorage.removeItem("user")
-    setToken(null)
-    setUser(null)
-  }, [])
-
-  return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider")
-  return ctx
-}
+    set({ token: null, user: null })
+  },
+}))
