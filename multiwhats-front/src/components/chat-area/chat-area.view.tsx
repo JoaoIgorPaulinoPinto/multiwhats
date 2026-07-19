@@ -8,10 +8,11 @@ import styles from "./chat-area.module.css"
 interface Props {
   contactId: number | null
   contactName?: string
+  phoneNumber?: string
 }
 
-export function ChatAreaView({ contactId, contactName }: Props) {
-  const { inputValue, setInputValue, messages, sendMessage } = useChatArea(contactId)
+export function ChatAreaView({ contactId, contactName, phoneNumber }: Props) {
+  const { inputValue, setInputValue, messages, sendError, sendMessage } = useChatArea(contactId, phoneNumber)
 
   return (
     <main className={styles.chat}>
@@ -52,6 +53,7 @@ export function ChatAreaView({ contactId, contactName }: Props) {
         />
         <button className={styles.send} onClick={sendMessage}><Send size={20} /></button>
       </footer>
+      {sendError && <div className={styles.error}>{sendError}</div>}
     </main>
   )
 }

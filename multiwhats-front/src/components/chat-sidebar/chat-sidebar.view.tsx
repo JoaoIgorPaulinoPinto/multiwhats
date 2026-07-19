@@ -1,17 +1,16 @@
 "use client"
 
 import { Search } from "lucide-react"
-import { AvatarView } from "../avatar/avatar.view"
 import { useChatSidebar } from "./chat-sidebar.logic"
 import styles from "./chat-sidebar.module.css"
 
 interface Props {
   selectedId: number | null
-  onSelect: (id: number, name: string) => void
+  onSelect: (id: number, name: string, phoneNumber: string) => void
 }
 
 export function ChatSidebarView({ selectedId, onSelect }: Props) {
-  const { search, setSearch, contacts } = useChatSidebar()
+  const { search, setSearch, chats } = useChatSidebar()
 
   return (
     <aside className={styles.sidebar}>
@@ -27,22 +26,18 @@ export function ChatSidebarView({ selectedId, onSelect }: Props) {
       </header>
 
       <section className={styles.chatList}>
-        {contacts.map((contact) => (
+        {chats.map((chat) => (
           <div
-            key={contact.id}
-            className={`${styles.chatItem} ${selectedId === contact.id ? styles.active : ""}`}
-            onClick={() => onSelect(contact.id, contact.name ?? contact.pushName ?? contact.phoneNumber)}
+            key={chat.id}
+            className={`${styles.chatItem} ${selectedId === chat.id ? styles.active : ""}`}
+            onClick={() => onSelect(chat.id, chat.contactName ?? chat.phoneNumber ?? `Chat #${chat.id}`, chat.phoneNumber ?? "")}
           >
-            {contact.profilePicUrl ? (
-              <img src={contact.profilePicUrl} alt="" className={styles.avatarImg} />
-            ) : (
-              <AvatarView name={contact.name ?? contact.pushName ?? contact.phoneNumber} />
-            )}
             <div className={styles.chatInfo}>
               <div className={styles.chatTop}>
-                <strong>{contact.name ?? contact.pushName ?? contact.phoneNumber}</strong>
+                <strong>{chat.name ?? chat.phoneNumber ?? `Chat #${chat.id}`}</strong>
+                <label>{ chat.phoneNumber ?? `Chat #${chat.id}`}</label>
               </div>
-              <p>{contact.phoneNumber}</p>
+              {chat.lastMessageBody && <p className={styles.lastMsg}>{chat.lastMessageBody}</p>}
             </div>
           </div>
         ))}

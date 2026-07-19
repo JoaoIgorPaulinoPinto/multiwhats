@@ -1,39 +1,39 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { api, type Client, type Contact } from "../../../services/api"
+import { useCallback, useEffect, useState } from "react"
+import { companiesService, type ClientResponse } from "../../../services/companies.service"
+import { contactsService, type ContactResponse } from "../../../services/contacts.service"
 
 export function useCompanies() {
-  const [companies, setCompanies] = useState<Client[]>([])
-  const [allContacts, setAllContacts] = useState<Contact[]>([])
-  const [editing, setEditing] = useState<Client | null>(null)
+  const [companies, setCompanies] = useState<ClientResponse[]>([])
+  const [allContacts, setAllContacts] = useState<ContactResponse[]>([])
+  const [editing, setEditing] = useState<ClientResponse | null>(null)
   const [formName, setFormName] = useState("")
   const [formPhone, setFormPhone] = useState("")
   const [formStatus, setFormStatus] = useState("Active")
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
 
-  const loadData = () => {
-    console.log(`[Companies] carregando lista...`)
-    return Promise.all([
-      api.get<Client[]>("/api/clients"),
-      api.get<Contact[]>("/api/contacts"),
+  const loadData = useCallback(() =>
+    Promise.all([
+      companiesService.list(),
+      contactsService.list(),
     ]).then(([c, ct]) => {
-      console.log(`[Companies] ${c.length} empresas, ${ct.length} contatos carregados`)
       setCompanies(c)
       setAllContacts(ct)
-    }).catch((e) => console.error(`[Companies] erro ao carregar:`, e))
-  }
+    }),
+  [])
 
   useEffect(() => {
-    loadData().finally(() => setLoading(false))
-  }, [])
+    console.log(`[Companies] carregando lista...`)
+    loadData().catch((e) => console.error(`[Companies] erro ao carregar:`, e)).finally(() => setLoading(false))
+  }, [loadData])
 
   const filtered = companies.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
   )
 
-  function startEdit(company: Client) {
+  function startEdit(company: ClientResponse) {
     setEditing(company)
     setFormName(company.name)
     setFormPhone(company.mainPhoneNumber ?? "")
@@ -49,41 +49,57 @@ export function useCompanies() {
 
   async function saveEdit() {
     if (!editing) return
-    console.log(`[Companies] salvando empresa #${editing.id}: nome="${formName}", phone="${formPhone}", status="${formStatus}"`)
-    await api.put(`/api/clients/${editing.id}`, {
-      name: formName,
-      mainPhoneNumber: formPhone || null,
-      status: formStatus,
-    })
-    console.log(`[Companies] empresa #${editing.id} atualizada`)
-    await loadData()
-    cancelEdit()
+    console.log(`[Companies] salvando empresa #${editing.id}...`)
+    try {
+      await companiesService.update(editing.id, {
+        name: formName,
+        mainPhoneNumber: formPhone || null,
+        status: formStatus,
+      })
+      console.log(`[Companies] empresa #${editing.id} atualizada`)
+      await loadData()
+      cancelEdit()
+    } catch (e) {
+      console.error(`[Companies] erro ao salvar:`, e)
+    }
   }
 
-  async function createCompany() {
-    console.log(`[Companies] criando empresa: nome="${formName}", phone="${formPhone}"`)
-    await api.post("/api/clients", { name: formName, mainPhoneNumber: formPhone || null })
-    console.log(`[Companies] empresa criada`)
-    await loadData()
-    cancelEdit()
+  async function createNewCompany() {
+    console.log(`[Companies] criando empresa...`)
+    try {
+      await companiesService.create({ name: formName, mainPhoneNumber: formPhone || null })
+      console.log(`[Companies] empresa criada`)
+      await loadData()
+      cancelEdit()
+    } catch (e) {
+      console.error(`[Companies] erro ao criar:`, e)
+    }
   }
 
-  async function deleteCompany(id: number) {
-    console.log(`[Companies] deletando empresa #${id}`)
-    await api.delete(`/api/clients/${id}`)
-    console.log(`[Companies] empresa #${id} deletada`)
-    setCompanies((prev) => prev.filter((c) => c.id !== id))
+  async function handleDeleteCompany(id: number) {
+    console.log(`[Companies] deletando empresa #${id}...`)
+    try {
+      await companiesService.delete(id)
+      console.log(`[Companies] empresa #${id} deletada`)
+      setCompanies((prev) => prev.filter((c) => c.id !== id))
+    } catch (e) {
+      console.error(`[Companies] erro ao deletar:`, e)
+    }
   }
 
   const companyContacts = (clientId: number) =>
     allContacts.filter((c) => c.clientId === clientId)
 
-  async function unassignContact(contactId: number) {
-    console.log(`[Companies] removendo contato #${contactId} da empresa`)
-    await api.patch(`/api/contacts/${contactId}/unassign`)
-    console.log(`[Companies] contato #${contactId} removido`)
-    const updated = await api.get<Contact[]>(`/api/contacts`)
-    setAllContacts(updated)
+  async function handleUnassignContact(contactId: number) {
+    console.log(`[Companies] removendo contato #${contactId} da empresa...`)
+    try {
+      await companiesService.unassignContact(contactId)
+      console.log(`[Companies] contato #${contactId} removido`)
+      const updated = await contactsService.list()
+      setAllContacts(updated)
+    } catch (e) {
+      console.error(`[Companies] erro ao remover contato:`, e)
+    }
   }
 
   return {
@@ -102,9 +118,9 @@ export function useCompanies() {
     startEdit,
     cancelEdit,
     saveEdit,
-    createCompany,
-    deleteCompany,
+    createCompany: createNewCompany,
+    deleteCompany: handleDeleteCompany,
     companyContacts,
-    unassignContact,
+    unassignContact: handleUnassignContact,
   }
 }

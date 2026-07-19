@@ -23,6 +23,29 @@
   font-size: 18px;
 }
 
+.headerActions {
+  display: flex;
+  gap: 8px;
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: var(--primary);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.addBtn:hover {
+  background: var(--primary-hover);
+}
+
 .search {
   display: flex;
   align-items: center;

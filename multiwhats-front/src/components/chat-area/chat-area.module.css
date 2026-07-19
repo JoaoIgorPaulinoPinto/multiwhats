@@ -120,3 +120,11 @@
 .send:hover {
   background: var(--primary-hover) !important;
 }
+
+.error {
+  padding: 10px 16px;
+  background: var(--danger-bg, #fef2f2);
+  color: var(--danger, #dc2626);
+  font-size: 13px;
+  border-top: 1px solid var(--danger-border, #fecaca);
+}

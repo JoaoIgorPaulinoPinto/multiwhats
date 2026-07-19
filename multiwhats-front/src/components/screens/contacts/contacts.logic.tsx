@@ -1,28 +1,34 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { api, type Contact, type Client } from "../../../services/api"
+import { contactsService, type ContactResponse } from "../../../services/contacts.service"
+import { companiesService, type ClientResponse } from "../../../services/companies.service"
 
 export function useContacts() {
-  const [contacts, setContacts] = useState<Contact[]>([])
-  const [clients, setClients] = useState<Client[]>([])
-  const [editing, setEditing] = useState<Contact | null>(null)
+  const [contacts, setContacts] = useState<ContactResponse[]>([])
+  const [clients, setClients] = useState<ClientResponse[]>([])
+  const [editing, setEditing] = useState<ContactResponse | null>(null)
+  const [creating, setCreating] = useState(false)
+  const [formJid, setFormJid] = useState("")
+  const [formPhone, setFormPhone] = useState("")
   const [formName, setFormName] = useState("")
   const [formPushName, setFormPushName] = useState("")
   const [assignClientId, setAssignClientId] = useState<number | null>(null)
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    console.log(`[Contacts] carregando lista...`)
+  const loadData = () =>
     Promise.all([
-      api.get<Contact[]>("/api/contacts"),
-      api.get<Client[]>("/api/clients"),
+      contactsService.list(),
+      companiesService.list(),
     ]).then(([c, cl]) => {
-      console.log(`[Contacts] ${c.length} contatos, ${cl.length} empresas carregados`)
       setContacts(c)
       setClients(cl)
-    }).catch((e) => console.error(`[Contacts] erro ao carregar:`, e)).finally(() => setLoading(false))
+    })
+
+  useEffect(() => {
+    console.log(`[Contacts] carregando lista...`)
+    loadData().catch((e) => console.error(`[Contacts] erro ao carregar:`, e)).finally(() => setLoading(false))
   }, [])
 
   const filtered = contacts.filter((c) => {
@@ -30,45 +36,86 @@ export function useContacts() {
     return (c.name ?? c.pushName ?? c.phoneNumber).toLowerCase().includes(q)
   })
 
-  function startEdit(contact: Contact) {
+  function resetForm() {
+    setFormJid("")
+    setFormPhone("")
+    setFormName("")
+    setFormPushName("")
+    setAssignClientId(null)
+  }
+
+  function startCreate() {
+    resetForm()
+    setCreating(true)
+    setEditing(null)
+  }
+
+  function startEdit(contact: ContactResponse) {
+    setCreating(false)
     setEditing(contact)
+    setFormJid(contact.jid)
+    setFormPhone(contact.phoneNumber)
     setFormName(contact.name ?? "")
     setFormPushName(contact.pushName ?? "")
     setAssignClientId(contact.clientId)
   }
 
   function cancelEdit() {
+    setCreating(false)
     setEditing(null)
-    setFormName("")
-    setFormPushName("")
-    setAssignClientId(null)
+    resetForm()
   }
 
   async function saveEdit() {
     if (!editing) return
-    console.log(`[Contacts] salvando contato #${editing.id}: nome="${formName}", pushName="${formPushName}", clientId=${assignClientId}`)
-    await api.put(`/api/contacts/${editing.id}`, { name: formName, pushName: formPushName })
-    if (assignClientId !== editing.clientId) {
-      if (assignClientId) {
-        console.log(`[Contacts] atribuindo contato #${editing.id} ao cliente #${assignClientId}`)
-        await api.patch(`/api/contacts/${editing.id}/assign`, { clientId: assignClientId })
-      } else {
-        console.log(`[Contacts] desatrelar contato #${editing.id} do cliente`)
-        await api.patch(`/api/contacts/${editing.id}/unassign`)
+    console.log(`[Contacts] salvando contato #${editing.id}...`)
+    try {
+      await contactsService.update(editing.id, { name: formName, pushName: formPushName })
+      if (assignClientId !== editing.clientId) {
+        if (assignClientId) {
+          await contactsService.assign(editing.id, assignClientId)
+        } else {
+          await contactsService.unassign(editing.id)
+        }
       }
+      console.log(`[Contacts] contato #${editing.id} atualizado`)
+      const updated = await contactsService.getById(editing.id)
+      setContacts((prev) => prev.map((c) => (c.id === editing.id ? updated : c)))
+      cancelEdit()
+    } catch (e) {
+      console.error(`[Contacts] erro ao salvar:`, e)
     }
-    const updated = await api.get<Contact>(`/api/contacts/${editing.id}`)
-    console.log(`[Contacts] contato #${editing.id} atualizado`)
-    setContacts((prev) => prev.map((c) => (c.id === editing.id ? updated : c)))
-    cancelEdit()
   }
 
-  async function deleteContact(id: number) {
-    console.log(`[Contacts] deletando contato #${id}`)
-    await api.delete(`/api/contacts/${id}`)
-    console.log(`[Contacts] contato #${id} deletado`)
-    setContacts((prev) => prev.filter((c) => c.id !== id))
+  async function createContact() {
+    console.log(`[Contacts] criando contato...`)
+    try {
+      await contactsService.create({
+        jid: formJid,
+        phoneNumber: formPhone,
+        name: formName || undefined,
+        pushName: formPushName || undefined,
+      })
+      console.log(`[Contacts] contato criado`)
+      await loadData()
+      cancelEdit()
+    } catch (e) {
+      console.error(`[Contacts] erro ao criar:`, e)
+    }
   }
+
+  async function handleDeleteContact(id: number) {
+    console.log(`[Contacts] deletando contato #${id}...`)
+    try {
+      await contactsService.delete(id)
+      console.log(`[Contacts] contato #${id} deletado`)
+      setContacts((prev) => prev.filter((c) => c.id !== id))
+    } catch (e) {
+      console.error(`[Contacts] erro ao deletar:`, e)
+    }
+  }
+
+  const modalOpen = creating || editing !== null
 
   return {
     contacts: filtered,
@@ -76,16 +123,24 @@ export function useContacts() {
     loading,
     search,
     setSearch,
+    creating,
     editing,
+    formJid,
+    formPhone,
     formName,
     formPushName,
     assignClientId,
+    setFormJid,
+    setFormPhone,
     setFormName,
     setFormPushName,
     setAssignClientId,
+    startCreate,
     startEdit,
     cancelEdit,
     saveEdit,
-    deleteContact,
+    createContact,
+    deleteContact: handleDeleteContact,
+    modalOpen,
   }
 }
