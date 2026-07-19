@@ -15,5 +15,6 @@ public record CreateOccurrenceRequest
     public Priority Priority { get; init; } = Priority.Medium;
 
     [Required]
-    public int ContactId { get; init; }
+    public int ChatId { get; init; }
 }
+

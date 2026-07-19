@@ -13,6 +13,4 @@ public interface IContactRepository
     Task<bool> DeleteAsync(int id);
     Task<List<Contact>> GetByClientAsync(int clientId);
     Task<List<Contact>> GetByGroupAsync(int groupId);
-    Task<List<Message>> GetMessagesAsync(int contactId);
-    Task<List<Occurrence>> GetOccurrencesAsync(int contactId);
 }

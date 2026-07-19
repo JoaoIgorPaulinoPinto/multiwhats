@@ -6,6 +6,6 @@ public interface IGetMessagesUseCase
 {
     Task<List<MessageResponse>> ExecuteAll();
     Task<MessageResponse?> ExecuteById(int id);
-    Task<List<MessageResponse>> ExecuteByContact(int contactId);
+    Task<PaginatedResponse<MessageResponse>> ExecuteByChat(int chatId, int page, int pageSize);
     Task<List<MessageResponse>> ExecuteByPhoneNumber(string phoneNumber);
 }

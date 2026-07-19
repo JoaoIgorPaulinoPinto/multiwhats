@@ -1,4 +1,4 @@
-@host = http://localhost:51563
+@host = http://localhost:5261
 # Cole o token gerado aqui para ser usado em todas as requisições automaticamente
 @token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiSm9hbyBJZ29yIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiU3VwcG9ydCIsImp0aSI6IjM5NmZmMTI0LTcyN2YtNGJiZi05NGYwLWI5NjJhOTM1MmE0ZiIsImlhdCI6IjE3ODQzOTU4MDQiLCJleHAiOjE3ODQ0MjQ2MDQsImlzcyI6Ik1pbmhhQXBpRW1pc3NvciIsImF1ZCI6Ik1ldUFwcENsaWVudGUifQ.kDM-D31sc6Aj2Q8qqBasAjaz69AU1OA8XzpWoVALJ6Y
 
@@ -83,7 +83,7 @@ GET {{host}}/api/contacts
 Authorization: Bearer {{token}}
 
 ### Buscar Contato por ID
-GET {{host}}/api/contacts/7
+GET {{host}}/api/contacts/1
 Authorization: Bearer {{token}}
 
 ### Atualizar Contato
@@ -142,7 +142,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "phoneNumber": "5515996880359",
+  "phoneNumber": "5515997076327",
   "text": "O multi-whats está funcionando!!"
 }
 

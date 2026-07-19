@@ -8,9 +8,9 @@ const { Client, LocalAuth } = pkg;
 const app = express();
 app.use(express.json());
 
-const PORT = 3000;
+const PORT = 3333;
 // URL da sua API ASP.NET que vai processar e salvar as mensagens recebidas
-    const ASPNET_WEBHOOK_URL = "http://127.0.0.1:51563/api/webhook/whatsapp";
+const ASPNET_WEBHOOK_URL = "http://127.0.0.1:5261/api/webhook/whatsapp";
 
 // ==========================================
 // 1. INICIALIZAÇÃO DO WHATSAPP-WEB.JS

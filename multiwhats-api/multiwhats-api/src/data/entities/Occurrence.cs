@@ -28,11 +28,11 @@ public class Occurrence : BaseEntity
     public Priority Priority { get; private set; } = Priority.Medium;
 
     [Required]
-    [Column("contact_id")]
-    public int ContactId { get; private set; }
+    [Column("chat_id")]
+    public int ChatId { get; private set; }
 
-    [ForeignKey(nameof(ContactId))]
-    public Contact Contact { get; private set; } = null!;
+    [ForeignKey(nameof(ChatId))]
+    public Chat Chat { get; private set; } = null!;
 
     [Column("assigned_to_user_id")]
     public int? AssignedToUserId { get; private set; }
@@ -49,14 +49,14 @@ public class Occurrence : BaseEntity
 
     public Occurrence(
         string title,
-        int contactId,
+        int chatId,
         int? createdByUserId = null,
         string? description = null,
         Priority priority = Priority.Medium,
         int? assignedToUserId = null)
     {
         Title = title ?? throw new ArgumentNullException(nameof(title));
-        ContactId = contactId;
+        ChatId = chatId;
         CreatedByUserId = createdByUserId;
         Description = description;
         Priority = priority;

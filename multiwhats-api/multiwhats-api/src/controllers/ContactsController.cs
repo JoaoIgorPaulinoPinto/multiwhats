@@ -102,12 +102,4 @@ public class ContactsController : ControllerBase
         }
     }
 
-    [HttpGet("{id}/messages")]
-    public async Task<IActionResult> GetMessages(int id)
-    {
-        var contact = await _getContactsUseCase.ExecuteById(id);
-        if (contact == null)
-            return NotFound(new { message = "Contato não encontrado." });
-        return Ok(contact);
-    }
 }

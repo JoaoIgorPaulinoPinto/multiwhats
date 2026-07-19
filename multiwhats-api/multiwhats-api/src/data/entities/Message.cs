@@ -77,11 +77,11 @@ public class Message : BaseEntity
     [Column("is_forwarded")]
     public bool IsForwarded { get; private set; }
 
-    [Column("contact_id")]
-    public int? ContactId { get; private set; }
+    [Column("chat_id")]
+    public int ChatId { get; private set; }
 
-    [ForeignKey(nameof(ContactId))]
-    public Contact? Contact { get; private set; }
+    [ForeignKey(nameof(ChatId))]
+    public Chat Chat { get; private set; } = null!;
 
     [Column("user_id")]
     public int? UserId { get; private set; }
@@ -110,7 +110,7 @@ public class Message : BaseEntity
         MessageDirection direction,
         MessageType type,
         long timestamp,
-        int? contactId = null,
+        int chatId,
         int? userId = null,
         int? occurrenceId = null,
         string? toJid = null,
@@ -132,7 +132,7 @@ public class Message : BaseEntity
         Type = type;
         Timestamp = timestamp;
         SentAt = DateTimeOffset.FromUnixTimeSeconds(timestamp).UtcDateTime;
-        ContactId = contactId;
+        ChatId = chatId;
         UserId = userId;
         OccurrenceId = occurrenceId;
         ToJid = toJid;

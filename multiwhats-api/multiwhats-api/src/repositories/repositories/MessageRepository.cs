@@ -26,7 +26,7 @@ public class MessageRepository : IMessageRepository
     {
         return await _context.Messages
             .AsNoTracking()
-            .Include(m => m.Contact)
+            .Include(m => m.Chat)
             .Include(m => m.Occurrence)
             .FirstOrDefaultAsync(m => m.Id == id);
     }
@@ -50,13 +50,20 @@ public class MessageRepository : IMessageRepository
         return false;
     }
 
-    public async Task<List<Message>> GetByContactAsync(int contactId)
+    public async Task<List<Message>> GetByChatAsync(int chatId, int page, int pageSize)
     {
         return await _context.Messages
             .AsNoTracking()
-            .Where(m => m.ContactId == contactId)
+            .Where(m => m.ChatId == chatId)
             .OrderByDescending(m => m.Timestamp)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+    }
+
+    public async Task<int> GetByChatTotalCountAsync(int chatId)
+    {
+        return await _context.Messages.CountAsync(m => m.ChatId == chatId);
     }
 
     public async Task<List<Message>> GetByOccurrenceAsync(int occurrenceId)

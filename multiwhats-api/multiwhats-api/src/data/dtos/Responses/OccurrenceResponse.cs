@@ -9,8 +9,9 @@ public record OccurrenceResponse
     public string? Description { get; init; }
     public OccurrenceStatus Status { get; init; }
     public Priority Priority { get; init; }
-    public int ContactId { get; init; }
+    public int ChatId { get; init; }
     public int? AssignedToUserId { get; init; }
+    public string? ChatName { get; init; }
     public string? AssignedToName { get; init; }
     public int? CreatedByUserId { get; init; }
     public string? CreatedByName { get; init; }

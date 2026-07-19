@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<Client> Clients { get; set; }
+    public DbSet<Chat> Chats { get; set; }
     public DbSet<Contact> Contacts { get; set; }
     public DbSet<Message> Messages { get; set; }
     public DbSet<Occurrence> Occurrences { get; set; }
@@ -31,6 +32,26 @@ public class AppDbContext : DbContext
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
 
+        modelBuilder.Entity<Chat>(entity =>
+        {
+            entity.ToTable("Chats");
+            entity.HasIndex(e => e.Jid).IsUnique();
+            entity.HasIndex(e => e.PhoneNumber);
+            entity.HasOne(e => e.Contact)
+                  .WithOne(c => c.Chat)
+                  .HasForeignKey<Chat>(e => e.ContactId)
+                  .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(e => e.Client)
+                  .WithMany(c => c.Chats)
+                  .HasForeignKey(e => e.ClientId)
+                  .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(e => e.AssignedTo)
+                  .WithMany()
+                  .HasForeignKey(e => e.AssignedToUserId)
+                  .OnDelete(DeleteBehavior.SetNull);
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
         modelBuilder.Entity<Contact>(entity =>
         {
             entity.ToTable("Contacts");
@@ -49,6 +70,10 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.MessageId);
             entity.HasIndex(e => e.PhoneNumber);
             entity.HasIndex(e => e.Timestamp);
+            entity.HasOne(e => e.Chat)
+                  .WithMany(c => c.Messages)
+                  .HasForeignKey(e => e.ChatId)
+                  .OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.ReplyTo)
                   .WithMany()
                   .HasForeignKey(e => e.ReplyToId)
@@ -65,6 +90,10 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Priority)
                   .HasConversion<string>()
                   .HasMaxLength(20);
+            entity.HasOne(e => e.Chat)
+                  .WithMany(c => c.Occurrences)
+                  .HasForeignKey(e => e.ChatId)
+                  .OnDelete(DeleteBehavior.Cascade);
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
 

@@ -26,9 +26,9 @@ public class GetOccurrencesUseCase : IGetOccurrencesUseCase
         return occurrence != null ? MapResponse(occurrence) : null;
     }
 
-    public async Task<List<OccurrenceResponse>> ExecuteByContact(int contactId)
+    public async Task<List<OccurrenceResponse>> ExecuteByChat(int chatId)
     {
-        var occurrences = await _occurrenceRepository.GetByContactAsync(contactId);
+        var occurrences = await _occurrenceRepository.GetByChatAsync(chatId);
         return MapResponses(occurrences);
     }
 
@@ -39,7 +39,8 @@ public class GetOccurrencesUseCase : IGetOccurrencesUseCase
         Description = o.Description,
         Status = o.Status,
         Priority = o.Priority,
-        ContactId = o.ContactId,
+        ChatId = o.ChatId,
+        ChatName = o.Chat?.Name ?? o.Chat?.PhoneNumber,
         AssignedToUserId = o.AssignedToUserId,
         AssignedToName = o.AssignedTo?.Name,
         CreatedByUserId = o.CreatedByUserId,

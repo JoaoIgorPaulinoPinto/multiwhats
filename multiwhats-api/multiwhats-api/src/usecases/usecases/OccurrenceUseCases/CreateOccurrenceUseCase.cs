@@ -19,7 +19,7 @@ public class CreateOccurrenceUseCase : ICreateOccurrenceUseCase
     {
         var occurrence = new Occurrence(
             request.Title,
-            request.ContactId,
+            request.ChatId,
             userId,
             request.Description,
             request.Priority
@@ -34,7 +34,7 @@ public class CreateOccurrenceUseCase : ICreateOccurrenceUseCase
             Description = created.Description,
             Status = created.Status,
             Priority = created.Priority,
-            ContactId = created.ContactId,
+            ChatId = created.ChatId,
             AssignedToUserId = created.AssignedToUserId,
             CreatedByUserId = created.CreatedByUserId,
             CreatedAt = created.CreatedAt,

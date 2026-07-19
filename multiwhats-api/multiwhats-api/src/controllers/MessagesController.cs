@@ -52,14 +52,6 @@ public class MessagesController : ControllerBase
         return Ok(message);
     }
 
-    [HttpGet("contact/{contactId}")]
-    [Authorize]
-    public async Task<IActionResult> GetByContact(int contactId)
-    {
-        var messages = await _getMessagesUseCase.ExecuteByContact(contactId);
-        return Ok(messages);
-    }
-
     [HttpGet("phone/{phoneNumber}")]
     [Authorize]
     public async Task<IActionResult> GetByPhoneNumber(string phoneNumber)

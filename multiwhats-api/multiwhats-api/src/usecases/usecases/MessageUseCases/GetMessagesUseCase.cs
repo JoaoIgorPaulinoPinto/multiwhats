@@ -27,10 +27,19 @@ public class GetMessagesUseCase : IGetMessagesUseCase
         return message != null ? MapToResponse(message) : null;
     }
 
-    public async Task<List<MessageResponse>> ExecuteByContact(int contactId)
+    public async Task<PaginatedResponse<MessageResponse>> ExecuteByChat(int chatId, int page, int pageSize)
     {
-        var messages = await _messageRepository.GetByContactAsync(contactId);
-        return messages.Select(MapToResponse).ToList();
+        var messages = await _messageRepository.GetByChatAsync(chatId, page, pageSize);
+        var totalCount = await _messageRepository.GetByChatTotalCountAsync(chatId);
+
+        return new PaginatedResponse<MessageResponse>
+        {
+            Items = messages.Select(MapToResponse).ToList(),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize,
+            TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+        };
     }
 
     public async Task<List<MessageResponse>> ExecuteByPhoneNumber(string phoneNumber)
@@ -62,7 +71,7 @@ public class GetMessagesUseCase : IGetMessagesUseCase
             MediaCaption = message.MediaCaption,
             DeliveryStatus = message.DeliveryStatus,
             IsForwarded = message.IsForwarded,
-            ContactId = message.ContactId,
+            ChatId = message.ChatId,
             UserId = message.UserId,
             OccurrenceId = message.OccurrenceId,
             ReplyToId = message.ReplyToId,

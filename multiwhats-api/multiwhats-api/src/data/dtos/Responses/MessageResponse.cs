@@ -26,7 +26,7 @@ public record MessageResponse
     public DeliveryStatus DeliveryStatus { get; init; }
     public bool IsForwarded { get; init; }
 
-    public int? ContactId { get; init; }
+    public int ChatId { get; init; }
     public int? UserId { get; init; }
     public int? OccurrenceId { get; init; }
     public int? ReplyToId { get; init; }

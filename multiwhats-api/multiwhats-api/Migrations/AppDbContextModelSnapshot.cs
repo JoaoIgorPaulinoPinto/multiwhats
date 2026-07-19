@@ -88,6 +88,86 @@ namespace multiwhats_api.Migrations
                     b.ToTable("AuditLogs", (string)null);
                 });
 
+            modelBuilder.Entity("multiwhats_api.src.data.entities.Chat", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AssignedToUserId")
+                        .HasColumnType("int")
+                        .HasColumnName("assigned_to_user_id");
+
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("int")
+                        .HasColumnName("client_id");
+
+                    b.Property<int?>("ContactId")
+                        .HasColumnType("int")
+                        .HasColumnName("contact_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Jid")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("jid");
+
+                    b.Property<DateTime?>("LastMessageAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("last_message_at");
+
+                    b.Property<string>("LastMessageBody")
+                        .HasColumnType("longtext")
+                        .HasColumnName("last_message_body");
+
+                    b.Property<DateTime>("LastUpdate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("LastUpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("phone_number");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedToUserId");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("ContactId")
+                        .IsUnique();
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("Jid")
+                        .IsUnique();
+
+                    b.HasIndex("PhoneNumber");
+
+                    b.ToTable("Chats", (string)null);
+                });
+
             modelBuilder.Entity("multiwhats_api.src.data.entities.Client", b =>
                 {
                     b.Property<int>("Id")
@@ -349,9 +429,9 @@ namespace multiwhats_api.Migrations
                         .HasColumnType("longtext")
                         .HasColumnName("body");
 
-                    b.Property<int?>("ContactId")
+                    b.Property<int>("ChatId")
                         .HasColumnType("int")
-                        .HasColumnName("contact_id");
+                        .HasColumnName("chat_id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -461,7 +541,7 @@ namespace multiwhats_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ContactId");
+                    b.HasIndex("ChatId");
 
                     b.HasIndex("MessageId");
 
@@ -491,9 +571,9 @@ namespace multiwhats_api.Migrations
                         .HasColumnType("int")
                         .HasColumnName("assigned_to_user_id");
 
-                    b.Property<int>("ContactId")
+                    b.Property<int>("ChatId")
                         .HasColumnType("int")
-                        .HasColumnName("contact_id");
+                        .HasColumnName("chat_id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -537,7 +617,7 @@ namespace multiwhats_api.Migrations
 
                     b.HasIndex("AssignedToUserId");
 
-                    b.HasIndex("ContactId");
+                    b.HasIndex("ChatId");
 
                     b.HasIndex("CreatedByUserId");
 
@@ -597,6 +677,36 @@ namespace multiwhats_api.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("multiwhats_api.src.data.entities.Chat", b =>
+                {
+                    b.HasOne("multiwhats_api.src.data.entities.User", "AssignedTo")
+                        .WithMany()
+                        .HasForeignKey("AssignedToUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("multiwhats_api.src.data.entities.Client", "Client")
+                        .WithMany("Chats")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("multiwhats_api.src.data.entities.Contact", "Contact")
+                        .WithOne("Chat")
+                        .HasForeignKey("multiwhats_api.src.data.entities.Chat", "ContactId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("multiwhats_api.src.data.entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId");
+
+                    b.Navigation("AssignedTo");
+
+                    b.Navigation("Client");
+
+                    b.Navigation("Contact");
+
+                    b.Navigation("CreatedBy");
+                });
+
             modelBuilder.Entity("multiwhats_api.src.data.entities.ClientTask", b =>
                 {
                     b.HasOne("multiwhats_api.src.data.entities.User", "AssignedTo")
@@ -644,9 +754,11 @@ namespace multiwhats_api.Migrations
 
             modelBuilder.Entity("multiwhats_api.src.data.entities.Message", b =>
                 {
-                    b.HasOne("multiwhats_api.src.data.entities.Contact", "Contact")
+                    b.HasOne("multiwhats_api.src.data.entities.Chat", "Chat")
                         .WithMany("Messages")
-                        .HasForeignKey("ContactId");
+                        .HasForeignKey("ChatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("multiwhats_api.src.data.entities.Occurrence", "Occurrence")
                         .WithMany("Messages")
@@ -661,7 +773,7 @@ namespace multiwhats_api.Migrations
                         .WithMany()
                         .HasForeignKey("UserId");
 
-                    b.Navigation("Contact");
+                    b.Navigation("Chat");
 
                     b.Navigation("Occurrence");
 
@@ -676,9 +788,9 @@ namespace multiwhats_api.Migrations
                         .WithMany()
                         .HasForeignKey("AssignedToUserId");
 
-                    b.HasOne("multiwhats_api.src.data.entities.Contact", "Contact")
+                    b.HasOne("multiwhats_api.src.data.entities.Chat", "Chat")
                         .WithMany("Occurrences")
-                        .HasForeignKey("ContactId")
+                        .HasForeignKey("ChatId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -688,13 +800,22 @@ namespace multiwhats_api.Migrations
 
                     b.Navigation("AssignedTo");
 
-                    b.Navigation("Contact");
+                    b.Navigation("Chat");
 
                     b.Navigation("CreatedBy");
                 });
 
+            modelBuilder.Entity("multiwhats_api.src.data.entities.Chat", b =>
+                {
+                    b.Navigation("Messages");
+
+                    b.Navigation("Occurrences");
+                });
+
             modelBuilder.Entity("multiwhats_api.src.data.entities.Client", b =>
                 {
+                    b.Navigation("Chats");
+
                     b.Navigation("Contacts");
 
                     b.Navigation("Tasks");
@@ -702,9 +823,7 @@ namespace multiwhats_api.Migrations
 
             modelBuilder.Entity("multiwhats_api.src.data.entities.Contact", b =>
                 {
-                    b.Navigation("Messages");
-
-                    b.Navigation("Occurrences");
+                    b.Navigation("Chat");
                 });
 
             modelBuilder.Entity("multiwhats_api.src.data.entities.Group", b =>

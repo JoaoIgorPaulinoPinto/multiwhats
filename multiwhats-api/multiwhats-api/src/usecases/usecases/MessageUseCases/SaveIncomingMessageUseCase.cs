@@ -1,10 +1,8 @@
-using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.data.dtos.Webhook;
 using multiwhats_api.src.data.enums;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.helpers;
 using multiwhats_api.src.repositories.interfaces;
-using multiwhats_api.src.usecases.interfaces.ContactInterfaces;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
 
 namespace multiwhats_api.src.usecases.usecases.MessageUseCases;
@@ -12,15 +10,18 @@ namespace multiwhats_api.src.usecases.usecases.MessageUseCases;
 public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
 {
     private readonly IMessageRepository _messageRepository;
+    private readonly IChatRepository _chatRepository;
     private readonly IContactRepository _contactRepository;
     private readonly IUserRepository _userRepository;
 
     public SaveIncomingMessageUseCase(
         IMessageRepository repository,
+        IChatRepository chatRepository,
         IContactRepository contactRepository,
         IUserRepository userRepository)
     {
         _messageRepository = repository;
+        _chatRepository = chatRepository;
         _contactRepository = contactRepository;
         _userRepository = userRepository;
     }
@@ -28,17 +29,33 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
     public async Task<bool> Execute(WhatsAppWebhookDto payload)
     {
         var phoneNumber = PhoneNumberHelper.Sanitize(payload.PhoneNumber);
-        var contact = await _contactRepository.GetByPhoneNumberAsync(phoneNumber);
 
-        if (contact == null)
+        var chat = await _chatRepository.GetByJidAsync(payload.From);
+        if (chat == null)
         {
-            var newContact = new Contact(
+            var contact = await _contactRepository.GetByPhoneNumberAsync(phoneNumber);
+
+            chat = new Chat(
                 payload.From,
                 phoneNumber,
-                payload.NotifyName,
-                payload.NotifyName
+                payload.NotifyName ?? contact?.Name,
+                contactId: contact?.Id,
+                clientId: contact?.ClientId
             );
-            contact = await _contactRepository.AddAsync(newContact);
+
+            chat = await _chatRepository.AddAsync(chat);
+        }
+        else
+        {
+            if (chat.ContactId == null)
+            {
+                var contact = await _contactRepository.GetByPhoneNumberAsync(phoneNumber);
+                if (contact != null)
+                {
+                    chat.LinkToContact(contact.Id, contact.ClientId);
+                    await _chatRepository.UpdateAsync(chat);
+                }
+            }
         }
 
         var user = await _userRepository.GetByIdAsync(payload.UserId);
@@ -56,14 +73,16 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
             _ => MessageType.Text
         };
 
+        var timestamp = payload.Timestamp;
+
         var message = new Message(
             fromJid: payload.From,
             phoneNumber: phoneNumber,
             body: payload.Body,
             direction: MessageDirection.Incoming,
             type: messageType,
-            timestamp: payload.Timestamp,
-            contactId: contact.Id,
+            timestamp: timestamp,
+            chatId: chat.Id,
             userId: userId,
             messageId: payload.MessageId,
             notifyName: payload.NotifyName,
@@ -76,6 +95,11 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         );
 
         await _messageRepository.AddAsync(message);
+
+        var sentAt = DateTimeOffset.FromUnixTimeSeconds(timestamp).UtcDateTime;
+        chat.UpdateLastMessage(sentAt, payload.Body);
+        await _chatRepository.UpdateAsync(chat);
+
         return true;
     }
 }

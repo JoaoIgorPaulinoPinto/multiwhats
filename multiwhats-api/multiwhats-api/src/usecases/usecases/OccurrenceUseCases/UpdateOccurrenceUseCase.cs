@@ -30,7 +30,7 @@ public class UpdateOccurrenceUseCase : IUpdateOccurrenceUseCase
             Description = updated.Description,
             Status = updated.Status,
             Priority = updated.Priority,
-            ContactId = updated.ContactId,
+            ChatId = updated.ChatId,
             AssignedToUserId = updated.AssignedToUserId,
             CreatedByUserId = updated.CreatedByUserId,
             CreatedAt = updated.CreatedAt,

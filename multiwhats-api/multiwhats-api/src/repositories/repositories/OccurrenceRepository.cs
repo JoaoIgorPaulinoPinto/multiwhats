@@ -18,7 +18,7 @@ public class OccurrenceRepository : IOccurrenceRepository
     {
         return await _context.Occurrences
             .AsNoTracking()
-            .Include(o => o.Contact)
+            .Include(o => o.Chat)
             .Include(o => o.AssignedTo)
             .OrderByDescending(o => o.CreatedAt)
             .ToListAsync();
@@ -28,7 +28,7 @@ public class OccurrenceRepository : IOccurrenceRepository
     {
         return await _context.Occurrences
             .AsNoTracking()
-            .Include(o => o.Contact)
+            .Include(o => o.Chat)
             .Include(o => o.AssignedTo)
             .Include(o => o.CreatedBy)
             .Include(o => o.Messages)
@@ -61,11 +61,11 @@ public class OccurrenceRepository : IOccurrenceRepository
         return false;
     }
 
-    public async Task<List<Occurrence>> GetByContactAsync(int contactId)
+    public async Task<List<Occurrence>> GetByChatAsync(int chatId)
     {
         return await _context.Occurrences
             .AsNoTracking()
-            .Where(o => o.ContactId == contactId)
+            .Where(o => o.ChatId == chatId)
             .OrderByDescending(o => o.CreatedAt)
             .ToListAsync();
     }

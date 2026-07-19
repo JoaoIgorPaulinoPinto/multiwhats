@@ -57,8 +57,7 @@ public class Contact : BaseEntity
     [ForeignKey(nameof(CreatedByUserId))]
     public User? CreatedBy { get; private set; }
 
-    public ICollection<Message> Messages { get; private set; } = new List<Message>();
-    public ICollection<Occurrence> Occurrences { get; private set; } = new List<Occurrence>();
+    public Chat? Chat { get; private set; }
 
     private Contact() { }
 

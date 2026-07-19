@@ -30,7 +30,6 @@ public class ContactRepository : IContactRepository
             .AsNoTracking()
             .Include(c => c.Client)
             .Include(c => c.Group)
-            .Include(c => c.Messages)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
@@ -95,21 +94,4 @@ public class ContactRepository : IContactRepository
             .ToListAsync();
     }
 
-    public async Task<List<Message>> GetMessagesAsync(int contactId)
-    {
-        return await _context.Messages
-            .AsNoTracking()
-            .Where(m => m.ContactId == contactId)
-            .OrderByDescending(m => m.Timestamp)
-            .ToListAsync();
-    }
-
-    public async Task<List<Occurrence>> GetOccurrencesAsync(int contactId)
-    {
-        return await _context.Occurrences
-            .AsNoTracking()
-            .Where(o => o.ContactId == contactId)
-            .OrderByDescending(o => o.CreatedAt)
-            .ToListAsync();
-    }
 }

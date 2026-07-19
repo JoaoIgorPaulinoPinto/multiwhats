@@ -25,6 +25,7 @@ public class Client : BaseEntity
     public ClientStatus Status { get; private set; } = ClientStatus.Active;
 
     public ICollection<Contact> Contacts { get; private set; } = new List<Contact>();
+    public ICollection<Chat> Chats { get; private set; } = new List<Chat>();
     public ICollection<ClientTask> Tasks { get; private set; } = new List<ClientTask>();
 
     private Client() { }

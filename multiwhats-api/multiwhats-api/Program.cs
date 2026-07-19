@@ -7,12 +7,14 @@ using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.repositories.repositories;
 using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.AuthInterfaces;
+using multiwhats_api.src.usecases.interfaces.ChatInterfaces;
 using multiwhats_api.src.usecases.interfaces.ContactInterfaces;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
 using multiwhats_api.src.usecases.interfaces.ClientInterfaces;
 using multiwhats_api.src.usecases.interfaces.OccurrenceInterfaces;
 using multiwhats_api.src.usecases.interfaces.TaskInterfaces;
 using multiwhats_api.src.usecases.usecases.AuthUseCases;
+using multiwhats_api.src.usecases.usecases.ChatUseCases;
 using multiwhats_api.src.usecases.usecases.ContactUseCases;
 using multiwhats_api.src.usecases.usecases.MessageUseCases;
 using multiwhats_api.src.usecases.usecases.ClientUseCases;
@@ -41,7 +43,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("Xampp");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         connectionString,
@@ -50,6 +52,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Repositories
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
+builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IContactRepository, ContactRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IOccurrenceRepository, OccurrenceRepository>();
@@ -61,6 +64,10 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRegisterUserUseCase, RegisterUserUseCase>();
 builder.Services.AddScoped<ILoginUseCase, LoginUseCase>();
 builder.Services.AddScoped<ILogoutUseCase, LogoutUseCase>();
+
+// Chat Use Cases
+builder.Services.AddScoped<ICreateChatUseCase, CreateChatUseCase>();
+builder.Services.AddScoped<IGetChatsUseCase, GetChatsUseCase>();
 
 // Contact Use Cases
 builder.Services.AddScoped<ICreateContactUseCase, CreateContactUseCase>();

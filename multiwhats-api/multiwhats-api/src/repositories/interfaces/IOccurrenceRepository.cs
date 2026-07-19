@@ -9,6 +9,6 @@ public interface IOccurrenceRepository
     Task<Occurrence> AddAsync(Occurrence occurrence);
     Task<Occurrence> UpdateAsync(Occurrence occurrence);
     Task<bool> DeleteAsync(int id);
-    Task<List<Occurrence>> GetByContactAsync(int contactId);
+    Task<List<Occurrence>> GetByChatAsync(int chatId);
     Task<List<Occurrence>> GetByUserAsync(int userId);
 }
