@@ -43,7 +43,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-var connectionString = builder.Configuration.GetConnectionString("Xampp");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         connectionString,
@@ -164,6 +164,8 @@ app.MapControllers();
 app.MapHub<WhatsappHub>("/whatsappHub");
 
 // Audit middleware — salva logs ao final de cada requisição
+// Mudar para logs dentro do use case, mais explicativos e rastreaveis
+// CriarContatoUseCase - O usuario ***** criou o contato com o Id **** as ********* (exemplo)
 app.Use(async (context, next) =>
 {
     await next();

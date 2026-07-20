@@ -61,21 +61,26 @@ client.on("ready", async () => {
 client.on("message_create", async (msg) => {
 
     if (msg.from.includes("@newsletter")) return;
+    if (msg.from.includes("@g.us")) return;
     if (msg.fromMe && msg.to !== msg.from) return;
 
     try {
-        // 1. Busca o contato de forma assíncrona (resolve tanto @c.us quanto @lid)
         const contato = await msg.getContact();
 
-        // 2. Aqui você pega o número de telefone real e limpo (ex: 5511999999999)
-        const numeroReal = contato.number;
+        const rawNumber =
+            contato.number ||                          // Tenta do perfil do contato
+            contato.id?.user ||                        // Tenta do ID do contato
+            msg.author?.split('@')[0] ||               // Se for grupo, pega quem enviou
+            msg.from.split('@')[0];                    // Fallback para o JID da mensagem
 
+        const numeroReal = rawNumber ? rawNumber.replace(/\D/g, '') : null;
         console.log("==================================");
         console.log("Nova mensagem recebida");
         console.log("Nome (WhatsApp):", msg._data?.notifyName || contato.pushname);
         console.log("Nome Salvo na Agenda:", contato.name || "Não salvo");
         console.log("JID Original:", msg.from);
         console.log("Número Real Extraído:", numeroReal);
+        console.log("Número Real Extraído 2 teste:", numeroReal);
         console.log("==================================");
 
         // 3. Detecta tipo e mídia
@@ -131,25 +136,22 @@ client.initialize();
 // 2. ENDPOINT PARA O ASP.NET ENVIAR MENSAGENS
 // ==========================================
 app.post('/api/enviar', async (req, res) => {
-    const { numero, mensagem } = req.body;
+    const { jid, mensagem } = req.body;
 
-    if (!numero || !mensagem) {
-        return res.status(400).json({ error: 'Número e mensagem são obrigatórios.' });
+    if (!jid || !mensagem) {
+        return res.status(400).json({ error: 'JID e mensagem são obrigatórios.' });
     }
 
     try {
-        let numeroLimpo = numero.replace(/\D/g, '');
-        const numeroFormatado = `${numeroLimpo}@c.us`;
+        console.log(`[WhatsApp] Tentando enviar mensagem para: ${jid}`);
 
-        console.log(`[WhatsApp] Tentando enviar mensagem para: ${numeroFormatado}`);
-
-        const chat = await client.getChatById(numeroFormatado).catch(() => null);
+        const chat = await client.getChatById(jid).catch(() => null);
 
         let resposta;
         if (chat) {
             resposta = await chat.sendMessage(mensagem);
         } else {
-            resposta = await client.sendMessage(numeroFormatado, mensagem);
+            resposta = await client.sendMessage(jid, mensagem);
         }
 
         const messageId = (resposta && resposta.id && resposta.id._serialized)

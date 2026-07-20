@@ -16,10 +16,9 @@ public class Chat : BaseEntity
     [Column("jid")]
     public string Jid { get; private set; } = null!;
 
-    [Required]
     [MaxLength(20)]
     [Column("phone_number")]
-    public string PhoneNumber { get; private set; } = null!;
+    public string? PhoneNumber { get; private set; }
 
     [MaxLength(150)]
     [Column("name")]
@@ -59,14 +58,14 @@ public class Chat : BaseEntity
 
     public Chat(
         string jid,
-        string phoneNumber,
+        string? phoneNumber = null,
         string? name = null,
         int? contactId = null,
         int? clientId = null,
         int? assignedToUserId = null)
     {
         Jid = jid ?? throw new ArgumentNullException(nameof(jid));
-        PhoneNumber = phoneNumber ?? throw new ArgumentNullException(nameof(phoneNumber));
+        PhoneNumber = phoneNumber;
         Name = name;
         ContactId = contactId;
         ClientId = clientId;

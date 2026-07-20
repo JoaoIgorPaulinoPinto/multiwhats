@@ -12,8 +12,8 @@ using multiwhats_api.src.data.db;
 namespace multiwhats_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260719161952_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20260720165245_JidAsPrimaryIdentifier")]
+    partial class JidAsPrimaryIdentifier
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -147,7 +147,6 @@ namespace multiwhats_api.Migrations
                         .HasColumnName("name");
 
                     b.Property<string>("PhoneNumber")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)")
                         .HasColumnName("phone_number");
@@ -512,7 +511,6 @@ namespace multiwhats_api.Migrations
                         .HasColumnName("occurrence_id");
 
                     b.Property<string>("PhoneNumber")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)")
                         .HasColumnName("phone_number");

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace multiwhats_api.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class MigrateToRailway4 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

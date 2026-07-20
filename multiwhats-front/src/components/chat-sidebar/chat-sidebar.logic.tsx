@@ -9,15 +9,20 @@ export function useChatSidebar() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    console.log(`[ChatSidebar] carregando chats...`)
-    chatsService
-      .listChats()
-      .then((res) => {
-        console.log(`[ChatSidebar] ${res.items.length} chats carregados`)
-        setChats(res.items)
-      })
-      .catch((e) => console.error(`[ChatSidebar] erro ao carregar:`, e))
-      .finally(() => setLoading(false))
+    let active = true
+
+    function load() {
+      chatsService
+        .listChats()
+        .then((res) => { if (active) setChats(res.items) })
+        .catch((e) => console.error(`[ChatSidebar] erro ao carregar:`, e))
+        .finally(() => { if (active) setLoading(false) })
+    }
+
+    load()
+    const interval = setInterval(load, 5000)
+
+    return () => { active = false; clearInterval(interval) }
   }, [])
 
   const filtered = chats.filter((c) => {

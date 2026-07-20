@@ -10,10 +10,12 @@ namespace multiwhats_api.src.usecases.usecases.ContactUseCases;
 public class CreateContactUseCase : ICreateContactUseCase
 {
     private readonly IContactRepository _contactRepository;
+    private readonly IChatRepository _chatRepository;
 
-    public CreateContactUseCase(IContactRepository contactRepository)
+    public CreateContactUseCase(IContactRepository contactRepository, IChatRepository chatRepository)
     {
         _contactRepository = contactRepository;
+        _chatRepository = chatRepository;
     }
 
     public async Task<ContactResponse> Execute(CreateContactRequest request, int userId)
@@ -33,6 +35,13 @@ public class CreateContactUseCase : ICreateContactUseCase
         );
 
         var created = await _contactRepository.AddAsync(contact);
+
+        var existingChat = await _chatRepository.GetByJidAsync(request.Jid);
+        if (existingChat != null)
+        {
+            existingChat.LinkToContact(created.Id, created.ClientId);
+            await _chatRepository.UpdateAsync(existingChat);
+        }
 
         return MapToResponse(created);
     }

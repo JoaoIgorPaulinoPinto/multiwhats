@@ -25,10 +25,9 @@ public class Message : BaseEntity
     [Column("to_jid")]
     public string? ToJid { get; private set; }
 
-    [Required]
     [MaxLength(20)]
     [Column("phone_number")]
-    public string PhoneNumber { get; private set; } = null!;
+    public string? PhoneNumber { get; private set; }
 
     [Column("body")]
     public string? Body { get; private set; }
@@ -105,7 +104,7 @@ public class Message : BaseEntity
 
     public Message(
         string fromJid,
-        string phoneNumber,
+        string? phoneNumber,
         string? body,
         MessageDirection direction,
         MessageType type,
@@ -126,7 +125,7 @@ public class Message : BaseEntity
         int? replyToId = null)
     {
         FromJid = fromJid ?? throw new ArgumentNullException(nameof(fromJid));
-        PhoneNumber = phoneNumber ?? throw new ArgumentNullException(nameof(phoneNumber));
+        PhoneNumber = phoneNumber;
         Body = body;
         Direction = direction;
         Type = type;

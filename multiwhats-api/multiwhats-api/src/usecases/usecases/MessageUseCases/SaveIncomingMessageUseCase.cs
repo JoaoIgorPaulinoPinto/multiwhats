@@ -33,7 +33,7 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         var chat = await _chatRepository.GetByJidAsync(payload.From);
         if (chat == null)
         {
-            var contact = await _contactRepository.GetByPhoneNumberAsync(phoneNumber);
+            var contact = await _contactRepository.GetByJidAsync(payload.From);
 
             chat = new Chat(
                 payload.From,
@@ -49,7 +49,7 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         {
             if (chat.ContactId == null)
             {
-                var contact = await _contactRepository.GetByPhoneNumberAsync(phoneNumber);
+                var contact = await _contactRepository.GetByJidAsync(payload.From);
                 if (contact != null)
                 {
                     chat.LinkToContact(contact.Id, contact.ClientId);

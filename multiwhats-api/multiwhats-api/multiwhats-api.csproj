@@ -36,6 +36,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="Migrations\" />
 	  <Folder Include="Properties\" />
 	  <Folder Include="src\repositories\repositories\" />
 	  <Folder Include="src\usecases\interfaces\ChatInterfaces\" />

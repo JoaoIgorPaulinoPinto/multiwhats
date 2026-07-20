@@ -1,3 +1,9 @@
+-- TODO --
+- Fazer com que as mensagens enviadas de mim fiquem a esquerda (colocar um from_me. se n existir) 
+- log deve ser salvo em um arquivo - e enviado ao banco (talvez ao banco em nuvem do railway apos estar em produção)
+- Habilitar a criação de contato novamente (criar o suporte na API para criar contatos com numero de telefone) 
+- 
+
 ================================================================================
   MULTIWHATS API - DOCUMENTAÇÃO DA ARQUITETURA
 ================================================================================

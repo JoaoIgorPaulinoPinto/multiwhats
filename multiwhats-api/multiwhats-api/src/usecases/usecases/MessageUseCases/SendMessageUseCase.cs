@@ -3,7 +3,6 @@ using System.Text.Json;
 using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.data.enums;
 using multiwhats_api.src.data.entities;
-using multiwhats_api.src.helpers;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
 
@@ -32,11 +31,9 @@ public class SendMessageUseCase : ISendMessageUseCase
     {
         try
         {
-            var phoneNumber = PhoneNumberHelper.Sanitize(request.PhoneNumber);
-
             var payloadNode = new
             {
-                numero = phoneNumber,
+                jid = request.Jid,
                 mensagem = request.Text
             };
 
@@ -56,14 +53,14 @@ public class SendMessageUseCase : ISendMessageUseCase
             var raw = JsonSerializer.Deserialize<JsonElement>(responseBody);
             var messageId = raw.TryGetProperty("messageId", out var mid) ? mid.GetString() : null;
 
-            var fromJid = phoneNumber + "@c.us";
-            var chat = await _chatRepository.GetByJidAsync(fromJid);
+            var chat = await _chatRepository.GetByJidAsync(request.Jid);
             if (chat == null)
             {
-                var contact = await _contactRepository.GetByPhoneNumberAsync(phoneNumber);
+                var phoneNumber = request.Jid.Split('@')[0];
+                var contact = await _contactRepository.GetByJidAsync(request.Jid);
 
                 chat = new Chat(
-                    fromJid,
+                    request.Jid,
                     phoneNumber,
                     contact?.Name,
                     contactId: contact?.Id,
@@ -74,10 +71,11 @@ public class SendMessageUseCase : ISendMessageUseCase
             }
 
             var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var phoneNumberFromJid = request.Jid.Split('@')[0];
 
             var message = new Message(
-                fromJid: fromJid,
-                phoneNumber: phoneNumber,
+                fromJid: request.Jid,
+                phoneNumber: phoneNumberFromJid,
                 body: request.Text,
                 direction: MessageDirection.Outgoing,
                 type: MessageType.Text,

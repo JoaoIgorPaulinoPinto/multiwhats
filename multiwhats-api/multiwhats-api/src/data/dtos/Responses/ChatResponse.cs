@@ -6,7 +6,7 @@ public record ChatResponse
 {
     public int Id { get; init; }
     public string Jid { get; init; } = null!;
-    public string PhoneNumber { get; init; } = null!;
+    public string? PhoneNumber { get; init; }
     public string? Name { get; init; }
     public int? ContactId { get; init; }
     public string? ContactName { get; init; }

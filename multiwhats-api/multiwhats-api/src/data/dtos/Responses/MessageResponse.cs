@@ -8,7 +8,7 @@ public record MessageResponse
     public string? MessageId { get; init; }
     public string FromJid { get; init; } = null!;
     public string? ToJid { get; init; }
-    public string PhoneNumber { get; init; } = null!;
+    public string? PhoneNumber { get; init; }
     public string? Body { get; init; }
     public MessageDirection Direction { get; init; }
     public MessageType Type { get; init; }

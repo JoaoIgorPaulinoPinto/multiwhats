@@ -12,10 +12,10 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
             .AddJsonFile("appsettings.json")
             .Build();
 
-        var connectionString = configuration.GetConnectionString("Xampp");
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
 
         if (string.IsNullOrEmpty(connectionString))
-            throw new InvalidOperationException("Connection string 'Xampp' not found.");
+            throw new InvalidOperationException("Connection string not found.");
 
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
         optionsBuilder.UseMySql(connectionString, ServerVersion.Parse("8.0.0-mysql"));
