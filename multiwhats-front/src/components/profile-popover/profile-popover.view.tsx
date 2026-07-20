@@ -20,6 +20,7 @@ export function ProfilePopoverView() {
 
       {open && (
         <>
+        {console.log(user)}
           <div className={styles.overlay} onClick={close} />
           <div className={styles.popover}>
             <AvatarView name={user?.name ?? "?"} size={64} fontSize={28} />

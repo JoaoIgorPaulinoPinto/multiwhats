@@ -1,11 +1,10 @@
 import { api } from "./api"
 
-export type UserRole = "Support" | "Dev" | "Admin"
 
 export interface UserResponse {
   id: number
   name: string
-  role: UserRole
+  role: string
   isActive: boolean
   createdAt: string
 }

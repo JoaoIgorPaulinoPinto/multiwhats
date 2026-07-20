@@ -1,6 +1,6 @@
 "use client"
 
-import { Pencil, Phone, Plus, Search, Trash2, X } from "lucide-react"
+import { Info, Pencil, Phone, Search, Trash2, X } from "lucide-react"
 import { useContacts } from "./contacts.logic"
 import { AvatarView } from "../../../components/avatar/avatar.view"
 import styles from "./contacts.module.css"
@@ -12,23 +12,15 @@ export function ContactsView() {
     loading,
     search,
     setSearch,
-    creating,
     editing,
-    formJid,
-    formPhone,
     formName,
     formPushName,
     assignClientId,
-    setFormJid,
-    setFormPhone,
     setFormName,
-    setFormPushName,
     setAssignClientId,
-    startCreate,
     startEdit,
     cancelEdit,
     saveEdit,
-    createContact,
     deleteContact,
     modalOpen,
   } = useContacts()
@@ -42,10 +34,13 @@ export function ContactsView() {
         <header className={styles.header}>
           <h2>Contatos</h2>
           <div className={styles.headerActions}>
-            <button className={styles.addBtn} onClick={startCreate}>
-              <Plus size={18} />
+            <button className={styles.addBtnDisabled} disabled title="Crie contatos acessando um chat e clicando em 'Salvar em contatos'">
+              <Info size={18} />
               Novo
             </button>
+          </div>
+          <div className={styles.createHint}>
+            Para criar um novo contato, acesse um chat e clique em &quot;Salvar em contatos&quot;.
           </div>
           <div className={styles.search}>
             <Search size={18} />
@@ -93,32 +88,11 @@ export function ContactsView() {
           <div className={styles.overlay} onClick={cancelEdit} />
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <h3>{creating ? "Novo contato" : "Editar contato"}</h3>
+              <h3>Editar contato</h3>
               <button className={styles.closeBtn} onClick={cancelEdit}>
                 <X size={20} />
               </button>
             </div>
-
-            {creating && (
-              <>
-                <div className={styles.field}>
-                  <label>JID (WhatsApp ID)</label>
-                  <input
-                    value={formJid}
-                    onChange={(e) => setFormJid(e.target.value)}
-                    placeholder="5515987654321@c.us"
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label>Telefone</label>
-                  <input
-                    value={formPhone}
-                    onChange={(e) => setFormPhone(e.target.value)}
-                    placeholder="5515987654321"
-                  />
-                </div>
-              </>
-            )}
 
             <div className={styles.field}>
               <label>Nome</label>
@@ -127,7 +101,7 @@ export function ContactsView() {
 
             <div className={styles.field}>
               <label>Push Name (WhatsApp)</label>
-              <input value={formPushName} onChange={(e) => setFormPushName(e.target.value)} />
+              <input value={formPushName} readOnly />
             </div>
 
             <div className={styles.field}>
@@ -146,8 +120,8 @@ export function ContactsView() {
 
             <div className={styles.modalActions}>
               <button className={styles.cancelBtn} onClick={cancelEdit}>Cancelar</button>
-              <button className={styles.saveBtn} onClick={creating ? createContact : saveEdit}>
-                {creating ? "Criar" : "Salvar"}
+              <button className={styles.saveBtn} onClick={saveEdit}>
+                Salvar
               </button>
             </div>
           </div>

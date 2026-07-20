@@ -71,7 +71,7 @@ export const chatsService = {
     return api.get(`/api/chats/${chatId}/occurrences`)
   },
 
-  sendMessage(phoneNumber: string, text: string) {
-    return api.post<MessageResponse>("/api/messages/send", { phoneNumber, text })
+  sendMessage(jid: string, text: string) {
+    return api.post<MessageResponse>("/api/messages/send", { jid, text })
   },
 }

@@ -1,5 +1,8 @@
 .wrapper {
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.397);
+  border-radius: 25%;
+background: linear-gradient(to right, #323750, #224b6d);
 }
 
 .trigger {

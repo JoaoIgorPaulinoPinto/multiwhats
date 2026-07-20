@@ -3,10 +3,11 @@
 import { Search } from "lucide-react"
 import { useChatSidebar } from "./chat-sidebar.logic"
 import styles from "./chat-sidebar.module.css"
+import { AvatarView } from "../avatar/avatar.view"
 
 interface Props {
   selectedId: number | null
-  onSelect: (id: number, name: string, phoneNumber: string) => void
+  onSelect: (id: number, name: string, phoneNumber: string, jid: string, contactId: number | null) => void
 }
 
 export function ChatSidebarView({ selectedId, onSelect }: Props) {
@@ -16,7 +17,7 @@ export function ChatSidebarView({ selectedId, onSelect }: Props) {
     <aside className={styles.sidebar}>
       <header className={styles.sidebarHeader}>
         <div className={styles.search}>
-          <Search size={18} />
+          <Search size={15} />
           <input
             placeholder="Pesquisar conversa"
             value={search}
@@ -30,12 +31,13 @@ export function ChatSidebarView({ selectedId, onSelect }: Props) {
           <div
             key={chat.id}
             className={`${styles.chatItem} ${selectedId === chat.id ? styles.active : ""}`}
-            onClick={() => onSelect(chat.id, chat.contactName ?? chat.phoneNumber ?? `Chat #${chat.id}`, chat.phoneNumber ?? "")}
+            onClick={() => onSelect(chat.id, chat.contactName ?? chat.phoneNumber ?? `Chat #${chat.id}`, chat.phoneNumber ?? "", chat.jid, chat.contactId)}
           >
+            <AvatarView name={chat.contactName ?? chat.name ?? chat.phoneNumber ?? "?"} size={42} />
             <div className={styles.chatInfo}>
               <div className={styles.chatTop}>
-                <strong>{chat.name ?? chat.phoneNumber ?? `Chat #${chat.id}`}</strong>
-                <label>{ chat.phoneNumber ?? `Chat #${chat.id}`}</label>
+                <strong>{chat.contactName ?? chat.name ?? chat.phoneNumber ?? `Chat #${chat.id}`}</strong>
+                <label>{chat.phoneNumber ?? ""}</label>
               </div>
               {chat.lastMessageBody && <p className={styles.lastMsg}>{chat.lastMessageBody}</p>}
             </div>

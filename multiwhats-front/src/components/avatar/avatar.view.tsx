@@ -1,18 +1,31 @@
 import styles from "./avatar.module.css"
 
-const COLORS = [
-  "#25d366", "#00a884", "#128c7e", "#075e54",
-  "#e91e63", "#9c27b0", "#673ab7", "#3f51b5",
-  "#2196f3", "#03a9f4", "#009688", "#4caf50",
-  "#ff9800", "#ff5722", "#795548", "#607d8b",
+const GRADIENTS = [
+  ["#25d366", "#128c7e"],
+  ["#00a884", "#075e54"],
+  ["#e91e63", "#9c27b0"],
+  ["#673ab7", "#3f51b5"],
+  ["#2196f3", "#03a9f4"],
+  ["#009688", "#4caf50"],
+  ["#ff9800", "#ff5722"],
+  ["#795548", "#607d8b"],
+  ["#e91e63", "#f44336"],
+  ["#9c27b0", "#673ab7"],
+  ["#3f51b5", "#2196f3"],
+  ["#00bcd4", "#009688"],
+  ["#8bc34a", "#4caf50"],
+  ["#ffc107", "#ff9800"],
+  ["#ff5722", "#e64a19"],
+  ["#607d8b", "#455a64"],
 ]
 
-function hashColor(name: string): string {
+function hashGradient(name: string): string {
   let hash = 0
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash)
   }
-  return COLORS[Math.abs(hash) % COLORS.length]
+  const [a, b] = GRADIENTS[Math.abs(hash) % GRADIENTS.length]
+  return `linear-gradient(135deg, ${a}, ${b})`
 }
 
 function getInitial(name: string): string {
@@ -33,7 +46,7 @@ export function AvatarView({ name, size = 44, fontSize, square }: Props) {
       style={{
         width: size,
         height: size,
-        background: hashColor(name),
+        background: hashGradient(name),
         fontSize: fontSize ?? size * 0.42,
       }}
     >
