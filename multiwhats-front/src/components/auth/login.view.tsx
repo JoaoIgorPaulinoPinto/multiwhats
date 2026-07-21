@@ -28,7 +28,12 @@ export function LoginView() {
         </div>
 
         <button className={styles.submit} type="submit" disabled={loading || !name || !password}>
-          {loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Cadastrar"}
+          {loading ? (
+            <span className={styles.btnLoading}>
+              <span className="spinner" />
+              Aguarde...
+            </span>
+          ) : mode === "login" ? "Entrar" : "Cadastrar"}
         </button>
 
         <button className={styles.toggle} type="button" onClick={toggleMode} disabled={loading}>

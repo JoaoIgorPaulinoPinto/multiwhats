@@ -1,4 +1,77 @@
-Aqui está a sua documentação totalmente formatada e estruturada em Markdown:MultiWhats API — Documentação da Arquitetura🛠 Stack TecnológicaBackend Principal: ASP.NET Core 10 (Web API + SignalR)Banco de Dados: MySQL (Hospedado no Railway via Pomelo Entity Framework Core)Serviço de Messageria: Node.js (messageria/) — WhatsApp Web.js + Express (Porta 3000)Autenticação: JWT Bearer Auth📐 Entidades e RelacionamentosClient (Empresa / Cliente)Id (PK)Name (Obrigatório)MainPhoneNumberStatus (ClientStatus: Active | Inactive)CreatedAt, LastUpdate, IsDeleted, CreatedByUserId, LastUpdatedByUserId└── ← Contacts[] (1:N — Um cliente possui vários números)└── ← ClientTasks[] (1:N — Demandas da empresa)Contact (Número de WhatsApp)Id (PK)Jid (5511999999999@c.us) [UNIQUE]PhoneNumber (5511999999999)Name (Nome salvo na agenda)PushName (Nome do perfil do WhatsApp)ProfilePicUrlIsBlocked, IsGroupLastMessageAtClientId? → Client (FK — Atrelável/desatrelável via PATCH)GroupId? → GroupCreatedByUserId → UserCreatedAt, LastUpdate, IsDeleted├── ← Messages[] (1:N)└── ← Occurrences[] (1:N — Chamados)Message (Mensagem)Id (PK)MessageId (ID serializado do WhatsApp, para deduplicação)FromJid, ToJid?, PhoneNumber, Body?Direction (Incoming | Outgoing)Type (Text | Image | Audio | Video | Document | Sticker | Contact | Location | Unknown)Timestamp (Unix) + SentAt (DateTime)NotifyName?HasMedia, MediaUrl?, MediaMimeType?, MediaFilename?, MediaSize?, MediaCaption?DeliveryStatus (Pending | Sent | Delivered | Read | Failed)IsForwardedContactId? → ContactUserId? → User (Quem enviou/recebeu)OccurrenceId? → Occurrence (Vínculo opcional com chamado)ReplyToId? → Message (Resposta a)CreatedAt, LastUpdate, IsDeletedOccurrence (Chamado do Número)Id (PK)Title, Description?Status (Open | InProgress | Resolved | Closed)Priority (Low | Medium | High | Urgent)ContactId → Contact (FK Obrigatório)AssignedToUserId? → UserCreatedByUserId → UserCreatedAt, LastUpdate, IsDeleted└── ← Messages[]ClientTask (Demanda da Empresa)Id (PK)Title, Description?Status (Open | InProgress | Completed | Cancelled)Priority (Low | Medium | High | Urgent)DueDate?ClientId → Client (FK)AssignedToUserId? → UserCreatedByUserId → UserCreatedAt, LastUpdate, IsDeletedGroupId (PK)Name, Description?WhatsAppGroupId?CreatedAt, LastUpdate, IsDeleted└── ← Members (Contact[])UserId (PK)Name [UNIQUE]PasswordRole (Support | Dev | Admin)IsActiveCreatedAt, LastUpdate, IsDeletedAuditLogId (PK)UserId?, UserName?, UserRole?EntityType (Ex: "Contact", "Message")EntityId?Action ("Created" | "Updated" | "Deleted")Description (Ex: "Created Contact #5 - Maria - 5511999999999")OldValues? (JSON)NewValues? (JSON)Timestamp🔢 EnumsMessageDirection: Incoming | OutgoingMessageType: Text | Image | Audio | Video | Document | Sticker | Contact | Location | UnknownDeliveryStatus: Pending | Sent | Delivered | Read | FailedOccurrenceStatus: Open | InProgress | Resolved | ClosedClientTaskStatus: Open | InProgress | Completed | CancelledPriority: Low | Medium | High | UrgentClientStatus: Active | InactiveUserRole: Support | Dev | Admin🌐 Rotas da APIAuthMétodoRotaAutenticaçãoDescriçãoPOST/api/auth/register[anon]Registrar usuárioPOST/api/auth/login[anon]Login (retorna JWT + user)POST/api/auth/logout[auth]Revoga tokenClientsMétodoRotaAutenticaçãoDescriçãoPOST/api/clients[auth]Criar clienteGET/api/clients[auth]Listar todosGET/api/clients/{id}[auth]Buscar por IDPUT/api/clients/{id}[auth]AtualizarDELETE/api/clients/{id}[auth]Deletar (soft delete)GET/api/clients/{id}/contacts[auth]Contatos do clienteContactsMétodoRotaAutenticaçãoDescriçãoPOST/api/contacts[auth]Criar contatoGET/api/contacts[auth]Listar todosGET/api/contacts/{id}[auth]Buscar por IDPUT/api/contacts/{id}[auth]Atualizar (nome, pushName, blocked)DELETE/api/contacts/{id}[auth]DeletarPATCH/api/contacts/{id}/assign[auth]Atrelar a um clientePATCH/api/contacts/{id}/unassign[auth]Desatrelar do clienteGET/api/contacts/{id}/messages[auth]Mensagens do contatoMessagesMétodoRotaAutenticaçãoDescriçãoPOST/api/messages/send[auth]Enviar mensagem WhatsAppOccurrencesMétodoRotaAutenticaçãoDescriçãoPOST/api/occurrences[auth]Criar ocorrênciaGET/api/occurrences[auth]Listar todasGET/api/occurrences/{id}[auth]Buscar por IDPUT/api/occurrences/{id}[auth]AtualizarDELETE/api/occurrences/{id}[auth]DeletarTasksMétodoRotaAutenticaçãoDescriçãoPOST/api/tasks[auth]Criar tarefaGET/api/tasks[auth]Listar todasGET/api/tasks/{id}[auth]Buscar por IDPUT/api/tasks/{id}[auth]AtualizarDELETE/api/tasks/{id}[auth]DeletarPATCH/api/tasks/{id}/status[Admin, Dev]Alterar statusWebhookMétodoRotaAutenticaçãoDescriçãoPOST/api/webhook/whatsapp[anon]Webhook do Node.js📦 Payloads DTOPOST /api/auth/registerJSON{
+# MultiWhats API
+
+## Rodando com Docker
+
+### Pré-requisitos
+- Docker e Docker Compose instalados
+
+### 1. Criar arquivo `.env` na raiz do projeto
+
+Crie um arquivo `.env` na raiz do repositório (lado do `docker-compose.yml`):
+
+```bash
+DB_CONNECTION_STRING=server=tokaido.proxy.rlwy.net;port=14481;database=railway;user=root;password=SUA_SENHA;AllowZeroDateTime=True;DateTimeKind=Utc
+JWT_SECRET=SuaChaveSecretaSuperPoderosaEALeatoriaComMaisDe32Caracteres!
+```
+
+### 2. Subir todos os serviços
+
+```bash
+docker compose up --build
+```
+
+Isso vai construir e rodar:
+- **Backend** (ASP.NET Core) → `http://localhost:5261`
+- **Messageria** (Node.js + WhatsApp Web.js) → `http://localhost:3333`
+- **Frontend** (Next.js) → `http://localhost:3000`
+
+### 3. Atualizar após modificar código
+
+```bash
+# Reconstruir apenas o serviço alterado (ex: backend)
+docker compose up --build backend
+
+# Reconstruir tudo
+docker compose up --build
+
+# Rodar em background (detached)
+docker compose up --build -d
+
+# Ver logs
+docker compose logs -f backend
+docker compose logs -f messageria
+docker compose logs -f frontend
+```
+
+### 4. Parar e limpar
+
+```bash
+# Parar todos os serviços
+docker compose down
+
+# Parar e remover imagens construídas
+docker compose down --rmi local
+```
+
+### Arquitetura Docker
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│   Frontend   │────▶│   Backend    │────▶│  Messageria  │
+│  Next.js     │     │  ASP.NET Core│     │  Node.js     │
+│  :3000       │     │  :5261       │     │  :3333       │
+└──────────────┘     └──────┬───────┘     └──────┬───────┘
+                            │                     │
+                            ▼                     ▼
+                      ┌──────────┐        WhatsApp Web.js
+                      │  MySQL   │        (Puppeteer/Chromium)
+                      │ (Railway)│
+                      └──────────┘
+```
+
+---
+
+## Documentação da Arquitetura🛠 Stack TecnológicaBackend Principal: ASP.NET Core 10 (Web API + SignalR)Banco de Dados: MySQL (Hospedado no Railway via Pomelo Entity Framework Core)Serviço de Messageria: Node.js (messageria/) — WhatsApp Web.js + Express (Porta 3000)Autenticação: JWT Bearer Auth📐 Entidades e RelacionamentosClient (Empresa / Cliente)Id (PK)Name (Obrigatório)MainPhoneNumberStatus (ClientStatus: Active | Inactive)CreatedAt, LastUpdate, IsDeleted, CreatedByUserId, LastUpdatedByUserId└── ← Contacts[] (1:N — Um cliente possui vários números)└── ← ClientTasks[] (1:N — Demandas da empresa)Contact (Número de WhatsApp)Id (PK)Jid (5511999999999@c.us) [UNIQUE]PhoneNumber (5511999999999)Name (Nome salvo na agenda)PushName (Nome do perfil do WhatsApp)ProfilePicUrlIsBlocked, IsGroupLastMessageAtClientId? → Client (FK — Atrelável/desatrelável via PATCH)GroupId? → GroupCreatedByUserId → UserCreatedAt, LastUpdate, IsDeleted├── ← Messages[] (1:N)└── ← Occurrences[] (1:N — Chamados)Message (Mensagem)Id (PK)MessageId (ID serializado do WhatsApp, para deduplicação)FromJid, ToJid?, PhoneNumber, Body?Direction (Incoming | Outgoing)Type (Text | Image | Audio | Video | Document | Sticker | Contact | Location | Unknown)Timestamp (Unix) + SentAt (DateTime)NotifyName?HasMedia, MediaUrl?, MediaMimeType?, MediaFilename?, MediaSize?, MediaCaption?DeliveryStatus (Pending | Sent | Delivered | Read | Failed)IsForwardedContactId? → ContactUserId? → User (Quem enviou/recebeu)OccurrenceId? → Occurrence (Vínculo opcional com chamado)ReplyToId? → Message (Resposta a)CreatedAt, LastUpdate, IsDeletedOccurrence (Chamado do Número)Id (PK)Title, Description?Status (Open | InProgress | Resolved | Closed)Priority (Low | Medium | High | Urgent)ContactId → Contact (FK Obrigatório)AssignedToUserId? → UserCreatedByUserId → UserCreatedAt, LastUpdate, IsDeleted└── ← Messages[]ClientTask (Demanda da Empresa)Id (PK)Title, Description?Status (Open | InProgress | Completed | Cancelled)Priority (Low | Medium | High | Urgent)DueDate?ClientId → Client (FK)AssignedToUserId? → UserCreatedByUserId → UserCreatedAt, LastUpdate, IsDeletedGroupId (PK)Name, Description?WhatsAppGroupId?CreatedAt, LastUpdate, IsDeleted└── ← Members (Contact[])UserId (PK)Name [UNIQUE]PasswordRole (Support | Dev | Admin)IsActiveCreatedAt, LastUpdate, IsDeletedAuditLogId (PK)UserId?, UserName?, UserRole?EntityType (Ex: "Contact", "Message")EntityId?Action ("Created" | "Updated" | "Deleted")Description (Ex: "Created Contact #5 - Maria - 5511999999999")OldValues? (JSON)NewValues? (JSON)Timestamp🔢 EnumsMessageDirection: Incoming | OutgoingMessageType: Text | Image | Audio | Video | Document | Sticker | Contact | Location | UnknownDeliveryStatus: Pending | Sent | Delivered | Read | FailedOccurrenceStatus: Open | InProgress | Resolved | ClosedClientTaskStatus: Open | InProgress | Completed | CancelledPriority: Low | Medium | High | UrgentClientStatus: Active | InactiveUserRole: Support | Dev | Admin🌐 Rotas da APIAuthMétodoRotaAutenticaçãoDescriçãoPOST/api/auth/register[anon]Registrar usuárioPOST/api/auth/login[anon]Login (retorna JWT + user)POST/api/auth/logout[auth]Revoga tokenClientsMétodoRotaAutenticaçãoDescriçãoPOST/api/clients[auth]Criar clienteGET/api/clients[auth]Listar todosGET/api/clients/{id}[auth]Buscar por IDPUT/api/clients/{id}[auth]AtualizarDELETE/api/clients/{id}[auth]Deletar (soft delete)GET/api/clients/{id}/contacts[auth]Contatos do clienteContactsMétodoRotaAutenticaçãoDescriçãoPOST/api/contacts[auth]Criar contatoGET/api/contacts[auth]Listar todosGET/api/contacts/{id}[auth]Buscar por IDPUT/api/contacts/{id}[auth]Atualizar (nome, pushName, blocked)DELETE/api/contacts/{id}[auth]DeletarPATCH/api/contacts/{id}/assign[auth]Atrelar a um clientePATCH/api/contacts/{id}/unassign[auth]Desatrelar do clienteGET/api/contacts/{id}/messages[auth]Mensagens do contatoMessagesMétodoRotaAutenticaçãoDescriçãoPOST/api/messages/send[auth]Enviar mensagem WhatsAppOccurrencesMétodoRotaAutenticaçãoDescriçãoPOST/api/occurrences[auth]Criar ocorrênciaGET/api/occurrences[auth]Listar todasGET/api/occurrences/{id}[auth]Buscar por IDPUT/api/occurrences/{id}[auth]AtualizarDELETE/api/occurrences/{id}[auth]DeletarTasksMétodoRotaAutenticaçãoDescriçãoPOST/api/tasks[auth]Criar tarefaGET/api/tasks[auth]Listar todasGET/api/tasks/{id}[auth]Buscar por IDPUT/api/tasks/{id}[auth]AtualizarDELETE/api/tasks/{id}[auth]DeletarPATCH/api/tasks/{id}/status[Admin, Dev]Alterar statusWebhookMétodoRotaAutenticaçãoDescriçãoPOST/api/webhook/whatsapp[anon]Webhook do Node.js📦 Payloads DTOPOST /api/auth/registerJSON{
   "name": "Joao",
   "password": "123123"
 }

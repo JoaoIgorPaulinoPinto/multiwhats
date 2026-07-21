@@ -14,6 +14,7 @@ public class ContactsController : ControllerBase
     private readonly ICreateContactUseCase _createContactUseCase;
     private readonly IGetContactsUseCase _getContactsUseCase;
     private readonly IDeleteContactUseCase _deleteContactUseCase;
+    private readonly IUpdateContactUseCase _updateContactUseCase;
     private readonly IAssignContactUseCase _assignContactUseCase;
 
     private int UserId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -22,11 +23,13 @@ public class ContactsController : ControllerBase
         ICreateContactUseCase createContactUseCase,
         IGetContactsUseCase getContactsUseCase,
         IDeleteContactUseCase deleteContactUseCase,
+        IUpdateContactUseCase updateContactUseCase,
         IAssignContactUseCase assignContactUseCase)
     {
         _createContactUseCase = createContactUseCase;
         _getContactsUseCase = getContactsUseCase;
         _deleteContactUseCase = deleteContactUseCase;
+        _updateContactUseCase = updateContactUseCase;
         _assignContactUseCase = assignContactUseCase;
     }
 
@@ -60,6 +63,20 @@ public class ContactsController : ControllerBase
         return Ok(contact);
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateContactRequest request)
+    {
+        try
+        {
+            var contact = await _updateContactUseCase.Execute(id, request);
+            return Ok(new { message = "Contato atualizado com sucesso.", contact });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -77,7 +94,7 @@ public class ContactsController : ControllerBase
     [HttpPatch("{id}/assign")]
     public async Task<IActionResult> Assign(int id, [FromBody] AssignContactRequest request)
     {
-        try
+        try     
         {
             var contact = await _assignContactUseCase.Assign(id, request.ClientId);
             return Ok(new { message = "Contato atribuído ao cliente.", contact });

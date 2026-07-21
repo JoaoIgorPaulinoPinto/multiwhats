@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react"
 import { contactsService, type ContactResponse } from "../../../services/contacts.service"
 import { companiesService, type ClientResponse } from "../../../services/companies.service"
+import { useToast } from "../../../components/toast/toast.provider"
 
 export function useContacts() {
+  const { toast } = useToast()
   const [contacts, setContacts] = useState<ContactResponse[]>([])
   const [clients, setClients] = useState<ClientResponse[]>([])
   const [editing, setEditing] = useState<ContactResponse | null>(null)
@@ -16,6 +18,8 @@ export function useContacts() {
   const [assignClientId, setAssignClientId] = useState<number | null>(null)
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState<number | null>(null)
 
   const loadData = () =>
     Promise.all([
@@ -68,6 +72,7 @@ export function useContacts() {
 
   async function saveEdit() {
     if (!editing) return
+    setSaving(true)
     console.log(`[Contacts] salvando contato #${editing.id}...`)
     try {
       await contactsService.update(editing.id, { name: formName, pushName: formPushName })
@@ -81,13 +86,18 @@ export function useContacts() {
       console.log(`[Contacts] contato #${editing.id} atualizado`)
       const updated = await contactsService.getById(editing.id)
       setContacts((prev) => prev.map((c) => (c.id === editing.id ? updated : c)))
+      toast.success("Contato atualizado com sucesso")
       cancelEdit()
     } catch (e) {
       console.error(`[Contacts] erro ao salvar:`, e)
+      toast.error("Erro ao salvar contato")
+    } finally {
+      setSaving(false)
     }
   }
 
   async function createContact() {
+    setSaving(true)
     console.log(`[Contacts] criando contato...`)
     try {
       await contactsService.create({
@@ -97,21 +107,31 @@ export function useContacts() {
         pushName: formPushName || undefined,
       })
       console.log(`[Contacts] contato criado`)
+      toast.success("Contato criado com sucesso")
       await loadData()
       cancelEdit()
     } catch (e) {
       console.error(`[Contacts] erro ao criar:`, e)
+      toast.error("Erro ao criar contato")
+    } finally {
+      setSaving(false)
     }
   }
 
   async function handleDeleteContact(id: number) {
+    if (!window.confirm("Tem certeza que deseja excluir este contato?")) return
+    setDeleting(id)
     console.log(`[Contacts] deletando contato #${id}...`)
     try {
       await contactsService.delete(id)
       console.log(`[Contacts] contato #${id} deletado`)
       setContacts((prev) => prev.filter((c) => c.id !== id))
+      toast.success("Contato excluído")
     } catch (e) {
       console.error(`[Contacts] erro ao deletar:`, e)
+      toast.error("Erro ao excluir contato")
+    } finally {
+      setDeleting(null)
     }
   }
 
@@ -121,6 +141,8 @@ export function useContacts() {
     contacts: filtered,
     clients,
     loading,
+    saving,
+    deleting,
     search,
     setSearch,
     creating,

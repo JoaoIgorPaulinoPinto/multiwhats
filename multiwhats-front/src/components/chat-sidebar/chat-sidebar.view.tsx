@@ -10,8 +10,20 @@ interface Props {
   onSelect: (id: number, name: string, phoneNumber: string, jid: string, contactId: number | null) => void
 }
 
+function SkeletonChatItem() {
+  return (
+    <div className={styles.skeletonItem}>
+      <div className="skeleton" style={{ width: 42, height: 42, borderRadius: "50%", flexShrink: 0 }} />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+        <div className="skeleton" style={{ height: 14, width: "55%" }} />
+        <div className="skeleton" style={{ height: 11, width: "75%" }} />
+      </div>
+    </div>
+  )
+}
+
 export function ChatSidebarView({ selectedId, onSelect }: Props) {
-  const { search, setSearch, chats } = useChatSidebar()
+  const { search, setSearch, chats, loading } = useChatSidebar()
 
   return (
     <aside className={styles.sidebar}>
@@ -27,7 +39,15 @@ export function ChatSidebarView({ selectedId, onSelect }: Props) {
       </header>
 
       <section className={styles.chatList}>
-        {chats.map((chat) => (
+        {loading ? (
+          <>
+            <SkeletonChatItem />
+            <SkeletonChatItem />
+            <SkeletonChatItem />
+            <SkeletonChatItem />
+            <SkeletonChatItem />
+          </>
+        ) : chats.map((chat) => (
           <div
             key={chat.id}
             className={`${styles.chatItem} ${selectedId === chat.id ? styles.active : ""}`}

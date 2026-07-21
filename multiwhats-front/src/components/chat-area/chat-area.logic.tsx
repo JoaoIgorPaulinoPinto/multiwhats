@@ -13,6 +13,7 @@ export function useChatArea(chatId: number | null, jid: string) {
   const [messages, setMessages] = useState<MessageResponse[]>([])
   const [loading, setLoading] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
+  const [sending, setSending] = useState(false)
   const lastFetched = useRef<number | null>(null)
 
   const [showSaveModal, setShowSaveModal] = useState(false)
@@ -119,6 +120,7 @@ export function useChatArea(chatId: number | null, jid: string) {
     setSendError(null)
     if (!chatId || !inputValue.trim()) return
 
+    setSending(true)
     try {
       await chatsService.sendMessage(jid, inputValue.trim())
       cache.delete(chatId)
@@ -127,6 +129,8 @@ export function useChatArea(chatId: number | null, jid: string) {
       const message = e instanceof Error ? e.message : "Erro ao enviar mensagem"
       setSendError(message)
       console.error(`[ChatArea] falha ao enviar mensagem:`, e)
+    } finally {
+      setSending(false)
     }
   }
 
@@ -135,6 +139,7 @@ export function useChatArea(chatId: number | null, jid: string) {
     setInputValue,
     messages,
     loading,
+    sending,
     sendError,
     sendMessage,
     showSaveModal,

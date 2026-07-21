@@ -323,3 +323,32 @@
 .saveBtn:hover {
   background: var(--primary-hover);
 }
+
+.saveBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btnLoading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.skeletonList {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+}
+
+.skeletonItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+}
+
+.itemDeleting {
+  opacity: 0.5;
+  pointer-events: none;
+}

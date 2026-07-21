@@ -1,0 +1,52 @@
+services:
+
+  backend:
+    build:
+      context: ./multiwhats-api
+      dockerfile: multiwhats-api/Dockerfile
+    ports:
+      - "5261:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+      - JwtSettings__Secret=${JWT_SECRET}
+      - JwtSettings__Issuer=MinhaApiEmissor
+      - JwtSettings__Audience=MeuAppCliente
+      - JwtSettings__ExpiryInMinutes=60
+    depends_on:
+      - messageria
+    networks:
+      - multiwhats-net
+
+  messageria:
+    build:
+      context: ./multiwhats-api/multiwhats-api
+      dockerfile: Dockerfile.messageria
+    ports:
+      - "3333:3333"
+    environment:
+      - PORT=3333
+      - ASPNET_WEBHOOK_URL=http://backend:5261/api/webhook/whatsapp
+      - ASPNET_DEVICE_URL=http://backend:5261/api/device
+      - CHROME_PATH=/usr/bin/chromium
+    networks:
+      - multiwhats-net
+
+  frontend:
+    build:
+      context: ./multiwhats-front
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:5261
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5261
+    depends_on:
+      - backend
+    networks:
+      - multiwhats-net
+
+networks:
+  multiwhats-net:
+    driver: bridge

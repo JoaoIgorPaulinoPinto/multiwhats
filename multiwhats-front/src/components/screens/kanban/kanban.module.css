@@ -130,3 +130,10 @@
 .occurrence {
   border-left: 3px solid var(--primary);
 }
+
+.skeletonCard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}

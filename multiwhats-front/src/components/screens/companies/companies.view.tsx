@@ -9,6 +9,8 @@ export function CompaniesView() {
   const {
     companies,
     loading,
+    saving,
+    deleting,
     search,
     setSearch,
     editing,
@@ -45,14 +47,25 @@ export function CompaniesView() {
 
       <section className={styles.list}>
         {loading ? (
-          <p className={styles.loading}>Carregando...</p>
+          <div className={styles.skeletonList}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className={styles.skeletonCard}>
+                <div className="skeleton" style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0 }} />
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div className="skeleton" style={{ height: 14, width: "50%" }} />
+                  <div className="skeleton" style={{ height: 11, width: "30%" }} />
+                </div>
+                <div className="skeleton" style={{ height: 24, width: 60, borderRadius: 8 }} />
+              </div>
+            ))}
+          </div>
         ) : companies.length === 0 ? (
           <p className={styles.loading}>Nenhuma empresa encontrada</p>
         ) : (
           companies.map((company) => {
             const contacts = companyContacts(company.id)
             return (
-              <div key={company.id} className={styles.card}>
+              <div key={company.id} className={`${styles.card} ${deleting === company.id ? styles.cardDeleting : ""}`}>
                 <div className={styles.cardLeft}>
               <AvatarView name={company.name} size={44} fontSize={18} square />
                   <div className={styles.info}>
@@ -65,11 +78,11 @@ export function CompaniesView() {
                   <span className={`${styles.status} ${company.status === "Active" ? styles.activeStatus : styles.inactiveStatus}`}>
                     {company.status === "Active" ? "Ativo" : "Inativo"}
                   </span>
-                  <button className={styles.editBtn} onClick={() => startEdit(company)}>
+                  <button className={styles.editBtn} onClick={() => startEdit(company)} disabled={deleting === company.id}>
                     <Pencil size={18} />
                   </button>
-                  <button className={styles.deleteBtn} onClick={() => deleteCompany(company.id)}>
-                    <Trash2 size={18} />
+                  <button className={styles.deleteBtn} onClick={() => deleteCompany(company.id)} disabled={deleting === company.id}>
+                    {deleting === company.id ? <span className="spinner spinnerDark" /> : <Trash2 size={18} />}
                   </button>
                 </div>
               </div>
@@ -81,7 +94,7 @@ export function CompaniesView() {
       {editing && (
         <>
           <div className={styles.overlay} onClick={cancelEdit} />
-          <div className={styles.modal}>
+          <div className={`${styles.modal} fadeIn`}>
             <div className={styles.modalHeader}>
               <h3>{editing.id ? "Editar empresa" : "Nova empresa"}</h3>
               <button className={styles.closeBtn} onClick={cancelEdit}>
@@ -91,12 +104,12 @@ export function CompaniesView() {
 
             <div className={styles.field}>
               <label>Nome</label>
-              <input value={formName} onChange={(e) => setFormName(e.target.value)} />
+              <input value={formName} onChange={(e) => setFormName(e.target.value)} disabled={saving} />
             </div>
 
             <div className={styles.field}>
               <label>Telefone</label>
-              <input value={formPhone} onChange={(e) => setFormPhone(e.target.value)} />
+              <input value={formPhone} onChange={(e) => setFormPhone(e.target.value)} disabled={saving} />
             </div>
 
             <div className={styles.field}>
@@ -105,6 +118,7 @@ export function CompaniesView() {
                 className={styles.select}
                 value={formStatus}
                 onChange={(e) => setFormStatus(e.target.value)}
+                disabled={saving}
               >
                 <option value="Active">Ativo</option>
                 <option value="Inactive">Inativo</option>
@@ -135,9 +149,14 @@ export function CompaniesView() {
             ) : null}
 
             <div className={styles.modalActions}>
-              <button className={styles.cancelBtn} onClick={cancelEdit}>Cancelar</button>
-              <button className={styles.saveBtn} onClick={editing.id ? saveEdit : createCompany}>
-                {editing.id ? "Salvar" : "Criar"}
+              <button className={styles.cancelBtn} onClick={cancelEdit} disabled={saving}>Cancelar</button>
+              <button className={styles.saveBtn} onClick={editing.id ? saveEdit : createCompany} disabled={saving}>
+                {saving ? (
+                  <span className={styles.btnLoading}>
+                    <span className="spinner" />
+                    Salvando...
+                  </span>
+                ) : editing.id ? "Salvar" : "Criar"}
               </button>
             </div>
           </div>

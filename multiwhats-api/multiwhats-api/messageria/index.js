@@ -8,10 +8,10 @@ const { Client, LocalAuth } = pkg;
 const app = express();
 app.use(express.json());
 
-const PORT = 3333;
-// URL da sua API ASP.NET que vai processar e salvar as mensagens recebidas
-const ASPNET_WEBHOOK_URL = "http://127.0.0.1:5261/api/webhook/whatsapp";
-const ASPNET_DEVICE_URL = "http://127.0.0.1:5261/api/device";
+const PORT = process.env.PORT || 3333;
+const ASPNET_WEBHOOK_URL = process.env.ASPNET_WEBHOOK_URL || "http://127.0.0.1:5261/api/webhook/whatsapp";
+const ASPNET_DEVICE_URL = process.env.ASPNET_DEVICE_URL || "http://127.0.0.1:5261/api/device";
+const CHROME_PATH = process.env.CHROME_PATH || "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 
 // ==========================================
 // 1. INICIALIZAÇÃO DO WHATSAPP-WEB.JS
@@ -19,10 +19,12 @@ const ASPNET_DEVICE_URL = "http://127.0.0.1:5261/api/device";
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+        executablePath: CHROME_PATH,
         args: [
             "--no-sandbox",
-            "--disable-setuid-sandbox"
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu"
         ]
     }
 });

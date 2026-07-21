@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\multiwhats-api.csproj": {}
+    "C:\\Users\\User\\source\\multiwhtas-api\\multiwhats-api\\multiwhats-api\\multiwhats-api.csproj": {}
   },
   "projects": {
-    "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\multiwhats-api.csproj": {
+    "C:\\Users\\User\\source\\multiwhtas-api\\multiwhats-api\\multiwhats-api\\multiwhats-api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\multiwhats-api.csproj",
+        "projectUniqueName": "C:\\Users\\User\\source\\multiwhtas-api\\multiwhats-api\\multiwhats-api\\multiwhats-api.csproj",
         "projectName": "multiwhats-api",
-        "projectPath": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\multiwhats-api.csproj",
-        "packagesPath": "C:\\Users\\joaoi\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\obj\\",
+        "projectPath": "C:\\Users\\User\\source\\multiwhtas-api\\multiwhats-api\\multiwhats-api\\multiwhats-api.csproj",
+        "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\User\\source\\multiwhtas-api\\multiwhats-api\\multiwhats-api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\joaoi\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\User\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -26,7 +26,6 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -57,10 +56,6 @@
               "target": "Package",
               "version": "[10.0.10, )"
             },
-            "Microsoft.AspNetCore.OpenApi": {
-              "target": "Package",
-              "version": "[10.0.10, )"
-            },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
               "version": "[9.0.0, )"
@@ -75,17 +70,13 @@
               "target": "Package",
               "version": "[9.0.0, )"
             },
-            "Microsoft.OpenApi": {
-              "target": "Package",
-              "version": "[2.0.1, )"
-            },
             "Pomelo.EntityFrameworkCore.MySql": {
               "target": "Package",
               "version": "[9.0.0, )"
             },
-            "Scalar.AspNetCore": {
+            "Swashbuckle.AspNetCore": {
               "target": "Package",
-              "version": "[2.16.14, )"
+              "version": "[7.3.1, )"
             }
           },
           "imports": [
@@ -107,7 +98,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

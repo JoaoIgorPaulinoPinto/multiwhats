@@ -89,6 +89,12 @@
   cursor: not-allowed;
 }
 
+.btnLoading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .toggle {
   border: none;
   background: none;

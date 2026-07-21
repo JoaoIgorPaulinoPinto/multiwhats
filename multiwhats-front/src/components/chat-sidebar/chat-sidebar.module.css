@@ -96,3 +96,10 @@
 .active {
   background: var(--surface-hover);
 }
+
+.skeletonItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+}

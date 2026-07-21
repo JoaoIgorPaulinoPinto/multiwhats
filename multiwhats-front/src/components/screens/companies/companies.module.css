@@ -413,3 +413,35 @@
 .addContactBtn:hover {
   background: var(--primary-hover);
 }
+
+.saveBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btnLoading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.skeletonList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeletonCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.cardDeleting {
+  opacity: 0.5;
+  pointer-events: none;
+}

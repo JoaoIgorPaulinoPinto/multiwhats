@@ -18,6 +18,7 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
     inputValue,
     setInputValue,
     messages,
+    sending,
     sendError,
     sendMessage,
     showSaveModal,
@@ -63,7 +64,12 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
       <section className={styles.messages}>
         {messages.length === 0 ? (
           <div className={styles.empty}>
-            {chatId ? "Buscando..." : "Selecione um contato para ver as mensagens"}
+            {chatId ? (
+              <div className={styles.loadingMessages}>
+                <span className="spinner spinnerDark" />
+                Buscando mensagens...
+              </div>
+            ) : "Selecione um contato para ver as mensagens"}
           </div>
         ) : (
           messages.map((msg) => (
@@ -83,7 +89,13 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
         />
-        <button className={styles.send} onClick={sendMessage}><Send size={17} /></button>
+        <button
+          className={styles.send}
+          onClick={sendMessage}
+          disabled={sending || !inputValue.trim()}
+        >
+          {sending ? <span className="spinner" /> : <Send size={17} />}
+        </button>
       </footer>
       {sendError && <div className={styles.error}>{sendError}</div>}
 

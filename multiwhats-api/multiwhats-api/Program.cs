@@ -1,35 +1,35 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using System.IdentityModel.Tokens.Jwt;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using multiwhats_api.src.data.db;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.repositories.repositories;
 using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.AuthInterfaces;
 using multiwhats_api.src.usecases.interfaces.ChatInterfaces;
+using multiwhats_api.src.usecases.interfaces.ClientInterfaces;
 using multiwhats_api.src.usecases.interfaces.ContactInterfaces;
 using multiwhats_api.src.usecases.interfaces.DeviceInterfaces;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
-using multiwhats_api.src.usecases.interfaces.ClientInterfaces;
 using multiwhats_api.src.usecases.interfaces.OccurrenceInterfaces;
 using multiwhats_api.src.usecases.interfaces.TaskInterfaces;
 using multiwhats_api.src.usecases.usecases.AuthUseCases;
 using multiwhats_api.src.usecases.usecases.ChatUseCases;
+using multiwhats_api.src.usecases.usecases.ClientUseCases;
 using multiwhats_api.src.usecases.usecases.ContactUseCases;
 using multiwhats_api.src.usecases.usecases.DeviceUseCases;
 using multiwhats_api.src.usecases.usecases.MessageUseCases;
-using multiwhats_api.src.usecases.usecases.ClientUseCases;
 using multiwhats_api.src.usecases.usecases.OccurrenceUseCases;
 using multiwhats_api.src.usecases.usecases.TaskUseCases;
-using Scalar.AspNetCore;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
 
 builder.Services.AddHttpContextAccessor();
@@ -45,7 +45,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-var connectionString = builder.Configuration.GetConnectionString("Xampp");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         connectionString,
@@ -76,6 +76,7 @@ builder.Services.AddScoped<IGetChatsUseCase, GetChatsUseCase>();
 builder.Services.AddScoped<ICreateContactUseCase, CreateContactUseCase>();
 builder.Services.AddScoped<IGetContactsUseCase, GetContactsUseCase>();
 builder.Services.AddScoped<IDeleteContactUseCase, DeleteContactUseCase>();
+builder.Services.AddScoped<IUpdateContactUseCase, UpdateContactUseCase>();
 builder.Services.AddScoped<IAssignContactUseCase, AssignContactUseCase>();
 
 // Message Use Cases
@@ -148,14 +149,46 @@ builder.Services.AddAuthentication(options =>
         }
     };
 });
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Insira o token JWT desta maneira: Bearer {seu-token}"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
+
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+
+
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseCors("SignalRPolicy");

@@ -36,6 +36,11 @@ class ApiClient {
     })
 
     if (!res.ok) {
+      if (res.status === 401) {
+        localStorage.removeItem("token")
+        localStorage.removeItem("user")
+        window.location.href = "/login"
+      }
       const error = await res.json().catch(() => ({ message: res.statusText }))
       throw new ApiError(error.message ?? `HTTP ${res.status}`, res.status)
     }

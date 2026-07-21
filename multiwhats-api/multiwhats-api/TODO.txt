@@ -1,8 +1,15 @@
 -- TODO --
-- Fazer com que as mensagens enviadas de mim fiquem a esquerda (colocar um from_me. se n existir) 
-- log deve ser salvo em um arquivo - e enviado ao banco (talvez ao banco em nuvem do railway apos estar em produção)
-- Habilitar a criação de contato novamente (criar o suporte na API para criar contatos com numero de telefone) 
-- 
+- Adicionar a logica de ocorrencias ao KANBAN do front
+- Criar sistema de Fila, para carregar mensagems de forma gradativa e sem travar ou demorar
+- Criar sistema de cache, para que ao trocar de chat, não precise ficar fazendo requisições o tempo todo
+- Criar sistema de ocorrencias e atrela-las aos contatos (colocar badges nos contatos)
+- Criar sistema de configurações como (aceitar audio/video/fotos/figurinhas/etc) 
+- Remover todos Enums e trocar por tabelas no banco
+- Entender melhor a logica de tarefas e ocorrencias e implementa-las no front-end
+
+## REGRA DE NOGOCIO ##
+-   Ao deletar uma empresa, contatos vinculados a ela devem perder o vinculo.
+-   
 
 ================================================================================
   MULTIWHATS API - DOCUMENTAÇÃO DA ARQUITETURA
@@ -231,7 +238,7 @@
 
   1. Interceptor (AppDbContext.ApplyAudit):
      - Seta CreatedByUserId / LastUpdatedByUserId nas entidades
-     - Converte软 delete em IsDeleted = true (nunca remove de fato)
+     - Converte o delete em IsDeleted = true (nunca remove de fato)
 
   2. AuditService (middleware em Program.cs):
      - Gera logs com: quem fez, o que fez, valores antigos/novos (JSON)
@@ -266,7 +273,7 @@
 ================================================================================
 
   dotnet run                     → Sobe API em http://localhost:5261
-  cd messageria && npm start     → Sobe Node.js em http://localhost:3000
+  npm start                      → Sobe Node.js em http://localhost:3000
   dotnet ef migrations add Nome  → Cria migration
   dotnet ef database update      → Aplica migration no MySQL
 
