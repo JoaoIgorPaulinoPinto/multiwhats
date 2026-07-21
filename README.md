@@ -10,8 +10,8 @@
 Crie um arquivo `.env` na raiz do repositório (lado do `docker-compose.yml`):
 
 ```bash
-DB_CONNECTION_STRING=server=tokaido.proxy.rlwy.net;port=14481;database=railway;user=root;password=SUA_SENHA;AllowZeroDateTime=True;DateTimeKind=Utc
-JWT_SECRET=SuaChaveSecretaSuperPoderosaEALeatoriaComMaisDe32Caracteres!
+DB_CONNECTION_STRING=server=****************;port=*******;database=******;user=*****;password=***********;AllowZeroDateTime=True;DateTimeKind=Utc
+JWT_SECRET=*******************************************************
 ```
 
 ### 2. Subir todos os serviços
