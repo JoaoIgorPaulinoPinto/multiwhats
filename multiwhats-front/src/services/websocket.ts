@@ -45,7 +45,15 @@ class WsClient {
       console.log("[WS] conectado")
 
       conn.on("ReceberNovaMensagem", (payload: unknown) => {
-        this.emit("message", payload)
+        this.emit("message:raw", payload)
+      })
+
+      conn.on("MessageReceived", (payload: unknown) => {
+        this.emit("message:received", payload)
+      })
+
+      conn.on("MessageSent", (payload: unknown) => {
+        this.emit("message:sent", payload)
       })
     }
   }

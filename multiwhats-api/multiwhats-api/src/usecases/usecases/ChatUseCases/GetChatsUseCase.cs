@@ -1,5 +1,6 @@
 ﻿using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.repositories.interfaces;
+using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.ChatInterfaces;
 
 namespace multiwhats_api.src.usecases.usecases.ChatUseCases;
@@ -9,15 +10,18 @@ public class GetChatsUseCase : IGetChatsUseCase
     private readonly IChatRepository _chatRepository;
     private readonly IMessageRepository _messageRepository;
     private readonly IOccurrenceRepository _occurrenceRepository;
+    private readonly UseCaseLogger _useCaseLogger;
 
     public GetChatsUseCase(
         IChatRepository chatRepository,
         IMessageRepository messageRepository,
-        IOccurrenceRepository occurrenceRepository)
+        IOccurrenceRepository occurrenceRepository,
+        UseCaseLogger useCaseLogger)
     {
         _chatRepository = chatRepository;
         _messageRepository = messageRepository;
         _occurrenceRepository = occurrenceRepository;
+        _useCaseLogger = useCaseLogger;
     }
 
     public async Task<PaginatedResponse<ChatResponse>> ExecuteAll(int page, int pageSize)
@@ -52,6 +56,13 @@ public class GetChatsUseCase : IGetChatsUseCase
             });
         }
 
+        await _useCaseLogger.LogAsync(
+            action: "GetChats",
+            entityType: "Chat",
+            entityId: null,
+            description: $"Listed chats (page {page}, pageSize {pageSize}, total {totalCount})"
+        );
+
         return new PaginatedResponse<ChatResponse>
         {
             Items = responses,
@@ -68,6 +79,13 @@ public class GetChatsUseCase : IGetChatsUseCase
         if (chat == null) return null;
 
         var msgCount = await _messageRepository.GetByChatTotalCountAsync(chat.Id);
+
+        await _useCaseLogger.LogAsync(
+            action: "GetChat",
+            entityType: "Chat",
+            entityId: id,
+            description: $"Retrieved chat #{id} (Jid: {chat.Jid})"
+        );
 
         return new ChatResponse
         {

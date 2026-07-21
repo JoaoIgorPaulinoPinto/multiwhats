@@ -67,7 +67,7 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
           </div>
         ) : (
           messages.map((msg) => (
-            <div key={msg.id} className={msg.direction === "Incoming" ? styles.received : styles.sent}>
+            <div key={msg.id} className={msg.direction === 0 ? styles.received : styles.sent}>
               <div className={styles.bubble}>{msg.body}</div>
             </div>
           ))

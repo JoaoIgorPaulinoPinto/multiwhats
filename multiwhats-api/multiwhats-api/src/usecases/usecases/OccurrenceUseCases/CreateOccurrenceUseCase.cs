@@ -2,6 +2,7 @@ using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.repositories.interfaces;
+using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.OccurrenceInterfaces;
 
 namespace multiwhats_api.src.usecases.usecases.OccurrenceUseCases;
@@ -9,10 +10,12 @@ namespace multiwhats_api.src.usecases.usecases.OccurrenceUseCases;
 public class CreateOccurrenceUseCase : ICreateOccurrenceUseCase
 {
     private readonly IOccurrenceRepository _occurrenceRepository;
+    private readonly UseCaseLogger _useCaseLogger;
 
-    public CreateOccurrenceUseCase(IOccurrenceRepository occurrenceRepository)
+    public CreateOccurrenceUseCase(IOccurrenceRepository occurrenceRepository, UseCaseLogger useCaseLogger)
     {
         _occurrenceRepository = occurrenceRepository;
+        _useCaseLogger = useCaseLogger;
     }
 
     public async Task<OccurrenceResponse> Execute(CreateOccurrenceRequest request, int userId)
@@ -26,6 +29,14 @@ public class CreateOccurrenceUseCase : ICreateOccurrenceUseCase
         );
 
         var created = await _occurrenceRepository.AddAsync(occurrence);
+
+        await _useCaseLogger.LogAsync(
+            action: "CreateOccurrence",
+            entityType: "Occurrence",
+            entityId: created.Id,
+            description: $"Created occurrence \"{created.Title}\" (ChatId: {created.ChatId}, Priority: {created.Priority}, Status: {created.Status})",
+            explicitUserId: userId
+        );
 
         return new OccurrenceResponse
         {

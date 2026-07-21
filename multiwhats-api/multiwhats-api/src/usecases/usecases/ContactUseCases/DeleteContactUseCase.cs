@@ -1,4 +1,5 @@
 using multiwhats_api.src.repositories.interfaces;
+using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.ContactInterfaces;
 
 namespace multiwhats_api.src.usecases.usecases.ContactUseCases;
@@ -6,10 +7,12 @@ namespace multiwhats_api.src.usecases.usecases.ContactUseCases;
 public class DeleteContactUseCase : IDeleteContactUseCase
 {
     private readonly IContactRepository _contactRepository;
+    private readonly UseCaseLogger _useCaseLogger;
 
-    public DeleteContactUseCase(IContactRepository contactRepository)
+    public DeleteContactUseCase(IContactRepository contactRepository, UseCaseLogger useCaseLogger)
     {
         _contactRepository = contactRepository;
+        _useCaseLogger = useCaseLogger;
     }
 
     public async Task<bool> Execute(int contactId, int userId)
@@ -18,6 +21,16 @@ public class DeleteContactUseCase : IDeleteContactUseCase
         if (contact == null)
             throw new KeyNotFoundException("Contato não encontrado");
 
-        return await _contactRepository.DeleteAsync(contactId);
+        var result = await _contactRepository.DeleteAsync(contactId);
+
+        await _useCaseLogger.LogAsync(
+            action: "DeleteContact",
+            entityType: "Contact",
+            entityId: contactId,
+            description: $"Deleted contact #{contactId} (Name: {contact.Name}, Jid: {contact.Jid})",
+            explicitUserId: userId
+        );
+
+        return result;
     }
 }

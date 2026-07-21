@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace multiwhats_api.Migrations
 {
     /// <inheritdoc />
-    public partial class MigrateToRailway4 : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -66,6 +66,29 @@ namespace multiwhats_api.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Clients", x => x.id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Devices",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    jid = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    phone_number = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    push_name = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    platform = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    connected_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Devices", x => x.id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -220,7 +243,7 @@ namespace multiwhats_api.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     jid = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    phone_number = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false)
+                    phone_number = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     name = table.Column<string>(type: "varchar(150)", maxLength: 150, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -321,7 +344,7 @@ namespace multiwhats_api.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     to_jid = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    phone_number = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false)
+                    phone_number = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     body = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -465,6 +488,11 @@ namespace multiwhats_api.Migrations
                 column: "phone_number");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Devices_jid",
+                table: "Devices",
+                column: "jid");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Messages_chat_id",
                 table: "Messages",
                 column: "chat_id");
@@ -529,6 +557,9 @@ namespace multiwhats_api.Migrations
 
             migrationBuilder.DropTable(
                 name: "ClientTasks");
+
+            migrationBuilder.DropTable(
+                name: "Devices");
 
             migrationBuilder.DropTable(
                 name: "Messages");

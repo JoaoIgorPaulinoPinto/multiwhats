@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<Group> Groups { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<Device> Devices { get; set; }
 
     public int? CurrentUserId { get; set; }
 
@@ -123,6 +124,12 @@ public class AppDbContext : DbContext
                   .HasMaxLength(20);
             entity.HasIndex(e => e.Name).IsUnique();
             entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        modelBuilder.Entity<Device>(entity =>
+        {
+            entity.ToTable("Devices");
+            entity.HasIndex(e => e.Jid);
         });
 
         modelBuilder.Entity<AuditLog>(entity =>

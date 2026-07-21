@@ -1,6 +1,7 @@
 using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.repositories.interfaces;
+using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.ClientInterfaces;
 
 namespace multiwhats_api.src.usecases.usecases.ClientUseCases;
@@ -8,10 +9,12 @@ namespace multiwhats_api.src.usecases.usecases.ClientUseCases;
 public class UpdateClientUseCase : IUpdateClientUseCase
 {
     private readonly IClientRepository _clientRepository;
+    private readonly UseCaseLogger _useCaseLogger;
 
-    public UpdateClientUseCase(IClientRepository clientRepository)
+    public UpdateClientUseCase(IClientRepository clientRepository, UseCaseLogger useCaseLogger)
     {
         _clientRepository = clientRepository;
+        _useCaseLogger = useCaseLogger;
     }
 
     public async Task<ClientResponse> Execute(int id, UpdateClientRequest request)
@@ -22,6 +25,13 @@ public class UpdateClientUseCase : IUpdateClientUseCase
 
         client.Update(request.Name, request.MainPhoneNumber, request.Status);
         var updated = await _clientRepository.UpdateAsync(client);
+
+        await _useCaseLogger.LogAsync(
+            action: "UpdateClient",
+            entityType: "Client",
+            entityId: id,
+            description: $"Updated client #{id} (Name: \"{updated.Name}\", Phone: {updated.MainPhoneNumber}, Status: {updated.Status})"
+        );
 
         return new ClientResponse
         {

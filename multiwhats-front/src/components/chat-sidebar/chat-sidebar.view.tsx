@@ -1,9 +1,9 @@
 "use client"
 
 import { Search } from "lucide-react"
+import { AvatarView } from "../avatar/avatar.view"
 import { useChatSidebar } from "./chat-sidebar.logic"
 import styles from "./chat-sidebar.module.css"
-import { AvatarView } from "../avatar/avatar.view"
 
 interface Props {
   selectedId: number | null

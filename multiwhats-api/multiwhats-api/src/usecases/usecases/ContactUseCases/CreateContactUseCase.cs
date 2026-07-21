@@ -3,6 +3,7 @@ using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.helpers;
 using multiwhats_api.src.repositories.interfaces;
+using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.ContactInterfaces;
 
 namespace multiwhats_api.src.usecases.usecases.ContactUseCases;
@@ -11,11 +12,16 @@ public class CreateContactUseCase : ICreateContactUseCase
 {
     private readonly IContactRepository _contactRepository;
     private readonly IChatRepository _chatRepository;
+    private readonly UseCaseLogger _useCaseLogger;
 
-    public CreateContactUseCase(IContactRepository contactRepository, IChatRepository chatRepository)
+    public CreateContactUseCase(
+        IContactRepository contactRepository,
+        IChatRepository chatRepository,
+        UseCaseLogger useCaseLogger)
     {
         _contactRepository = contactRepository;
         _chatRepository = chatRepository;
+        _useCaseLogger = useCaseLogger;
     }
 
     public async Task<ContactResponse> Execute(CreateContactRequest request, int userId)
@@ -42,6 +48,14 @@ public class CreateContactUseCase : ICreateContactUseCase
             existingChat.LinkToContact(created.Id, created.ClientId);
             await _chatRepository.UpdateAsync(existingChat);
         }
+
+        await _useCaseLogger.LogAsync(
+            action: "CreateContact",
+            entityType: "Contact",
+            entityId: created.Id,
+            description: $"Created contact \"{created.Name}\" (Jid: {created.Jid}, ClientId: {created.ClientId})",
+            explicitUserId: userId
+        );
 
         return MapToResponse(created);
     }

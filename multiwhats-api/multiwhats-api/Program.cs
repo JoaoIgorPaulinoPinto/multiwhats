@@ -9,6 +9,7 @@ using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.AuthInterfaces;
 using multiwhats_api.src.usecases.interfaces.ChatInterfaces;
 using multiwhats_api.src.usecases.interfaces.ContactInterfaces;
+using multiwhats_api.src.usecases.interfaces.DeviceInterfaces;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
 using multiwhats_api.src.usecases.interfaces.ClientInterfaces;
 using multiwhats_api.src.usecases.interfaces.OccurrenceInterfaces;
@@ -16,6 +17,7 @@ using multiwhats_api.src.usecases.interfaces.TaskInterfaces;
 using multiwhats_api.src.usecases.usecases.AuthUseCases;
 using multiwhats_api.src.usecases.usecases.ChatUseCases;
 using multiwhats_api.src.usecases.usecases.ContactUseCases;
+using multiwhats_api.src.usecases.usecases.DeviceUseCases;
 using multiwhats_api.src.usecases.usecases.MessageUseCases;
 using multiwhats_api.src.usecases.usecases.ClientUseCases;
 using multiwhats_api.src.usecases.usecases.OccurrenceUseCases;
@@ -43,7 +45,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("Xampp");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         connectionString,
@@ -59,6 +61,7 @@ builder.Services.AddScoped<IOccurrenceRepository, OccurrenceRepository>();
 builder.Services.AddScoped<IClientTaskRepository, ClientTaskRepository>();
 builder.Services.AddScoped<IGroupRepository, GroupRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
 
 // Auth Use Cases
 builder.Services.AddScoped<IRegisterUserUseCase, RegisterUserUseCase>();
@@ -99,8 +102,12 @@ builder.Services.AddScoped<IUpdateTaskUseCase, UpdateTaskUseCase>();
 builder.Services.AddScoped<IDeleteTaskUseCase, DeleteTaskUseCase>();
 builder.Services.AddScoped<IUpdateTaskStatusUseCase, UpdateTaskStatusUseCase>();
 
+// Device Use Cases
+builder.Services.AddScoped<ISaveDeviceUseCase, SaveDeviceUseCase>();
+
 // Services
 builder.Services.AddSingleton<TokenBlacklistService>();
+builder.Services.AddSingleton<UseCaseLogger>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuditService>();
 
@@ -163,18 +170,5 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<WhatsappHub>("/whatsappHub");
 
-// Audit middleware — salva logs ao final de cada requisição
-// Mudar para logs dentro do use case, mais explicativos e rastreaveis
-// CriarContatoUseCase - O usuario ***** criou o contato com o Id **** as ********* (exemplo)
-app.Use(async (context, next) =>
-{
-    await next();
-
-    if (context.Request.Method is "POST" or "PUT" or "PATCH" or "DELETE")
-    {
-        var auditService = context.RequestServices.GetRequiredService<AuditService>();
-        await auditService.SaveAuditLogsAsync();
-    }
-});
 
 app.Run();

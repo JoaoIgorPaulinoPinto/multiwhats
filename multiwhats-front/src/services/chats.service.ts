@@ -1,7 +1,7 @@
 import { api } from "./api"
 import type { PaginatedResponse } from "./paginated.response"
 
-export type MessageDirection = "Incoming" | "Outgoing"
+export type MessageDirection = 0 | 1
 export type MessageType = "Text" | "Image" | "Audio" | "Video" | "Document" | "Sticker" | "Contact" | "Location" | "Unknown"
 export type DeliveryStatus = "Pending" | "Sent" | "Delivered" | "Read" | "Failed"
 

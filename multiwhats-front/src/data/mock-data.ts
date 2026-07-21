@@ -61,7 +61,7 @@ export interface Message {
   toJid: string | null
   phoneNumber: string
   body: string | null
-  direction: "Incoming" | "Outgoing"
+  direction: 0 | 1
   type: string
   timestamp: number
   sentAt: string
@@ -122,26 +122,26 @@ export const mockOccurrences: Occurrence[] = [
 
 export const mockMessagesByContact: Record<number, Message[]> = {
   1: [
-    { id: 1, phoneNumber: "(11) 99999-0001", body: "Olá, gostaria de saber sobre o status do meu pedido", direction: "Incoming", timestamp: 1718000000, sentAt: "2025-06-20T14:30:00Z", contactId: 1, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-20T14:30:00Z" },
-    { id: 2, phoneNumber: "(11) 99999-0001", body: "Olá João, seu pedido #1234 está a caminho e deve chegar em até 3 dias úteis.", direction: "Outgoing", timestamp: 1718000100, sentAt: "2025-06-20T14:31:00Z", contactId: 1, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-20T14:31:00Z" },
-    { id: 3, phoneNumber: "(11) 99999-0001", body: "Obrigado! Aguardarei.", direction: "Incoming", timestamp: 1718000200, sentAt: "2025-06-20T14:32:00Z", contactId: 1, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-20T14:32:00Z" },
+    { id: 1, phoneNumber: "(11) 99999-0001", body: "Olá, gostaria de saber sobre o status do meu pedido", direction: 0, timestamp: 1718000000, sentAt: "2025-06-20T14:30:00Z", contactId: 1, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-20T14:30:00Z" },
+    { id: 2, phoneNumber: "(11) 99999-0001", body: "Olá João, seu pedido #1234 está a caminho e deve chegar em até 3 dias úteis.", direction: 1, timestamp: 1718000100, sentAt: "2025-06-20T14:31:00Z", contactId: 1, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-20T14:31:00Z" },
+    { id: 3, phoneNumber: "(11) 99999-0001", body: "Obrigado! Aguardarei.", direction: 0, timestamp: 1718000200, sentAt: "2025-06-20T14:32:00Z", contactId: 1, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-20T14:32:00Z" },
   ],
   2: [
-    { id: 10, phoneNumber: "(11) 99999-0002", body: "Bom dia! Quando renova minha assinatura?", direction: "Incoming", timestamp: 1717500000, sentAt: "2025-06-19T09:15:00Z", contactId: 2, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-19T09:15:00Z" },
-    { id: 11, phoneNumber: "(11) 99999-0002", body: "Bom dia Maria! Sua assinatura vence em 30/06. Vou te enviar o boleto.", direction: "Outgoing", timestamp: 1717500100, sentAt: "2025-06-19T09:16:00Z", contactId: 2, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-19T09:16:00Z" },
+    { id: 10, phoneNumber: "(11) 99999-0002", body: "Bom dia! Quando renova minha assinatura?", direction: 0, timestamp: 1717500000, sentAt: "2025-06-19T09:15:00Z", contactId: 2, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-19T09:15:00Z" },
+    { id: 11, phoneNumber: "(11) 99999-0002", body: "Bom dia Maria! Sua assinatura vence em 30/06. Vou te enviar o boleto.", direction: 1, timestamp: 1717500100, sentAt: "2025-06-19T09:16:00Z", contactId: 2, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-19T09:16:00Z" },
   ],
   3: [
-    { id: 20, phoneNumber: "(11) 99999-0003", body: "Preciso de suporte com o sistema", direction: "Incoming", timestamp: 1717000000, sentAt: "2025-06-18T16:45:00Z", contactId: 3, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-18T16:45:00Z" },
-    { id: 21, phoneNumber: "(11) 99999-0003", body: "Claro Carlos, me fala qual o problema que já te ajudo.", direction: "Outgoing", timestamp: 1717000100, sentAt: "2025-06-18T16:46:00Z", contactId: 3, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-18T16:46:00Z" },
-    { id: 22, phoneNumber: "(11) 99999-0003", body: "Não consigo acessar o módulo de relatórios", direction: "Incoming", timestamp: 1717000200, sentAt: "2025-06-18T16:47:00Z", contactId: 3, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-18T16:47:00Z" },
+    { id: 20, phoneNumber: "(11) 99999-0003", body: "Preciso de suporte com o sistema", direction: 0, timestamp: 1717000000, sentAt: "2025-06-18T16:45:00Z", contactId: 3, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-18T16:45:00Z" },
+    { id: 21, phoneNumber: "(11) 99999-0003", body: "Claro Carlos, me fala qual o problema que já te ajudo.", direction: 1, timestamp: 1717000100, sentAt: "2025-06-18T16:46:00Z", contactId: 3, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-18T16:46:00Z" },
+    { id: 22, phoneNumber: "(11) 99999-0003", body: "Não consigo acessar o módulo de relatórios", direction: 0, timestamp: 1717000200, sentAt: "2025-06-18T16:47:00Z", contactId: 3, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-18T16:47:00Z" },
   ],
   5: [
-    { id: 30, phoneNumber: "(11) 99999-0005", body: "Vou precisar remarcar a reunião", direction: "Incoming", timestamp: 1716300000, sentAt: "2025-06-16T08:00:00Z", contactId: 5, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-16T08:00:00Z" },
-    { id: 31, phoneNumber: "(11) 99999-0005", body: "Sem problemas Pedro, qual a melhor data para você?", direction: "Outgoing", timestamp: 1716300100, sentAt: "2025-06-16T08:01:00Z", contactId: 5, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-16T08:01:00Z" },
+    { id: 30, phoneNumber: "(11) 99999-0005", body: "Vou precisar remarcar a reunião", direction: 0, timestamp: 1716300000, sentAt: "2025-06-16T08:00:00Z", contactId: 5, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-16T08:00:00Z" },
+    { id: 31, phoneNumber: "(11) 99999-0005", body: "Sem problemas Pedro, qual a melhor data para você?", direction: 1, timestamp: 1716300100, sentAt: "2025-06-16T08:01:00Z", contactId: 5, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-16T08:01:00Z" },
   ],
   8: [
-    { id: 40, phoneNumber: "(11) 99999-0008", body: "O produto chegou com defeito, quero trocar", direction: "Incoming", timestamp: 1715600000, sentAt: "2025-06-13T17:00:00Z", contactId: 8, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-13T17:00:00Z" },
-    { id: 41, phoneNumber: "(11) 99999-0008", body: "Sinto muito Fernanda! Vou abrir uma ocorrência de troca para você.", direction: "Outgoing", timestamp: 1715600100, sentAt: "2025-06-13T17:01:00Z", contactId: 8, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-13T17:01:00Z" },
+    { id: 40, phoneNumber: "(11) 99999-0008", body: "O produto chegou com defeito, quero trocar", direction: 0, timestamp: 1715600000, sentAt: "2025-06-13T17:00:00Z", contactId: 8, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-13T17:00:00Z" },
+    { id: 41, phoneNumber: "(11) 99999-0008", body: "Sinto muito Fernanda! Vou abrir uma ocorrência de troca para você.", direction: 1, timestamp: 1715600100, sentAt: "2025-06-13T17:01:00Z", contactId: 8, messageId: null, fromJid: "", toJid: "", type: "text", notifyName: null, hasMedia: false, createdAt: "2025-06-13T17:01:00Z" },
   ],
 }
 
@@ -208,7 +208,7 @@ export function sendMessage(contactId: number, text: string): void {
   const msg: Message = {
     id: Date.now(),
     body: text,
-    direction: "Outgoing",
+    direction: 1,
     phoneNumber: text,
     timestamp: Date.now() / 1000,
     sentAt: now,

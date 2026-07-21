@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { chatsService, type MessageResponse } from "../../services/chats.service"
 import { contactsService } from "../../services/contacts.service"
 import { companiesService, type ClientResponse } from "../../services/companies.service"
+import { ws } from "../../services/websocket"
 
 const cache = new Map<number, MessageResponse[]>()
 
@@ -27,6 +28,20 @@ export function useChatArea(chatId: number | null, jid: string) {
   useEffect(() => {
     companiesService.list().then(setClients).catch(console.error)
   }, [])
+
+  const handleNewMessage = useCallback((payload: unknown) => {
+    const msg = payload as MessageResponse
+    if (msg.chatId === chatId) {
+      setMessages((prev) => [...prev, msg])
+      cache.delete(chatId)
+    }
+  }, [chatId])
+
+  useEffect(() => {
+    const unsubReceived = ws.on("message:received", handleNewMessage)
+    const unsubSent = ws.on("message:sent", handleNewMessage)
+    return () => { unsubReceived(); unsubSent() }
+  }, [handleNewMessage])
 
   useEffect(() => {
     setInputValue("")

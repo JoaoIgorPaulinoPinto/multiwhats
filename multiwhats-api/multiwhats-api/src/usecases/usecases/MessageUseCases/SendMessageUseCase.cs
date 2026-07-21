@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.SignalR;
 using System.Text;
 using System.Text.Json;
 using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.data.enums;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.repositories.interfaces;
+using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
 
 namespace multiwhats_api.src.usecases.usecases.MessageUseCases;
@@ -14,17 +16,26 @@ public class SendMessageUseCase : ISendMessageUseCase
     private readonly IMessageRepository _messageRepository;
     private readonly IChatRepository _chatRepository;
     private readonly IContactRepository _contactRepository;
+    private readonly IDeviceRepository _deviceRepository;
+    private readonly UseCaseLogger _useCaseLogger;
+    private readonly IHubContext<WhatsappHub> _hubContext;
 
     public SendMessageUseCase(
         HttpClient httpClient,
         IMessageRepository messageRepository,
         IChatRepository chatRepository,
-        IContactRepository contactRepository)
+        IContactRepository contactRepository,
+        IDeviceRepository deviceRepository,
+        UseCaseLogger useCaseLogger,
+        IHubContext<WhatsappHub> hubContext)
     {
         _httpClient = httpClient;
         _messageRepository = messageRepository;
         _chatRepository = chatRepository;
         _contactRepository = contactRepository;
+        _deviceRepository = deviceRepository;
+        _useCaseLogger = useCaseLogger;
+        _hubContext = hubContext;
     }
 
     public async Task<bool> Execute(SendMessageRequest request, int userId)
@@ -73,8 +84,12 @@ public class SendMessageUseCase : ISendMessageUseCase
             var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             var phoneNumberFromJid = request.Jid.Split('@')[0];
 
+            var device = await _deviceRepository.GetCurrentAsync();
+            var deviceJid = device?.Jid;
+
             var message = new Message(
-                fromJid: request.Jid,
+                fromJid: deviceJid ?? request.Jid,
+                toJid: request.Jid,
                 phoneNumber: phoneNumberFromJid,
                 body: request.Text,
                 direction: MessageDirection.Outgoing,
@@ -90,12 +105,37 @@ public class SendMessageUseCase : ISendMessageUseCase
             chat.UpdateLastMessage(DateTime.UtcNow, request.Text);
             await _chatRepository.UpdateAsync(chat);
 
+            await _useCaseLogger.LogAsync(
+                action: "SendMessage",
+                entityType: "Message",
+                entityId: null,
+                description: $"Sent message to {request.Jid}: \"{Truncate(request.Text, 80)}\" (direction: Outgoing)",
+                explicitUserId: userId
+            );
+
+            var msgResponse = GetMessagesUseCase.MapToResponse(message);
+            await _hubContext.Clients.All.SendAsync("MessageSent", msgResponse);
+
             return true;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Erro ao integrar com a API do WhatsApp: {ex.Message}");
+
+            await _useCaseLogger.LogAsync(
+                action: "SendMessage",
+                entityType: "Message",
+                entityId: null,
+                description: $"Failed to send message to {request.Jid}: {ex.Message}",
+                explicitUserId: userId
+            );
+
             return false;
         }
+    }
+
+    private static string Truncate(string? value, int maxLength)
+    {
+        return value?.Length > maxLength ? value[..maxLength] + "..." : value ?? "";
     }
 }

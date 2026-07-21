@@ -10,11 +10,13 @@ public class LoginUseCase : ILoginUseCase
 {
     private readonly IUserRepository _userRepository;
     private readonly TokenService _tokenService;
+    private readonly UseCaseLogger _useCaseLogger;
 
-    public LoginUseCase(IUserRepository userRepository, TokenService tokenService)
+    public LoginUseCase(IUserRepository userRepository, TokenService tokenService, UseCaseLogger useCaseLogger)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
+        _useCaseLogger = useCaseLogger;
     }
 
     public async Task<LoginResponse> Execute(LoginRequest request)
@@ -24,6 +26,13 @@ public class LoginUseCase : ILoginUseCase
             throw new UnauthorizedAccessException("Credenciais inválidas ou usuário inativo.");
 
         var token = _tokenService.GenerateToken(user);
+
+        await _useCaseLogger.LogAsync(
+            action: "Login",
+            entityType: "User",
+            entityId: user.Id,
+            description: $"User \"{user.Name}\" logged in (Role: {user.Role})"
+        );
 
         return new LoginResponse
         {

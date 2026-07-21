@@ -11,6 +11,7 @@ app.use(express.json());
 const PORT = 3333;
 // URL da sua API ASP.NET que vai processar e salvar as mensagens recebidas
 const ASPNET_WEBHOOK_URL = "http://127.0.0.1:5261/api/webhook/whatsapp";
+const ASPNET_DEVICE_URL = "http://127.0.0.1:5261/api/device";
 
 // ==========================================
 // 1. INICIALIZAÇÃO DO WHATSAPP-WEB.JS
@@ -56,6 +57,18 @@ client.on("ready", async () => {
 
     const info = client.info;
     console.log(info);
+
+    try {
+        await axios.post(ASPNET_DEVICE_URL, {
+            jid: info.wid.user + "@c.us",
+            phoneNumber: info.wid.user,
+            pushName: info.pushname || info.me?.name || null,
+            platform: info.platform || null
+        });
+        console.log("✅ Informações do dispositivo enviadas para o backend");
+    } catch (error) {
+        console.error("❌ Erro ao enviar informações do dispositivo:", error.message);
+    }
 });
 // ENDPOINT 1: Escuta as mensagens e envia para o ASP.NET
 client.on("message_create", async (msg) => {

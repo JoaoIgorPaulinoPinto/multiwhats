@@ -2,6 +2,7 @@
 using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.repositories.interfaces;
+using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.ChatInterfaces;
 
 namespace multiwhats_api.src.usecases.usecases.ChatUseCases;
@@ -9,10 +10,12 @@ namespace multiwhats_api.src.usecases.usecases.ChatUseCases;
 public class CreateChatUseCase : ICreateChatUseCase
 {
     private readonly IChatRepository _chatRepository;
+    private readonly UseCaseLogger _useCaseLogger;
 
-    public CreateChatUseCase(IChatRepository chatRepository)
+    public CreateChatUseCase(IChatRepository chatRepository, UseCaseLogger useCaseLogger)
     {
         _chatRepository = chatRepository;
+        _useCaseLogger = useCaseLogger;
     }
 
     public async Task<ChatResponse> Execute(CreateChatRequest request)
@@ -30,6 +33,14 @@ public class CreateChatUseCase : ICreateChatUseCase
         );
 
         var created = await _chatRepository.AddAsync(chat);
+
+        await _useCaseLogger.LogAsync(
+            action: "CreateChat",
+            entityType: "Chat",
+            entityId: created.Id,
+            description: $"Created chat \"{created.Jid}\" (Name: {created.Name ?? "N/A"}, Phone: {created.PhoneNumber})"
+        );
+
         return MapToResponse(created);
     }
 
