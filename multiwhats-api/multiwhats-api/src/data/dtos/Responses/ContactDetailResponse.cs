@@ -1,6 +1,6 @@
 namespace multiwhats_api.src.data.dtos.Responses;
 
-public record ContactResponse
+public record ContactDetailResponse
 {
     public int Id { get; init; }
     public string Jid { get; init; } = null!;

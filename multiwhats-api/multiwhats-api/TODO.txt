@@ -3,13 +3,13 @@
 - Criar sistema de Fila, para carregar mensagems de forma gradativa e sem travar ou demorar
 - Criar sistema de cache, para que ao trocar de chat, não precise ficar fazendo requisições o tempo todo
 - Criar sistema de ocorrencias e atrela-las aos contatos (colocar badges nos contatos)
-- Criar sistema de configurações como (aceitar audio/video/fotos/figurinhas/etc) 
+- Criar sistema de configurações como (aceitar audio/video/fotos/figurinhas/etc) --- UTILIZAR POLIMORFISMO
 - Remover todos Enums e trocar por tabelas no banco
 - Entender melhor a logica de tarefas e ocorrencias e implementa-las no front-end
 
 ## REGRA DE NOGOCIO ##
 -   Ao deletar uma empresa, contatos vinculados a ela devem perder o vinculo.
--   
+
 
 ================================================================================
   MULTIWHATS API - DOCUMENTAÇÃO DA ARQUITETURA

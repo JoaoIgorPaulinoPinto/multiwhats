@@ -18,7 +18,7 @@ public class CreateClientUseCase : ICreateClientUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<ClientResponse> Execute(CreateClientRequest request, int userId)
+    public async Task<ClientDetailResponse> Execute(CreateClientRequest request, int userId)
     {
         var client = new Client(request.Name, request.MainPhoneNumber);
         var created = await _clientRepository.AddAsync(client);
@@ -31,7 +31,7 @@ public class CreateClientUseCase : ICreateClientUseCase
             explicitUserId: userId
         );
 
-        return new ClientResponse
+        return new ClientDetailResponse
         {
             Id = created.Id,
             Name = created.Name,

@@ -158,3 +158,5 @@ public class Message : BaseEntity
         OccurrenceId = occurrenceId;
     }
 }
+
+// Criar polimorfismo de mensagens para tipos de mensagens diferentes

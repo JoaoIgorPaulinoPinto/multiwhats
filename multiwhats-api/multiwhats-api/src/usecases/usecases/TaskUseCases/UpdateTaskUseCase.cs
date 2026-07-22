@@ -17,7 +17,7 @@ public class UpdateTaskUseCase : IUpdateTaskUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<TaskResponse> Execute(int id, UpdateTaskRequest request)
+    public async Task<TaskDetailResponse> Execute(int id, UpdateTaskRequest request)
     {
         var task = await _taskRepository.GetByIdAsync(id);
         if (task == null)
@@ -33,6 +33,6 @@ public class UpdateTaskUseCase : IUpdateTaskUseCase
             description: $"Updated task #{id} (Title: \"{updated.Title}\", Status: {updated.Status}, Priority: {updated.Priority})"
         );
 
-        return GetTasksUseCase.MapResponseStatic(updated);
+        return GetTasksUseCase.MapToDetailResponse(updated);
     }
 }

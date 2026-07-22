@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using multiwhats_api.src.data.dtos.Requests;
-using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.usecases.interfaces.ChatInterfaces;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
 using multiwhats_api.src.usecases.interfaces.OccurrenceInterfaces;
-using System.Security.Claims;
 
 namespace multiwhats_api.src.controllers;
 

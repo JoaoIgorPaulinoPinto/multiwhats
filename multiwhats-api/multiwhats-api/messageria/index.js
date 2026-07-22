@@ -89,14 +89,14 @@ client.on("message_create", async (msg) => {
             msg.from.split('@')[0];                    // Fallback para o JID da mensagem
 
         const numeroReal = rawNumber ? rawNumber.replace(/\D/g, '') : null;
-        console.log("==================================");
-        console.log("Nova mensagem recebida");
-        console.log("Nome (WhatsApp):", msg._data?.notifyName || contato.pushname);
-        console.log("Nome Salvo na Agenda:", contato.name || "Não salvo");
-        console.log("JID Original:", msg.from);
-        console.log("Número Real Extraído:", numeroReal);
-        console.log("Número Real Extraído 2 teste:", numeroReal);
-        console.log("==================================");
+        // console.log("==================================");
+        // console.log("Nova mensagem recebida");
+        // console.log("Nome (WhatsApp):", msg._data?.notifyName || contato.pushname);
+        // console.log("Nome Salvo na Agenda:", contato.name || "Não salvo");
+        // console.log("JID Original:", msg.from);
+        // console.log("Número Real Extraído:", numeroReal);
+        // console.log("Número Real Extraído 2 teste:", numeroReal);
+        // console.log("==================================");
 
         // 3. Detecta tipo e mídia
         let messageType = "text";

@@ -19,7 +19,7 @@ public class UpdateContactUseCase : IUpdateContactUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<ContactResponse> Execute(int id, UpdateContactRequest request)
+    public async Task<ContactDetailResponse> Execute(int id, UpdateContactRequest request)
     {
         var contact = await _contactRepository.GetByIdAsync(id)
             ?? throw new KeyNotFoundException("Contato não encontrado.");
@@ -36,6 +36,6 @@ public class UpdateContactUseCase : IUpdateContactUseCase
             explicitUserId: null
         );
 
-        return CreateContactUseCase.MapToResponse(updated);
+        return CreateContactUseCase.MapToDetailResponse(updated);
     }
 }

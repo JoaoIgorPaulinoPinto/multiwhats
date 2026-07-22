@@ -113,7 +113,7 @@ public class SendMessageUseCase : ISendMessageUseCase
                 explicitUserId: userId
             );
 
-            var msgResponse = GetMessagesUseCase.MapToResponse(message);
+            var msgResponse = GetMessagesUseCase.MapToSummaryResponse(message);
             await _hubContext.Clients.All.SendAsync("MessageSent", msgResponse);
 
             return true;

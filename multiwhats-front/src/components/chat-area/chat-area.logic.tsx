@@ -8,7 +8,7 @@ import { ws } from "../../services/websocket"
 
 const cache = new Map<number, MessageResponse[]>()
 
-export function useChatArea(chatId: number | null, jid: string) {
+export function useChatArea(chatId: number | null, jid: string, lastMessage?: string, lastMessageAt?: string | null) {
   const [inputValue, setInputValue] = useState("")
   const [messages, setMessages] = useState<MessageResponse[]>([])
   const [loading, setLoading] = useState(false)
@@ -60,19 +60,57 @@ export function useChatArea(chatId: number | null, jid: string) {
       if (lastFetched.current === chatId) return
     }
 
+    if (!cached && lastMessage) {
+      setMessages([{
+        id: 0,
+        messageId: null,
+        fromJid: "",
+        toJid: null,
+        phoneNumber: "",
+        body: lastMessage,
+        direction: 0 as const,
+        type: "Text" as const,
+        timestamp: 0,
+        sentAt: lastMessageAt ?? "",
+        notifyName: null,
+        hasMedia: false,
+        mediaUrl: null,
+        mediaMimeType: null,
+        mediaFilename: null,
+        mediaSize: null,
+        mediaCaption: null,
+        deliveryStatus: "Delivered" as const,
+        isForwarded: false,
+        chatId,
+        userId: null,
+        occurrenceId: null,
+        replyToId: null,
+        createdAt: lastMessageAt ?? "",
+      }])
+    }
+
+    const requestChatId = chatId
     lastFetched.current = chatId
     setLoading(true)
     chatsService
       .getMessages(chatId)
       .then((res) => {
-        cache.set(chatId, res.items)
-        setMessages(res.items.reverse())
+        if (requestChatId !== lastFetched.current) return
+        const newItems = res.items
+        const oldItems = cache.get(chatId) ?? []
+        const isSame =
+          newItems.length === oldItems.length &&
+          newItems.every((m, i) => m.id === oldItems[i].id && m.body === oldItems[i].body)
+        cache.set(chatId, newItems)
+        if (!isSame) setMessages(newItems.slice())
       })
       .catch((e) => {
         console.error(`[ChatArea] erro ao carregar mensagens:`, e)
-        if (!cached) setMessages([])
+        if (requestChatId === lastFetched.current && !cached) setMessages([])
       })
-      .finally(() => setLoading(false))
+      .finally(() => {
+        if (requestChatId === lastFetched.current) setLoading(false)
+      })
   }, [chatId])
 
   function openSaveModal(phone: string, name: string) {

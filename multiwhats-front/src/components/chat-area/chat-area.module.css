@@ -101,6 +101,28 @@
   border-top-right-radius: 2px;
 }
 
+.status {
+  display: flex;
+  align-items: flex-end;
+  margin-left: 2px;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.status .read {
+  color: #53bdeb;
+  opacity: 1;
+}
+
+.status .failed {
+  color: #dc2626;
+  opacity: 1;
+}
+
+.status .pending {
+  opacity: 0.4;
+}
+
 .received .bubble {
   border-top-left-radius: 2px;
 }

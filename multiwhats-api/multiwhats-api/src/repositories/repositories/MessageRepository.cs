@@ -52,15 +52,18 @@ public class MessageRepository : IMessageRepository
 
     public async Task<List<Message>> GetByChatAsync(int chatId, int page, int pageSize)
     {
-        return await _context.Messages
+        var messages = await _context.Messages
             .AsNoTracking()
             .Where(m => m.ChatId == chatId)
-            .OrderByDescending(m => m.Timestamp)
+            .OrderByDescending(m => m.Timestamp) // Pega as mais recentes no banco
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
-    }
 
+        messages.Reverse(); // Inverte a ordem na memória para o chat exibir corretamente (mais antiga no topo, mais recente embaixo)
+
+        return messages;
+    }
     public async Task<int> GetByChatTotalCountAsync(int chatId)
     {
         return await _context.Messages.CountAsync(m => m.ChatId == chatId);

@@ -3,7 +3,7 @@ import type { PaginatedResponse } from "./paginated.response"
 
 export type MessageDirection = 0 | 1
 export type MessageType = "Text" | "Image" | "Audio" | "Video" | "Document" | "Sticker" | "Contact" | "Location" | "Unknown"
-export type DeliveryStatus = "Pending" | "Sent" | "Delivered" | "Read" | "Failed"
+export type DeliveryStatus = "Pending" | "Sent" | "Delivered" | "Read" | "Failed" | 0 | 1 | 2 | 3
 
 export interface ChatResponse {
   id: number

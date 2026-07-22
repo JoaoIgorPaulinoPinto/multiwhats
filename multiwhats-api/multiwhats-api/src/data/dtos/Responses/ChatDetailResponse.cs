@@ -1,8 +1,6 @@
-﻿using multiwhats_api.src.data.enums;
-
 namespace multiwhats_api.src.data.dtos.Responses;
 
-public record ChatResponse
+public record ChatDetailResponse
 {
     public int Id { get; init; }
     public string Jid { get; init; } = null!;

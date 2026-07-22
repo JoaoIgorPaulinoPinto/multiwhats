@@ -4,8 +4,8 @@ namespace multiwhats_api.src.usecases.interfaces.MessageInterfaces;
 
 public interface IGetMessagesUseCase
 {
-    Task<List<MessageResponse>> ExecuteAll();
-    Task<MessageResponse?> ExecuteById(int id);
-    Task<PaginatedResponse<MessageResponse>> ExecuteByChat(int chatId, int page, int pageSize);
-    Task<List<MessageResponse>> ExecuteByPhoneNumber(string phoneNumber);
+    Task<List<MessageSummaryResponse>> ExecuteAll();
+    Task<MessageDetailResponse?> ExecuteById(int id);
+    Task<PaginatedResponse<MessageSummaryResponse>> ExecuteByChat(int chatId, int page, int pageSize);
+    Task<List<MessageSummaryResponse>> ExecuteByPhoneNumber(string phoneNumber);
 }

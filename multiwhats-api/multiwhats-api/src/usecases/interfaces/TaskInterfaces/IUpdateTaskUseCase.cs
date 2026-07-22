@@ -5,5 +5,5 @@ namespace multiwhats_api.src.usecases.interfaces.TaskInterfaces;
 
 public interface IUpdateTaskUseCase
 {
-    Task<TaskResponse> Execute(int id, UpdateTaskRequest request);
+    Task<TaskDetailResponse> Execute(int id, UpdateTaskRequest request);
 }

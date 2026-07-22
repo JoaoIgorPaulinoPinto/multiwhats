@@ -5,5 +5,5 @@ namespace multiwhats_api.src.usecases.interfaces.ChatInterfaces;
 
 public interface ICreateChatUseCase
 {
-    Task<ChatResponse> Execute(CreateChatRequest request);
+    Task<ChatDetailResponse> Execute(CreateChatRequest request);
 }

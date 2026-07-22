@@ -16,7 +16,7 @@ public class AssignContactUseCase : IAssignContactUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<ContactResponse> Assign(int contactId, int clientId)
+    public async Task<ContactDetailResponse> Assign(int contactId, int clientId)
     {
         var contact = await _contactRepository.GetByIdAsync(contactId);
         if (contact == null)
@@ -32,10 +32,10 @@ public class AssignContactUseCase : IAssignContactUseCase
             description: $"Assigned contact #{contactId} (Name: {contact.Name}) to client #{clientId}"
         );
 
-        return CreateContactUseCase.MapToResponse(updated);
+        return CreateContactUseCase.MapToDetailResponse(updated);
     }
 
-    public async Task<ContactResponse> Unassign(int contactId)
+    public async Task<ContactDetailResponse> Unassign(int contactId)
     {
         var contact = await _contactRepository.GetByIdAsync(contactId);
         if (contact == null)
@@ -51,6 +51,6 @@ public class AssignContactUseCase : IAssignContactUseCase
             description: $"Unassigned contact #{contactId} (Name: {contact.Name}) from client"
         );
 
-        return CreateContactUseCase.MapToResponse(updated);
+        return CreateContactUseCase.MapToDetailResponse(updated);
     }
 }

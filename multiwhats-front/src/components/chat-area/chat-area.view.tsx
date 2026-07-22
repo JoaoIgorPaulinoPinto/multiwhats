@@ -1,6 +1,6 @@
 "use client"
 
-import { Paperclip, Send, Smile, UserPlus, X } from "lucide-react"
+import { Check, CheckCheck, Paperclip, Send, Smile, UserPlus, X } from "lucide-react"
 import { AvatarView } from "../avatar/avatar.view"
 import { useChatArea } from "./chat-area.logic"
 import styles from "./chat-area.module.css"
@@ -10,10 +10,12 @@ interface Props {
   contactName?: string
   phoneNumber?: string
   jid: string
+  lastMessage: string
+  lastMessageAt?: string | null
   chatContactId?: number | null
 }
 
-export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContactId }: Props) {
+export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContactId, lastMessage}: Props) {
   const {
     inputValue,
     setInputValue,
@@ -36,7 +38,7 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
     openSaveModal,
     closeSaveModal,
     createContact,
-  } = useChatArea(chatId, jid)
+  } = useChatArea(chatId, jid, lastMessage)
 
   return (
     <main className={styles.chat}>
@@ -65,16 +67,36 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
         {messages.length === 0 ? (
           <div className={styles.empty}>
             {chatId ? (
+              <>
               <div className={styles.loadingMessages}>
                 <span className="spinner spinnerDark" />
                 Buscando mensagens...
               </div>
+                <div className={styles.received}>
+                <div className={styles.bubble}>{lastMessage}</div>
+              </div>
+              </>
             ) : "Selecione um contato para ver as mensagens"}
           </div>
         ) : (
           messages.map((msg) => (
             <div key={msg.id} className={msg.direction === 0 ? styles.received : styles.sent}>
               <div className={styles.bubble}>{msg.body}</div>
+              {msg.direction === 1 && (
+                <span className={styles.status}>
+                  {msg.deliveryStatus === "Read" || msg.deliveryStatus === 3 ? (
+                    <CheckCheck size={14} className={styles.read} />
+                  ) : msg.deliveryStatus === "Delivered" || msg.deliveryStatus === 2 ? (
+                    <CheckCheck size={14} />
+                  ) : msg.deliveryStatus === "Sent" || msg.deliveryStatus === 1 ? (
+                    <Check size={14} />
+                  ) : msg.deliveryStatus === "Failed" ? (
+                    <X size={12} className={styles.failed} />
+                  ) : (
+                    <Check size={14} className={styles.pending} />
+                  )}
+                </span>
+              )}
             </div>
           ))
         )}

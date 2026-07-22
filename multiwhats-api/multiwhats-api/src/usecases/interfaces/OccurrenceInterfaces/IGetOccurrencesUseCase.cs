@@ -4,7 +4,7 @@ namespace multiwhats_api.src.usecases.interfaces.OccurrenceInterfaces;
 
 public interface IGetOccurrencesUseCase
 {
-    Task<List<OccurrenceResponse>> ExecuteAll();
-    Task<OccurrenceResponse?> ExecuteById(int id);
-    Task<List<OccurrenceResponse>> ExecuteByChat(int chatId);
+    Task<List<OccurrenceListResponse>> ExecuteAll();
+    Task<OccurrenceDetailResponse?> ExecuteById(int id);
+    Task<List<ChatOccurrenceSummaryResponse>> ExecuteByChat(int chatId);
 }

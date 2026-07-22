@@ -18,7 +18,7 @@ public class CreateChatUseCase : ICreateChatUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<ChatResponse> Execute(CreateChatRequest request)
+    public async Task<ChatDetailResponse> Execute(CreateChatRequest request)
     {
         var existing = await _chatRepository.GetByJidAsync(request.Jid);
         if (existing != null)
@@ -41,12 +41,12 @@ public class CreateChatUseCase : ICreateChatUseCase
             description: $"Created chat \"{created.Jid}\" (Name: {created.Name ?? "N/A"}, Phone: {created.PhoneNumber})"
         );
 
-        return MapToResponse(created);
+        return MapToDetailResponse(created);
     }
 
-    internal static ChatResponse MapToResponse(Chat chat)
+    internal static ChatDetailResponse MapToDetailResponse(Chat chat)
     {
-        return new ChatResponse
+        return new ChatDetailResponse
         {
             Id = chat.Id,
             Jid = chat.Jid,

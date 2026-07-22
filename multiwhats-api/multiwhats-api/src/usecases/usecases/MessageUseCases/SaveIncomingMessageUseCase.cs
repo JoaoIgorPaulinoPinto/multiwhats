@@ -138,7 +138,7 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
             explicitUserName: userName
         );
 
-        var msgResponse = GetMessagesUseCase.MapToResponse(message);
+        var msgResponse = GetMessagesUseCase.MapToDetailResponse(message);
         await _hubContext.Clients.All.SendAsync("MessageReceived", msgResponse);
 
         return true;

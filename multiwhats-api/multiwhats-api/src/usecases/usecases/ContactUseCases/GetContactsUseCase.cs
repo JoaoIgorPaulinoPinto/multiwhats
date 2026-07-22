@@ -17,7 +17,7 @@ public class GetContactsUseCase : IGetContactsUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<List<ContactResponse>> ExecuteAll()
+    public async Task<List<ContactListResponse>> ExecuteAll()
     {
         var contacts = await _contactRepository.GetAllAsync();
 
@@ -28,10 +28,10 @@ public class GetContactsUseCase : IGetContactsUseCase
             description: $"Listed all contacts (count: {contacts.Count})"
         );
 
-        return contacts.Select(CreateContactUseCase.MapToResponse).ToList();
+        return contacts.Select(CreateContactUseCase.MapToListResponse).ToList();
     }
 
-    public async Task<ContactResponse?> ExecuteById(int id)
+    public async Task<ContactDetailResponse?> ExecuteById(int id)
     {
         var contact = await _contactRepository.GetByIdAsync(id);
 
@@ -44,10 +44,10 @@ public class GetContactsUseCase : IGetContactsUseCase
                 : $"Contact #{id} not found"
         );
 
-        return contact != null ? CreateContactUseCase.MapToResponse(contact) : null;
+        return contact != null ? CreateContactUseCase.MapToDetailResponse(contact) : null;
     }
 
-    public async Task<ContactResponse?> ExecuteByPhoneNumber(string phoneNumber)
+    public async Task<ContactDetailResponse?> ExecuteByPhoneNumber(string phoneNumber)
     {
         var sanitized = PhoneNumberHelper.Sanitize(phoneNumber);
         var contact = await _contactRepository.GetByPhoneNumberAsync(sanitized);
@@ -61,6 +61,6 @@ public class GetContactsUseCase : IGetContactsUseCase
                 : $"Contact not found for phone {sanitized}"
         );
 
-        return contact != null ? CreateContactUseCase.MapToResponse(contact) : null;
+        return contact != null ? CreateContactUseCase.MapToDetailResponse(contact) : null;
     }
 }

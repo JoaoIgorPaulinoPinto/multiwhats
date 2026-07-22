@@ -7,7 +7,7 @@ import styles from "./chat-sidebar.module.css"
 
 interface Props {
   selectedId: number | null
-  onSelect: (id: number, name: string, phoneNumber: string, jid: string, contactId: number | null) => void
+  onSelect: (id: number, name: string, phoneNumber: string, jid: string, contactId: number | null, lastMessage: string, lastMessageAt: string | null) => void
 }
 
 function SkeletonChatItem() {
@@ -51,7 +51,7 @@ export function ChatSidebarView({ selectedId, onSelect }: Props) {
           <div
             key={chat.id}
             className={`${styles.chatItem} ${selectedId === chat.id ? styles.active : ""}`}
-            onClick={() => onSelect(chat.id, chat.contactName ?? chat.phoneNumber ?? `Chat #${chat.id}`, chat.phoneNumber ?? "", chat.jid, chat.contactId)}
+            onClick={() => onSelect(chat.id, chat.contactName ?? chat.phoneNumber ?? `Chat #${chat.id}`, chat.phoneNumber ?? "", chat.jid, chat.contactId, chat.lastMessageBody ?? "", chat.lastMessageAt)}
           >
             <AvatarView name={chat.contactName ?? chat.name ?? chat.phoneNumber ?? "?"} size={42} />
             <div className={styles.chatInfo}>

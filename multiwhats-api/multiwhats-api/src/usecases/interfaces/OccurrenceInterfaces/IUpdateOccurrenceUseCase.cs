@@ -5,5 +5,5 @@ namespace multiwhats_api.src.usecases.interfaces.OccurrenceInterfaces;
 
 public interface IUpdateOccurrenceUseCase
 {
-    Task<OccurrenceResponse> Execute(int id, UpdateOccurrenceRequest request);
+    Task<OccurrenceDetailResponse> Execute(int id, UpdateOccurrenceRequest request);
 }

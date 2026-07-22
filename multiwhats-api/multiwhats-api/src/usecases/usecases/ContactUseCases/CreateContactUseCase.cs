@@ -24,7 +24,7 @@ public class CreateContactUseCase : ICreateContactUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<ContactResponse> Execute(CreateContactRequest request, int userId)
+    public async Task<ContactDetailResponse> Execute(CreateContactRequest request, int userId)
     {
         var existing = await _contactRepository.GetByJidAsync(request.Jid);
         if (existing != null)
@@ -57,12 +57,27 @@ public class CreateContactUseCase : ICreateContactUseCase
             explicitUserId: userId
         );
 
-        return MapToResponse(created);
+        return MapToDetailResponse(created);
     }
 
-    internal static ContactResponse MapToResponse(Contact contact)
+    internal static ContactListResponse MapToListResponse(Contact contact)
     {
-        return new ContactResponse
+        return new ContactListResponse
+        {
+            Id = contact.Id,
+            Name = contact.Name,
+            PhoneNumber = contact.PhoneNumber,
+            PushName = contact.PushName,
+            IsBlocked = contact.IsBlocked,
+            IsGroup = contact.IsGroup,
+            ClientName = contact.Client?.Name,
+            CreatedAt = contact.CreatedAt
+        };
+    }
+
+    internal static ContactDetailResponse MapToDetailResponse(Contact contact)
+    {
+        return new ContactDetailResponse
         {
             Id = contact.Id,
             Jid = contact.Jid,

@@ -18,7 +18,7 @@ public class GetMessagesUseCase : IGetMessagesUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<List<MessageResponse>> ExecuteAll()
+    public async Task<List<MessageSummaryResponse>> ExecuteAll()
     {
         var messages = await _messageRepository.GetAllAsync();
 
@@ -29,10 +29,10 @@ public class GetMessagesUseCase : IGetMessagesUseCase
             description: $"Listed all messages (count: {messages.Count})"
         );
 
-        return messages.Select(MapToResponse).ToList();
+        return messages.Select(MapToSummaryResponse).ToList();
     }
 
-    public async Task<MessageResponse?> ExecuteById(int id)
+    public async Task<MessageDetailResponse?> ExecuteById(int id)
     {
         var message = await _messageRepository.GetByIdAsync(id);
 
@@ -45,10 +45,10 @@ public class GetMessagesUseCase : IGetMessagesUseCase
                 : $"Message #{id} not found"
         );
 
-        return message != null ? MapToResponse(message) : null;
+        return message != null ? MapToDetailResponse(message) : null;
     }
 
-    public async Task<PaginatedResponse<MessageResponse>> ExecuteByChat(int chatId, int page, int pageSize)
+    public async Task<PaginatedResponse<MessageSummaryResponse>> ExecuteByChat(int chatId, int page, int pageSize)
     {
         var messages = await _messageRepository.GetByChatAsync(chatId, page, pageSize);
         var totalCount = await _messageRepository.GetByChatTotalCountAsync(chatId);
@@ -60,9 +60,9 @@ public class GetMessagesUseCase : IGetMessagesUseCase
             description: $"Listed messages for chat #{chatId} (page {page}, pageSize {pageSize}, total {totalCount})"
         );
 
-        return new PaginatedResponse<MessageResponse>
+        return new PaginatedResponse<MessageSummaryResponse>
         {
-            Items = messages.Select(MapToResponse).ToList(),
+            Items = messages.Select(MapToSummaryResponse).ToList(),
             TotalCount = totalCount,
             Page = page,
             PageSize = pageSize,
@@ -70,7 +70,7 @@ public class GetMessagesUseCase : IGetMessagesUseCase
         };
     }
 
-    public async Task<List<MessageResponse>> ExecuteByPhoneNumber(string phoneNumber)
+    public async Task<List<MessageSummaryResponse>> ExecuteByPhoneNumber(string phoneNumber)
     {
         var sanitized = PhoneNumberHelper.Sanitize(phoneNumber);
         var messages = await _messageRepository.GetByPhoneNumberAsync(sanitized);
@@ -82,12 +82,31 @@ public class GetMessagesUseCase : IGetMessagesUseCase
             description: $"Listed messages for phone {sanitized} (count: {messages.Count})"
         );
 
-        return messages.Select(MapToResponse).ToList();
+        return messages.Select(MapToSummaryResponse).ToList();
     }
 
-    internal static MessageResponse MapToResponse(Message message)
+    internal static MessageSummaryResponse MapToSummaryResponse(Message message)
     {
-        return new MessageResponse
+        return new MessageSummaryResponse
+        {
+            Id = message.Id,
+            Body = message.Body,
+            Direction = message.Direction,
+            Type = message.Type,
+            SentAt = message.SentAt,
+            PhoneNumber = message.PhoneNumber,
+            NotifyName = message.NotifyName,
+            HasMedia = message.HasMedia,
+            MediaMimeType = message.MediaMimeType,
+            DeliveryStatus = message.DeliveryStatus,
+            ChatId = message.ChatId,
+            CreatedAt = message.CreatedAt
+        };
+    }
+
+    internal static MessageDetailResponse MapToDetailResponse(Message message)
+    {
+        return new MessageDetailResponse
         {
             Id = message.Id,
             MessageId = message.MessageId,
@@ -112,7 +131,7 @@ public class GetMessagesUseCase : IGetMessagesUseCase
             UserId = message.UserId,
             OccurrenceId = message.OccurrenceId,
             ReplyToId = message.ReplyToId,
-            CreatedAt = message.CreatedAt,
+            CreatedAt = message.CreatedAt
         };
     }
 }

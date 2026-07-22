@@ -5,5 +5,5 @@ namespace multiwhats_api.src.usecases.interfaces.ContactInterfaces;
 
 public interface ICreateContactUseCase
 {
-    Task<ContactResponse> Execute(CreateContactRequest request, int userId);
+    Task<ContactDetailResponse> Execute(CreateContactRequest request, int userId);
 }
