@@ -4,7 +4,7 @@ import qrcode from 'qrcode-terminal';
 import axios from 'axios';
 
 
-const { Client, LocalAuth } = pkg;
+const { Client, LocalAuth, MessageMedia } = pkg;
 const app = express();
 app.use(express.json());
 
@@ -110,10 +110,17 @@ client.on("message_create", async (msg) => {
             hasMedia = true;
             const media = await msg.downloadMedia().catch(() => null);
             if (media) {
-                messageType = media.mimetype?.startsWith("image") ? "image"
-                    : media.mimetype?.startsWith("audio") ? "audio"
-                    : media.mimetype?.startsWith("video") ? "video"
-                    : "document";
+                if (media.mimetype === "image/webp") {
+                    messageType = "sticker";
+                } else if (media.mimetype?.startsWith("image")) {
+                    messageType = "image";
+                } else if (media.mimetype?.startsWith("audio")) {
+                    messageType = "audio";
+                } else if (media.mimetype?.startsWith("video")) {
+                    messageType = "video";
+                } else {
+                    messageType = "document";
+                }
                 mediaUrl = media.data ? `data:${media.mimetype};base64,${media.data}` : null;
                 mediaMimeType = media.mimetype;
                 mediaFilename = media.filename || null;
@@ -151,22 +158,56 @@ client.initialize();
 // 2. ENDPOINT PARA O ASP.NET ENVIAR MENSAGENS
 // ==========================================
 app.post('/api/enviar', async (req, res) => {
-    const { jid, mensagem } = req.body;
+    const { jid, mensagem, type, mediaBase64, mediaMimeType, caption, filename } = req.body;
 
-    if (!jid || !mensagem) {
-        return res.status(400).json({ error: 'JID e mensagem são obrigatórios.' });
+    if (!jid) {
+        return res.status(400).json({ error: 'JID é obrigatório.' });
+    }
+
+    if (type !== "text" && !mediaBase64) {
+        return res.status(400).json({ error: 'mediaBase64 é obrigatório para mensagens de mídia.' });
     }
 
     try {
-        console.log(`[WhatsApp] Tentando enviar mensagem para: ${jid}`);
+        console.log(`[WhatsApp] Tentando enviar ${type || 'text'} para: ${jid}`);
 
         const chat = await client.getChatById(jid).catch(() => null);
 
         let resposta;
-        if (chat) {
-            resposta = await chat.sendMessage(mensagem);
+
+        if (type && type !== "text" && mediaBase64) {
+            const media = await MessageMedia.fromBase64(mediaBase64, mediaMimeType);
+
+            const sendOptions = {};
+            if (caption) sendOptions.caption = caption;
+            if (filename && (type === "document")) sendOptions.filename = filename;
+
+            if (type === "sticker") {
+                const stickerMedia = await MessageMedia.fromBase64(mediaBase64, mediaMimeType || "image/webp");
+                if (chat) {
+                    resposta = await chat.sendMessage(stickerMedia);
+                } else {
+                    resposta = await client.sendMessage(jid, stickerMedia);
+                }
+            } else if (Object.keys(sendOptions).length > 0) {
+                if (chat) {
+                    resposta = await chat.sendMessage(media, sendOptions);
+                } else {
+                    resposta = await client.sendMessage(jid, media, sendOptions);
+                }
+            } else {
+                if (chat) {
+                    resposta = await chat.sendMessage(media);
+                } else {
+                    resposta = await client.sendMessage(jid, media);
+                }
+            }
         } else {
-            resposta = await client.sendMessage(jid, mensagem);
+            if (chat) {
+                resposta = await chat.sendMessage(mensagem);
+            } else {
+                resposta = await client.sendMessage(jid, mensagem);
+            }
         }
 
         const messageId = (resposta && resposta.id && resposta.id._serialized)

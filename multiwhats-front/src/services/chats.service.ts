@@ -4,11 +4,54 @@ import type { PaginatedResponse } from "./paginated.response"
 export type MessageDirection = 0 | 1
 export type MessageType = "Text" | "Image" | "Audio" | "Video" | "Document" | "Sticker" | "Contact" | "Location" | "Unknown"
 export type DeliveryStatus = "Pending" | "Sent" | "Delivered" | "Read" | "Failed" | 0 | 1 | 2 | 3
+export type OccurrenceStatus = "Open" | "InProgress" | "Resolved" | "Closed" | 0 | 1 | 2 | 3
+export type Priority = "Low" | "Medium" | "High" | "Urgent" | 0 | 1 | 2 | 3
 
-export interface ChatResponse {
+export interface OccurrenceSummary {
+  id: number
+  title: string
+  status: OccurrenceStatus
+  priority: Priority
+  assignedToName: string | null
+  messageCount: number
+  createdAt: string
+}
+
+export interface OccurrenceDetail {
+  id: number
+  title: string
+  description: string | null
+  status: OccurrenceStatus
+  priority: Priority
+  chatId: number
+  assignedToUserId: number | null
+  assignedToName: string | null
+  createdByUserId: number | null
+  createdByName: string | null
+  messageCount: number
+  createdAt: string
+  lastUpdate: string
+}
+
+export interface ChatListResponse {
+  id: number
+  name: string
+  phoneNumber: string | null
+  contactName: string | null
+  clientId: number | null
+  clientName: string | null
+  lastMessageAt: string | null
+  lastMessageBody: string | null
+  assignedToUserName: string | null
+  messageCount: number
+  occurrences: OccurrenceSummary[] | null
+  createdAt: string
+}
+
+export interface ChatDetailResponse {
   id: number
   jid: string
-  phoneNumber: string
+  phoneNumber: string | null
   name: string | null
   contactId: number | null
   contactName: string | null
@@ -16,6 +59,7 @@ export interface ChatResponse {
   clientName: string | null
   lastMessageAt: string | null
   lastMessageBody: string | null
+  occurrences: OccurrenceDetail[] | null
   assignedToUserId: number | null
   assignedToUserName: string | null
   createdByUserId: number | null
@@ -54,11 +98,11 @@ export interface MessageResponse {
 
 export const chatsService = {
   listChats(page = 1, pageSize = 20) {
-    return api.get<PaginatedResponse<ChatResponse>>(`/api/chats?page=${page}&pageSize=${pageSize}`)
+    return api.get<PaginatedResponse<ChatListResponse>>(`/api/chats?page=${page}&pageSize=${pageSize}`)
   },
 
   getChat(id: number) {
-    return api.get<ChatResponse>(`/api/chats/${id}`)
+    return api.get<ChatDetailResponse>(`/api/chats/${id}`)
   },
 
   getMessages(chatId: number, page = 1, pageSize = 50) {
@@ -73,5 +117,17 @@ export const chatsService = {
 
   sendMessage(jid: string, text: string) {
     return api.post<MessageResponse>("/api/messages/send", { jid, text })
+  },
+
+  sendMediaMessage(jid: string, type: MessageType, mediaBase64: string, options?: { text?: string; mediaMimeType?: string; mediaFilename?: string; mediaCaption?: string }) {
+    return api.post<MessageResponse>("/api/messages/send", {
+      jid,
+      type,
+      mediaBase64,
+      text: options?.text,
+      mediaMimeType: options?.mediaMimeType,
+      mediaFilename: options?.mediaFilename,
+      mediaCaption: options?.mediaCaption,
+    })
   },
 }

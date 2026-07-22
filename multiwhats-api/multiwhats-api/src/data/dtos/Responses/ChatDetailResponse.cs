@@ -12,6 +12,7 @@ public record ChatDetailResponse
     public string? ClientName { get; init; }
     public DateTime? LastMessageAt { get; init; }
     public string? LastMessageBody { get; init; }
+    public List<OccurrenceDetailResponse>? Occurrences { get; init; }
     public int? AssignedToUserId { get; init; }
     public string? AssignedToUserName { get; init; }
     public int? CreatedByUserId { get; init; }

@@ -1,12 +1,12 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { chatsService, type ChatResponse } from "../../services/chats.service"
+import { chatsService, type ChatListResponse } from "../../services/chats.service"
 import { ws } from "../../services/websocket"
 
 export function useChatSidebar() {
   const [search, setSearch] = useState("")
-  const [chats, setChats] = useState<ChatResponse[]>([])
+  const [chats, setChats] = useState<ChatListResponse[]>([])
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(() => {

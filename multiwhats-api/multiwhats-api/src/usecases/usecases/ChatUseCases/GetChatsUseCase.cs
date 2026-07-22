@@ -33,19 +33,32 @@ public class GetChatsUseCase : IGetChatsUseCase
         foreach (var chat in chats)
         {
             var msgCount = await _messageRepository.GetByChatTotalCountAsync(chat.Id);
-            var occCount = await _occurrenceRepository.GetByChatAsync(chat.Id);
+            var occurrences = await _occurrenceRepository.GetByChatAsync(chat.Id);
+
+            var occurrenceSummaries = occurrences.Select(o => new ChatOccurrenceSummaryResponse
+            {
+                Id = o.Id,
+                Title = o.Title,
+                Status = o.Status,
+                Priority = o.Priority,
+                AssignedToName = o.AssignedTo?.Name,
+                MessageCount = o.Messages?.Count ?? 0,
+                CreatedAt = o.CreatedAt
+            }).ToList();
+
             responses.Add(new ChatListResponse
             {
                 Id = chat.Id,
-                Name = chat.Name ?? chat.Contact?.Name ?? chat.PhoneNumber,
+                Name = chat.Name ?? chat.Contact?.Name ?? chat.PhoneNumber ?? "Desconhecido",
                 PhoneNumber = chat.PhoneNumber,
                 ContactName = chat.Contact?.Name,
+                ClientId = chat.ClientId,
                 ClientName = chat.Client?.Name,
                 LastMessageAt = chat.LastMessageAt,
                 LastMessageBody = chat.LastMessageBody,
                 AssignedToUserName = chat.AssignedTo?.Name,
                 MessageCount = msgCount,
-                OccurrenceCount = occCount.Count,
+                Occurrences = occurrenceSummaries,
                 CreatedAt = chat.CreatedAt
             });
         }
@@ -73,6 +86,24 @@ public class GetChatsUseCase : IGetChatsUseCase
         if (chat == null) return null;
 
         var msgCount = await _messageRepository.GetByChatTotalCountAsync(chat.Id);
+        var occurrences = await _occurrenceRepository.GetByChatAsync(chat.Id);
+
+        var occurrenceDetails = occurrences.Select(o => new OccurrenceDetailResponse
+        {
+            Id = o.Id,
+            Title = o.Title,
+            Description = o.Description,
+            Status = o.Status,
+            Priority = o.Priority,
+            ChatId = o.ChatId,
+            AssignedToUserId = o.AssignedToUserId,
+            AssignedToName = o.AssignedTo?.Name,
+            CreatedByUserId = o.CreatedByUserId,
+            CreatedByName = o.CreatedBy?.Name,
+            MessageCount = o.Messages?.Count ?? 0,
+            CreatedAt = o.CreatedAt,
+            LastUpdate = o.LastUpdate
+        }).ToList();
 
         await _useCaseLogger.LogAsync(
             action: "GetChat",
@@ -95,9 +126,10 @@ public class GetChatsUseCase : IGetChatsUseCase
             LastMessageBody = chat.LastMessageBody,
             AssignedToUserId = chat.AssignedToUserId,
             AssignedToUserName = chat.AssignedTo?.Name,
+            Occurrences = occurrenceDetails,
             CreatedByUserId = chat.CreatedByUserId,
             MessageCount = msgCount,
-            OccurrenceCount = chat.Occurrences?.Count ?? 0,
+            OccurrenceCount = occurrences.Count,
             CreatedAt = chat.CreatedAt,
             LastUpdate = chat.LastUpdate
         };

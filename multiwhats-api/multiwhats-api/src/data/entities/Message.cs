@@ -51,8 +51,7 @@ public class Message : BaseEntity
     [Column("has_media")]
     public bool HasMedia { get; private set; }
 
-    [MaxLength(1000)]
-    [Column("media_url")]
+    [Column("media_url", TypeName = "TEXT")]
     public string? MediaUrl { get; private set; }
 
     [MaxLength(100)]
@@ -158,5 +157,3 @@ public class Message : BaseEntity
         OccurrenceId = occurrenceId;
     }
 }
-
-// Criar polimorfismo de mensagens para tipos de mensagens diferentes

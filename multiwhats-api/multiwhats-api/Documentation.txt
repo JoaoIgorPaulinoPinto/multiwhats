@@ -1,0 +1,695 @@
+-- TODO --
+- Adicionar a logica de ocorrencias ao KANBAN do front
+- Criar sistema de Fila, para carregar mensagems de forma gradativa e sem travar ou demorar
+- Criar sistema de cache, para que ao trocar de chat, não precise ficar fazendo requisições o tempo todo
+- Criar sistema de ocorrencias e atrela-las aos contatos (colocar badges nos contatos)
+- Criar sistema de configurações como (aceitar audio/video/fotos/figurinhas/etc) --- UTILIZAR POLIMORFISMO
+- Remover todos Enums e trocar por tabelas no banco
+- Entender melhor a logica de tarefas e ocorrencias e implementa-las no front-end
+
+## REGRA DE NOGOCIO ##
+-   Ao deletar uma empresa, contatos vinculados a ela devem perder o vinculo.
+
+
+================================================================================
+  MULTIWHATS API - DOCUMENTAÇÃO DA ARQUITETURA
+================================================================================
+
+  STACK:
+  - ASP.NET Core 10 (Web API + SignalR)
+  - MySQL 
+  - Node.js (messageria/) - WhatsApp Web.js + Express (porta 3000)
+  - JWT Bearer Auth
+  - Web Sockets
+  - Logs são salvos no banco e criados nos use cases
+  - Middleware de authentication utilizando JWT
+
+================ ARQUITETURA ===================================================
+
+SRC
+|- CONTROLLERS (controle de endpoints)
+|
+|- DATA |- db (conectores e manager de configurações do banco de dados)
+|       |- dots (data transfer objects - mapeadores de resposta ou requisições)
+|       |- entities (mapa de entidades/tabelas do banco)
+|       |- enums (enumerados de relacoes que não sao com entidades)
+|
+|- HELPERS ( auxiliares )
+|
+|- REPOSITORIES |- (comunicação entre banco de dados e casos de uso)
+|               |- (dividido em interfaces e repositories (Injeção de dependencia - Principio SOLID))
+|
+|- SERVICES |- (Serviços que são independentes e não fazem parte do fluxo geral da aplicação)
+|           |- AuditService - Auxiliar de Auditoria (é tipo um midleware)
+|           |- TokenBlackListService - Revoga o JWT token 
+|           |- UseCaseLogger - Envia mensagens de log, Singleton
+|           |- WhatsappHub - HUB do websocket
+|
+|- USECASES |- Casos de uso da aplicação
+            |- utiliza Injeção de dependencia também
+
+Messageria |- API Node que comunica com o Wpp-js
+Program.cs |- Gerenciador global da aplicação. Ponto de partida
+
+================================================================================
+  ENTIDADES E RELACIONAMENTOS
+================================================================================
+
+  Client (Empresa/Cliente)
+  ├── Id (PK)
+  ├── Name (obrigatório)
+  ├── MainPhoneNumber
+  ├── Status (ClientStatus: Active | Inactive)
+  ├── CreatedAt, LastUpdate, IsDeleted, CreatedByUserId, LastUpdatedByUserId
+  ├── ← Contacts[] (1:N - um cliente tem vários números)
+  ├── ← Chats[] (1:N)
+  └── ← ClientTasks[] (1:N - demandas da empresa)
+
+  Contact (Número de WhatsApp)
+  ├── Id (PK)
+  ├── Jid (5511999999999@c.us)
+  ├── PhoneNumber (5511999999999)
+  ├── Name (nome salvo na agenda)
+  ├── PushName (nome do perfil WhatsApp)
+  ├── ProfilePicUrl
+  ├── IsBlocked, IsGroup
+  ├── LastMessageAt
+  ├── ClientId? → Client (FK - atrelável/desatrelável via PATCH)
+  ├── GroupId? → Group
+  ├── CreatedByUserId → User
+  ├── CreatedAt, LastUpdate, IsDeleted
+  └── ← Chat? (1:1)
+
+  Chat (Conversa)
+  ├── Id (PK)
+  ├── Jid (único por conversa)
+  ├── PhoneNumber?
+  ├── Name?
+  ├── ContactId? → Contact (FK - 1:1 com Contact)
+  ├── ClientId? → Client (FK)
+  ├── LastMessageAt?, LastMessageBody?
+  ├── AssignedToUserId? → User (atendente responsável)
+  ├── CreatedByUserId → User
+  ├── CreatedAt, LastUpdate, IsDeleted
+  ├── ← Messages[] (1:N)
+  └── ← Occurrences[] (1:N)
+
+  Message (Mensagem)
+  ├── Id (PK)
+  ├── MessageId (ID serializado do WhatsApp, para dedup)
+  ├── FromJid, ToJid?, PhoneNumber, Body?
+  ├── Direction (Incoming | Outgoing)
+  ├── Type (Text | Image | Audio | Video | Document | Sticker | Contact | Location | Unknown)
+  ├── Timestamp (Unix) + SentAt (DateTime)
+  ├── NotifyName?
+  ├── HasMedia, MediaUrl?, MediaMimeType?, MediaFilename?, MediaSize?, MediaCaption?
+  ├── DeliveryStatus (Pending | Sent | Delivered | Read | Failed)
+  ├── IsForwarded
+  ├── ChatId → Chat (FK obrigatório)
+  ├── UserId? → User (quem enviou/recebeu)
+  ├── OccurrenceId? → Occurrence (vínculo opcional com chamado)
+  ├── ReplyToId? → Message (resposta a)
+  └── CreatedAt, LastUpdate, IsDeleted
+
+  Occurrence (Chamado)
+  ├── Id (PK)
+  ├── Title, Description?
+  ├── Status (Open | InProgress | Resolved | Closed)
+  ├── Priority (Low | Medium | High | Urgent)
+  ├── ChatId → Chat (FK obrigatório)
+  ├── AssignedToUserId? → User
+  ├── CreatedByUserId → User
+  ├── CreatedAt, LastUpdate, IsDeleted
+  └── ← Messages[]
+
+  ClientTask (Demanda da empresa)
+  ├── Id (PK)
+  ├── Title, Description?
+  ├── Status (Open | InProgress | Completed | Cancelled)
+  ├── Priority (Low | Medium | High | Urgent)
+  ├── DueDate?
+  ├── ClientId → Client (FK)
+  ├── AssignedToUserId? → User
+  ├── CreatedByUserId → User
+  └── CreatedAt, LastUpdate, IsDeleted
+
+  Group
+  ├── Id (PK)
+  ├── Name, Description?
+  ├── WhatsAppGroupId?
+  ├── CreatedAt, LastUpdate, IsDeleted
+  └── ← Members (Contact[])
+
+  Device (Dispositivo conectado)
+  ├── Id (PK)
+  ├── Jid (5511999999999@c.us)
+  ├── PhoneNumber?, PushName?, Platform?
+  ├── ConnectedAt, UpdatedAt
+
+  User
+  ├── Id (PK)
+  ├── Name [UNIQUE]
+  ├── Password
+  ├── Role (Support | Dev | Admin)
+  ├── IsActive
+  └── CreatedAt, LastUpdate, IsDeleted
+
+  AuditLog
+  ├── Id (PK)
+  ├── UserId?, UserName?, UserRole?
+  ├── EntityType (ex: "Contact", "Message")
+  ├── EntityId?
+  ├── Action ("Created" | "Updated" | "Deleted")
+  ├── Description ("Created Contact #5 - Maria - 5511999999999")
+  ├── OldValues? (JSON)
+  ├── NewValues? (JSON)
+  └── Timestamp
+
+================================================================================
+  ENUMS
+================================================================================
+
+  MessageDirection  → Incoming | Outgoing
+  MessageType       → Text | Image | Audio | Video | Document | Sticker | Contact | Location | Unknown
+  DeliveryStatus    → Pending | Sent | Delivered | Read | Failed
+  OccurrenceStatus  → Open | InProgress | Resolved | Closed
+  ClientTaskStatus  → Open | InProgress | Completed | Cancelled
+  Priority          → Low | Medium | High | Urgent
+  ClientStatus      → Active | Inactive
+  UserRole          → Support | Dev | Admin
+
+================================================================================
+  ROTAS DA API
+================================================================================
+
+  ─── AUTH ────────────────────────────────────────────────────────────────────
+  POST   /api/auth/register        [anon]  Registrar usuário
+  POST   /api/auth/login           [anon]  Login (retorna JWT + user)
+  POST   /api/auth/logout          [auth]  Revoga token
+
+  ─── CLIENTS ─────────────────────────────────────────────────────────────────
+  POST   /api/clients              [auth]  Criar cliente
+  GET    /api/clients              [auth]  Listar todos
+  GET    /api/clients/{id}         [auth]  Buscar por ID
+  PUT    /api/clients/{id}         [auth]  Atualizar
+  DELETE /api/clients/{id}         [auth]  Deletar (soft delete)
+  GET    /api/clients/{id}/contacts  [auth]  Contatos do cliente
+
+  ─── CONTACTS ────────────────────────────────────────────────────────────────
+  POST   /api/contacts             [auth]  Criar contato
+  GET    /api/contacts             [auth]  Listar todos
+  GET    /api/contacts/{id}        [auth]  Buscar por ID
+  PUT    /api/contacts/{id}        [auth]  Atualizar (nome, pushName, blocked)
+  DELETE /api/contacts/{id}        [auth]  Deletar
+  PATCH  /api/contacts/{id}/assign   [auth]  Atrelar a um cliente
+  PATCH  /api/contacts/{id}/unassign [auth]  Desatrelar do cliente
+
+  ─── CHATS ───────────────────────────────────────────────────────────────────
+  GET    /api/chats                [auth]  Listar chats (paginado ?page=1&pageSize=20)
+  GET    /api/chats/{id}           [auth]  Buscar chat por ID
+  GET    /api/chats/{id}/messages  [auth]  Mensagens do chat (paginado ?page=1&pageSize=50)
+  GET    /api/chats/{id}/occurrences [auth] Ocorrências do chat
+
+  ─── MESSAGES ────────────────────────────────────────────────────────────────
+  POST   /api/messages/send        [auth]  Enviar mensagem WhatsApp
+  GET    /api/messages             [auth]  Listar todas as mensagens
+  GET    /api/messages/{id}        [auth]  Buscar mensagem por ID
+  GET    /api/messages/phone/{phoneNumber} [auth]  Mensagens por telefone
+
+      ─── OCCURRENCES ─────────────────────────────────────────────────────────────
+      POST   /api/occurrences          [auth]  Criar ocorrência (via chatId)
+      GET    /api/occurrences          [auth]  Listar todas
+      GET    /api/occurrences/{id}     [auth]  Buscar por ID
+      PUT    /api/occurrences/{id}     [auth]  Atualizar
+      DELETE /api/occurrences/{id}     [auth]  Deletar
+
+  ─── TASKS ───────────────────────────────────────────────────────────────────
+  POST   /api/tasks                [auth]  Criar tarefa
+  GET    /api/tasks                [auth]  Listar todas
+  GET    /api/tasks/{id}           [auth]  Buscar por ID
+  PUT    /api/tasks/{id}           [auth]  Atualizar
+  DELETE /api/tasks/{id}           [auth]  Deletar
+  PATCH  /api/tasks/{id}/status    [Admin,Dev]  Alterar status
+
+  ─── DEVICE ──────────────────────────────────────────────────────────────────
+  POST   /api/device               [anon]  Salvar/atualizar dispositivo conectado
+  GET    /api/device               [anon]  Buscar dispositivo atual
+
+  ─── WEBHOOK ─────────────────────────────────────────────────────────────────
+  POST   /api/webhook/whatsapp     [anon]  Webhook do Node.js
+
+================================================================================
+  DTOs - REQUESTS
+================================================================================
+
+  ─── RegisterUserRequest ────────────────────────────────────────────────────
+  {
+    "name": "Joao",                    // [Required] MaxLength(200)
+    "password": "123123"               // [Required] MinLength(6)
+  }
+
+  ─── LoginRequest ───────────────────────────────────────────────────────────
+  {
+    "name": "Joao",                    // [Required]
+    "password": "123123"               // [Required]
+  }
+
+  ─── CreateClientRequest ────────────────────────────────────────────────────
+  {
+    "name": "Timontec",                // [Required] MaxLength(200)
+    "mainPhoneNumber": "5515999999999" // MaxLength(20) [opcional]
+  }
+
+  ─── UpdateClientRequest ────────────────────────────────────────────────────
+  {
+    "name": "Timontec",                // MaxLength(200) [opcional]
+    "mainPhoneNumber": "5515999999999", // MaxLength(20) [opcional]
+    "status": "Active"                 // ClientStatus (Active|Inactive) [opcional]
+  }
+
+  ─── CreateContactRequest ───────────────────────────────────────────────────
+  {
+    "jid": "5515987654321@c.us",       // [Required] MaxLength(100)
+    "phoneNumber": "5515987654321",    // [Required] MaxLength(20)
+    "name": "Maria",                   // MaxLength(150) [opcional]
+    "pushName": "Maria",               // MaxLength(150) [opcional]
+    "clientId": 1,                     // int? [opcional]
+    "groupId": 1                       // int? [opcional]
+  }
+
+  ─── UpdateContactRequest ───────────────────────────────────────────────────
+  {
+    "name": "Maria",                   // MaxLength(150) [opcional]
+    "pushName": "Maria Silva",         // MaxLength(150) [opcional]
+    "isBlocked": false                 // bool? [opcional]
+  }
+
+  ─── AssignContactRequest ───────────────────────────────────────────────────
+  {
+    "clientId": 1                      // int
+  }
+
+  ─── SendMessageRequest ─────────────────────────────────────────────────────
+  {
+    "jid": "5515999999999@c.us",       // [Required]
+    "text": "olá"                      // [Required]
+  }
+
+  ─── CreateOccurrenceRequest ────────────────────────────────────────────────
+  {
+    "title": "Problema boleto",        // [Required] MaxLength(200)
+    "description": "...",              // MaxLength(2000) [opcional]
+    "priority": "High",                // Priority (Low|Medium|High|Urgent) default: Medium
+    "chatId": 1                        // [Required]
+  }
+
+  ─── UpdateOccurrenceRequest ────────────────────────────────────────────────
+  {
+    "title": "Problema boleto",        // MaxLength(200) [opcional]
+    "description": "...",              // MaxLength(2000) [opcional]
+    "status": "InProgress",            // OccurrenceStatus (Open|InProgress|Resolved|Closed) [opcional]
+    "priority": "High",                // Priority (Low|Medium|High|Urgent) [opcional]
+    "assignedToUserId": 1              // int? [opcional]
+  }
+
+  ─── CreateTaskRequest ──────────────────────────────────────────────────────
+  {
+    "title": "Relatório custos",       // [Required] MaxLength(300)
+    "description": "...",              // MaxLength(2000) [opcional]
+    "priority": "Medium",              // Priority (Low|Medium|High|Urgent) default: Medium
+    "dueDate": "2025-12-31T00:00:00",  // DateTime? [opcional]
+    "clientId": 1                      // [Required]
+  }
+
+  ─── UpdateTaskRequest ──────────────────────────────────────────────────────
+  {
+    "title": "Relatório custos",       // MaxLength(300) [opcional]
+    "description": "...",              // MaxLength(2000) [opcional]
+    "status": "InProgress",            // ClientTaskStatus (Open|InProgress|Completed|Cancelled) [opcional]
+    "priority": "High",                // Priority (Low|Medium|High|Urgent) [opcional]
+    "dueDate": "2025-12-31T00:00:00",  // DateTime? [opcional]
+    "assignedToUserId": 1              // int? [opcional]
+  }
+
+  ─── UpdateTaskStatusRequest ────────────────────────────────────────────────
+  {
+    "status": "InProgress"             // ClientTaskStatus [SÓ Admin/Dev]
+  }
+
+  ─── CreateChatRequest ──────────────────────────────────────────────────────
+  {
+    "jid": "5515987654321@c.us",       // string
+    "phoneNumber": "5515987654321",    // string? [opcional]
+    "name": "Maria",                   // string? [opcional]
+    "contactId": 1,                    // int? [opcional]
+    "clientId": 1                      // int? [opcional]
+  }
+
+  ─── DeviceRequest ──────────────────────────────────────────────────────────
+  {
+    "jid": "5515999999999@c.us",       // string
+    "phoneNumber": "5515999999999",    // string? [opcional]
+    "pushName": "Maria",               // string? [opcional]
+    "platform": "web"                  // string? [opcional]
+  }
+
+  ─── WhatsAppWebhookDto (Node.js → ASP.NET) ────────────────────────────────
+  {
+    "from": "5511999999999@c.us",      // JID completo
+    "phoneNumber": "5511999999999",    // número limpo
+    "body": "mensagem",
+    "timestamp": 1712345678,           // long
+    "notifyName": "Nome do Contato",
+    "messageType": "text",             // text, image, audio, video, document
+    "hasMedia": false,
+    "mediaUrl": null,                  // base64 da mídia
+    "mediaMimeType": null,
+    "mediaFilename": null,
+    "mediaSize": null,                 // long?
+    "messageId": "true_...",           // ID único do WhatsApp
+    "isForwarded": false,
+    "userId": 1                        // ID do usuário dono da conexão
+  }
+
+================================================================================
+  DTOs - RESPONSES
+================================================================================
+
+  ─── LoginResponse ──────────────────────────────────────────────────────────
+  {
+    "token": "...",
+    "user": {
+      "id": 1,
+      "name": "Joao",
+      "role": "Support",              // UserRole (Support|Dev|Admin)
+      "isActive": true,
+      "createdAt": "2025-01-01T00:00:00"
+    }
+  }
+
+  ─── UserResponse ───────────────────────────────────────────────────────────
+  {
+    "id": 1,
+    "name": "Joao",
+    "role": "Support",
+    "isActive": true,
+    "createdAt": "2025-01-01T00:00:00"
+  }
+
+  ─── PaginatedResponse<T> ───────────────────────────────────────────────────
+  {
+    "items": [...],
+    "totalCount": 50,
+    "page": 1,
+    "pageSize": 20,
+    "totalPages": 3,
+    "hasPrevious": false,
+    "hasNext": true
+  }
+
+  ─── ClientListResponse ─────────────────────────────────────────────────────
+  {
+    "id": 1,
+    "name": "Timontec",
+    "mainPhoneNumber": "5515999999999",
+    "status": "Active",               // ClientStatus
+    "contactCount": 5,
+    "createdAt": "2025-01-01T00:00:00"
+  }
+
+  ─── ClientDetailResponse ───────────────────────────────────────────────────
+  {
+    "id": 1,
+    "name": "Timontec",
+    "mainPhoneNumber": "5515999999999",
+    "status": "Active",
+    "contactCount": 5,
+    "createdAt": "2025-01-01T00:00:00",
+    "lastUpdate": "2025-06-01T00:00:00"
+  }
+
+  ─── ContactListResponse ────────────────────────────────────────────────────
+  {
+    "id": 1,
+    "name": "Maria",
+    "phoneNumber": "5515987654321",
+    "pushName": "Maria",
+    "isBlocked": false,
+    "isGroup": false,
+    "clientName": "Timontec",
+    "createdAt": "2025-01-01T00:00:00"
+  }
+
+  ─── ContactDetailResponse ──────────────────────────────────────────────────
+  {
+    "id": 1,
+    "jid": "5515987654321@c.us",
+    "phoneNumber": "5515987654321",
+    "name": "Maria",
+    "pushName": "Maria",
+    "profilePicUrl": "...",
+    "isBlocked": false,
+    "isGroup": false,
+    "lastMessageAt": "2025-06-01T00:00:00",
+    "clientId": 1,
+    "clientName": "Timontec",
+    "groupId": null,
+    "groupName": null,
+    "createdByUserId": 1,
+    "createdAt": "2025-01-01T00:00:00",
+    "lastUpdate": "2025-06-01T00:00:00"
+  }
+
+  ─── OccurrenceListResponse ─────────────────────────────────────────────────
+  {
+    "id": 1,
+    "title": "Problema boleto",
+    "status": "Open",                  // OccurrenceStatus
+    "priority": "High",               // Priority
+    "chatName": "Maria - Timontec",
+    "assignedToName": "Joao",
+    "messageCount": 5,
+    "createdAt": "2025-01-01T00:00:00"
+  }
+
+  ─── OccurrenceDetailResponse ───────────────────────────────────────────────
+  {
+    "id": 1,
+    "title": "Problema boleto",
+    "description": "...",
+    "status": "Open",
+    "priority": "High",
+    "chatId": 1,
+    "assignedToUserId": 1,
+    "chatName": "Maria - Timontec",
+    "assignedToName": "Joao",
+    "createdByUserId": 1,
+    "createdByName": "Admin",
+    "messageCount": 5,
+    "createdAt": "2025-01-01T00:00:00",
+    "lastUpdate": "2025-06-01T00:00:00"
+  }
+
+  ─── TaskListResponse ───────────────────────────────────────────────────────
+  {
+    "id": 1,
+    "title": "Relatório custos",
+    "status": "Open",                  // ClientTaskStatus
+    "priority": "Medium",
+    "dueDate": "2025-12-31T00:00:00",
+    "clientName": "Timontec",
+    "assignedToName": "Joao",
+    "createdAt": "2025-01-01T00:00:00"
+  }
+
+  ─── TaskDetailResponse ─────────────────────────────────────────────────────
+  {
+    "id": 1,
+    "title": "Relatório custos",
+    "description": "...",
+    "status": "Open",
+    "priority": "Medium",
+    "dueDate": "2025-12-31T00:00:00",
+    "clientId": 1,
+    "clientName": "Timontec",
+    "assignedToUserId": 1,
+    "assignedToName": "Joao",
+    "createdByUserId": 1,
+    "createdByName": "Admin",
+    "createdAt": "2025-01-01T00:00:00",
+    "lastUpdate": "2025-06-01T00:00:00"
+  }
+
+  ─── MessageSummaryResponse ─────────────────────────────────────────────────
+  {
+    "id": 1,
+    "body": "Olá, tudo bem?",
+    "direction": "Incoming",           // MessageDirection (Incoming|Outgoing)
+    "type": "Text",                    // MessageType
+    "sentAt": "2025-06-01T00:00:00",
+    "phoneNumber": "5515987654321",
+    "notifyName": "Maria",
+    "hasMedia": false,
+    "mediaMimeType": null,
+    "deliveryStatus": "Delivered",     // DeliveryStatus
+    "chatId": 1,
+    "createdAt": "2025-06-01T00:00:00"
+  }
+
+  ─── MessageDetailResponse ──────────────────────────────────────────────────
+  {
+    "id": 1,
+    "messageId": "true_abc123",
+    "fromJid": "5515987654321@c.us",
+    "toJid": "5515999999999@c.us",
+    "phoneNumber": "5515987654321",
+    "body": "Olá, tudo bem?",
+    "direction": "Incoming",
+    "type": "Text",
+    "timestamp": 1712345678,           // long (Unix)
+    "sentAt": "2025-06-01T00:00:00",
+    "notifyName": "Maria",
+    "hasMedia": false,
+    "mediaUrl": null,
+    "mediaMimeType": null,
+    "mediaFilename": null,
+    "mediaSize": null,
+    "mediaCaption": null,
+    "deliveryStatus": "Delivered",
+    "isForwarded": false,
+    "chatId": 1,
+    "userId": null,
+    "occurrenceId": null,
+    "replyToId": null,
+    "createdAt": "2025-06-01T00:00:00"
+  }
+
+  ─── ChatListResponse ───────────────────────────────────────────────────────
+  {
+    "id": 1,
+    "name": "Maria - Timontec",
+    "phoneNumber": "5515987654321",
+    "contactName": "Maria",
+    "clientName": "Timontec",
+    "lastMessageAt": "2025-06-01T00:00:00",
+    "lastMessageBody": "Olá!",
+    "assignedToUserName": "Joao",
+    "messageCount": 15,
+    "occurrenceCount": 2,
+    "createdAt": "2025-01-01T00:00:00"
+  }
+
+  ─── ChatDetailResponse ─────────────────────────────────────────────────────
+  {
+    "id": 1,
+    "jid": "5515987654321@c.us",
+    "phoneNumber": "5515987654321",
+    "name": "Maria - Timontec",
+    "contactId": 1,
+    "contactName": "Maria",
+    "clientId": 1,
+    "clientName": "Timontec",
+    "lastMessageAt": "2025-06-01T00:00:00",
+    "lastMessageBody": "Olá!",
+    "assignedToUserId": 1,
+    "assignedToUserName": "Joao",
+    "createdByUserId": 1,
+    "messageCount": 15,
+    "occurrenceCount": 2,
+    "createdAt": "2025-01-01T00:00:00",
+    "lastUpdate": "2025-06-01T00:00:00"
+  }
+
+  ─── ChatOccurrenceSummaryResponse ──────────────────────────────────────────
+  {
+    "id": 1,
+    "title": "Problema boleto",
+    "status": "Open",
+    "priority": "High",
+    "assignedToName": "Joao",
+    "messageCount": 5,
+    "createdAt": "2025-01-01T00:00:00"
+  }
+
+  ─── GroupResponse ──────────────────────────────────────────────────────────
+  {
+    "id": 1,
+    "name": "Suporte Timontec",
+    "description": "Grupo de suporte",
+    "whatsappGroupId": "5515999999999@g.us",
+    "memberCount": 10,
+    "createdAt": "2025-01-01T00:00:00"
+  }
+
+  ─── DeviceResponse ─────────────────────────────────────────────────────────
+  {
+    "id": 1,
+    "jid": "5515999999999@c.us",
+    "phoneNumber": "5515999999999",
+    "pushName": "Maria",
+    "platform": "web",
+    "connectedAt": "2025-06-01T00:00:00",
+    "updatedAt": "2025-06-01T00:00:00"
+  }
+
+================================================================================
+  AUTORIZAÇÃO
+================================================================================
+
+  Role     | PATCH /api/tasks/{id}/status | Demais endpoints
+  ─────────┼──────────────────────────────┼──────────────────
+  Admin    | ✅ Sim                       | ✅ Sim
+  Dev      | ✅ Sim                       | ✅ Sim
+  Support  | ❌ Não                       | ✅ Sim
+
+  Regra no JWT: claim "role" = "Admin" | "Dev" | "Support"
+  Implementado via: [Authorize(Roles = "Admin,Dev")]
+
+================================================================================
+  AUDITORIA
+================================================================================
+
+  Acionada automaticamente ao final de requisições POST/PUT/PATCH/DELETE.
+
+  1. Interceptor (AppDbContext.ApplyAudit):
+     - Seta CreatedByUserId / LastUpdatedByUserId nas entidades
+     - Converte o delete em IsDeleted = true (nunca remove de fato)
+
+  2. AuditService (middleware em Program.cs):
+     - Gera logs com: quem fez, o que fez, valores antigos/novos (JSON)
+     - Salva na tabela AuditLogs
+     - Escreve no console com cor:
+       [AUDIT] 12:34:56 | User "Joao" (Admin) | Created Contact #5 | ...
+       [AUDIT] 12:35:10 | User "Maria" (Support) | Updated Occurrence #3 | ...
+
+================================================================================
+  ARQUITETURA (FLUXO DE DADOS)
+================================================================================
+
+  Frontend / .http
+       │
+       ▼
+  ASP.NET Core API  (localhost:5261)
+       │
+       ├── Controllers  →  Use Cases  →  Repositories  →  DbContext  →  MySQL
+       │
+       ├── SignalR Hub (/whatsappHub)  →  notifica web em tempo real
+       │
+       └── POST http://localhost:3000/api/enviar  →  Node.js (messageria)
+                                                          │
+                                                          ▼
+                                                    WhatsApp Web (Puppeteer)
+
+  Mensagens recebidas do WhatsApp:
+    Node.js → POST /api/webhook/whatsapp → ASP.NET salva + cria/atualiza Chat + emite SignalR
+
+================================================================================
+  COMANDOS
+================================================================================
+
+  dotnet run                     → Sobe API em http://localhost:5261
+  npm start                      → Sobe Node.js em http://localhost:3000
+  dotnet ef migrations add Nome  → Cria migration
+  dotnet ef database update      → Aplica migration no MySQL
+
+

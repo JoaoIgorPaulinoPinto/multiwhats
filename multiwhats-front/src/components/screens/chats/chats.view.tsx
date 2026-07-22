@@ -11,15 +11,17 @@ export function ChatsView() {
   const [selectedPhone, setSelectedPhone] = useState<string>("")
   const [selectedJid, setSelectedJid] = useState<string>("")
   const [selectedLastMessage, setSelectedLastMessage] = useState<string>("")
+  const [selectedLastMessageAt, setSelectedLastMessageAt] = useState<string | null>(null)
   const [selectedContactId, setSelectedContactId] = useState<number | null>(null)
 
-  function handleSelect(id: number, name: string, phoneNumber: string, jid: string, contactId: number | null, lastMessage: string) {
+  function handleSelect(id: number, name: string, phoneNumber: string, jid: string, contactId: number | null, lastMessage: string, lastMessageAt: string | null) {
     setSelectedId(id)
     setSelectedName(name)
     setSelectedPhone(phoneNumber)
     setSelectedJid(jid)
     setSelectedContactId(contactId)
     setSelectedLastMessage(lastMessage)
+    setSelectedLastMessageAt(lastMessageAt)
   }
 
   return (
@@ -32,6 +34,7 @@ export function ChatsView() {
         jid={selectedJid}
         chatContactId={selectedContactId}
         lastMessage={selectedLastMessage}
+        lastMessageAt={selectedLastMessageAt}
       />
     </div>
   )

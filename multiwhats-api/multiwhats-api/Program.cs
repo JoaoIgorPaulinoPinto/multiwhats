@@ -20,6 +20,7 @@ using multiwhats_api.src.usecases.usecases.ClientUseCases;
 using multiwhats_api.src.usecases.usecases.ContactUseCases;
 using multiwhats_api.src.usecases.usecases.DeviceUseCases;
 using multiwhats_api.src.usecases.usecases.MessageUseCases;
+using multiwhats_api.src.data.strategies;
 using multiwhats_api.src.usecases.usecases.OccurrenceUseCases;
 using multiwhats_api.src.usecases.usecases.TaskUseCases;
 using System.IdentityModel.Tokens.Jwt;
@@ -83,6 +84,15 @@ builder.Services.AddScoped<IAssignContactUseCase, AssignContactUseCase>();
 builder.Services.AddHttpClient<ISendMessageUseCase, SendMessageUseCase>();
 builder.Services.AddScoped<ISaveIncomingMessageUseCase, SaveIncomingMessageUseCase>();
 builder.Services.AddScoped<IGetMessagesUseCase, GetMessagesUseCase>();
+
+// Message Strategies
+builder.Services.AddSingleton<IMessageStrategy, TextMessageStrategy>();
+builder.Services.AddSingleton<IMessageStrategy, ImageMessageStrategy>();
+builder.Services.AddSingleton<IMessageStrategy, VideoMessageStrategy>();
+builder.Services.AddSingleton<IMessageStrategy, AudioMessageStrategy>();
+builder.Services.AddSingleton<IMessageStrategy, DocumentMessageStrategy>();
+builder.Services.AddSingleton<IMessageStrategy, StickerMessageStrategy>();
+builder.Services.AddSingleton<MessageStrategyFactory>();
 
 // Client Use Cases
 builder.Services.AddScoped<ICreateClientUseCase, CreateClientUseCase>();
