@@ -9,7 +9,17 @@
 
 ## REGRA DE NOGOCIO ##
 -   Ao deletar uma empresa, contatos vinculados a ela devem perder o vinculo.
+-   Validações de contato ja existe, empresa com esse nome ja existe e tudo mais
 
+## Subir no docker ##
+ 
+2- Implementar as ocorrencias na interface e o botao de avançar ocorrencia s elcionada
+
+3 - mostrar na interface as ocorrencias atuais de um contato
+
+4 - Adicionar tela de cadastro de Task para desenvolvedores (apenas eles podem ver essa tela, suport apenas cadastra) 
+
+5 - Melhorar o polimorfismo das mensagens (ADICIONAR SUPORTE A IMAGEM) *Poder colar o print*
 
 ================================================================================
   MULTIWHATS API - DOCUMENTAÇÃO DA ARQUITETURA

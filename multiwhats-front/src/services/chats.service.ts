@@ -37,6 +37,7 @@ export interface ChatListResponse {
   id: number
   name: string
   phoneNumber: string | null
+  contactId: number | null
   contactName: string | null
   clientId: number | null
   clientName: string | null

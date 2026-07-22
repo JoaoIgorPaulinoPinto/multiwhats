@@ -6,7 +6,7 @@ import axios from 'axios';
 
 const { Client, LocalAuth, MessageMedia } = pkg;
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '100mb' }));
 
 const PORT = process.env.PORT || 3333;
 const ASPNET_WEBHOOK_URL = process.env.ASPNET_WEBHOOK_URL || "http://127.0.0.1:5261/api/webhook/whatsapp";
@@ -158,71 +158,91 @@ client.initialize();
 // 2. ENDPOINT PARA O ASP.NET ENVIAR MENSAGENS
 // ==========================================
 app.post('/api/enviar', async (req, res) => {
-    const { jid, mensagem, type, mediaBase64, mediaMimeType, caption, filename } = req.body;
+    const {
+        jid,
+        mensagem,
+        type,
+        mediaBase64,
+        mediaMimeType,
+        caption,
+        filename
+    } = req.body;
 
     if (!jid) {
-        return res.status(400).json({ error: 'JID é obrigatório.' });
+        return res.status(400).json({
+            error: "JID é obrigatório."
+        });
     }
 
     if (type !== "text" && !mediaBase64) {
-        return res.status(400).json({ error: 'mediaBase64 é obrigatório para mensagens de mídia.' });
+        return res.status(400).json({
+            error: "mediaBase64 é obrigatório para mensagens de mídia."
+        });
     }
 
     try {
-        console.log(`[WhatsApp] Tentando enviar ${type || 'text'} para: ${jid}`);
+
+        console.log(`[WhatsApp] Tentando enviar ${type || "text"} para: ${jid}`);
 
         const chat = await client.getChatById(jid).catch(() => null);
 
         let resposta;
 
-        if (type && type !== "text" && mediaBase64) {
-            const media = await MessageMedia.fromBase64(mediaBase64, mediaMimeType);
+        // ============================
+        // ENVIO DE TEXTO
+        // ============================
+        if (!type || type === "text") {
+
+            if (chat)
+                resposta = await chat.sendMessage(mensagem);
+            else
+                resposta = await client.sendMessage(jid, mensagem);
+
+        } else {
+
+            // Remove prefixo data:image/png;base64,...
+            const base64 = mediaBase64.replace(/^data:.*;base64,/, "");
+
+            const media = new MessageMedia(
+                mediaMimeType,
+                base64,
+                filename || "arquivo"
+            );
 
             const sendOptions = {};
-            if (caption) sendOptions.caption = caption;
-            if (filename && (type === "document")) sendOptions.filename = filename;
 
-            if (type === "sticker") {
-                const stickerMedia = await MessageMedia.fromBase64(mediaBase64, mediaMimeType || "image/webp");
-                if (chat) {
-                    resposta = await chat.sendMessage(stickerMedia);
-                } else {
-                    resposta = await client.sendMessage(jid, stickerMedia);
-                }
-            } else if (Object.keys(sendOptions).length > 0) {
-                if (chat) {
-                    resposta = await chat.sendMessage(media, sendOptions);
-                } else {
-                    resposta = await client.sendMessage(jid, media, sendOptions);
-                }
-            } else {
-                if (chat) {
-                    resposta = await chat.sendMessage(media);
-                } else {
-                    resposta = await client.sendMessage(jid, media);
-                }
-            }
-        } else {
-            if (chat) {
-                resposta = await chat.sendMessage(mensagem);
-            } else {
-                resposta = await client.sendMessage(jid, mensagem);
-            }
+            if (caption)
+                sendOptions.caption = caption;
+
+            if (filename && type === "document")
+                sendOptions.filename = filename;
+
+            if (chat)
+                resposta = await chat.sendMessage(media, sendOptions);
+            else
+                resposta = await client.sendMessage(jid, media, sendOptions);
+
         }
 
-        const messageId = (resposta && resposta.id && resposta.id._serialized)
-            ? resposta.id._serialized
-            : `fallback-id-${Date.now()}`;
+        const messageId =
+            resposta?.id?._serialized ??
+            `fallback-${Date.now()}`;
 
-        console.log("Mensagem enviada ao wppw-js!", messageId)
+        console.log("✅ Mensagem enviada!", messageId);
+
         return res.status(200).json({
             sucesso: true,
-            messageId: messageId
+            messageId
         });
 
     } catch (error) {
-        console.error('❌ ERRO REAL AO ENVIAR NO WHATSAPP-WEB.JS:', error);
-        return res.status(500).json({ error: `Falha ao enviar a mensagem: ${error.message}` });
+
+        console.error("❌ ERRO AO ENVIAR:", error);
+
+        return res.status(500).json({
+            error: error.message
+        });
+
     }
 });
 app.listen(PORT, () => {

@@ -4,15 +4,20 @@ import { useEffect, useState, useCallback } from "react"
 import { chatsService, type ChatListResponse } from "../../services/chats.service"
 import { ws } from "../../services/websocket"
 
+let cachedChats: ChatListResponse[] | null = null
+
 export function useChatSidebar() {
   const [search, setSearch] = useState("")
-  const [chats, setChats] = useState<ChatListResponse[]>([])
-  const [loading, setLoading] = useState(true)
+  const [chats, setChats] = useState<ChatListResponse[]>(() => cachedChats ?? [])
+  const [loading, setLoading] = useState(cachedChats === null)
 
   const load = useCallback(() => {
     chatsService
       .listChats()
-      .then((res) => setChats(res.items))
+      .then((res) => {
+        cachedChats = res.items
+        setChats(res.items)
+      })
       .catch((e) => console.error(`[ChatSidebar] erro ao carregar:`, e))
       .finally(() => setLoading(false))
   }, [])

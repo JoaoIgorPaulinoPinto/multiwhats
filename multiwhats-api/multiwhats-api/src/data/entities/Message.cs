@@ -51,7 +51,7 @@ public class Message : BaseEntity
     [Column("has_media")]
     public bool HasMedia { get; private set; }
 
-    [Column("media_url", TypeName = "TEXT")]
+    [Column("media_url", TypeName = "LONGTEXT")]
     public string? MediaUrl { get; private set; }
 
     [MaxLength(100)]

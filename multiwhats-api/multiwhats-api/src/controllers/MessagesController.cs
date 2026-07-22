@@ -25,6 +25,7 @@ public class MessagesController : ControllerBase
 
     [HttpPost("send")]
     [Authorize]
+    [RequestSizeLimit(100 * 1024 * 1024)] // Limite de 100 MB
     public async Task<IActionResult> Send([FromBody] SendMessageRequest request)
     {
         var result = await _sendMessageUseCase.Execute(request, UserId);
@@ -36,6 +37,7 @@ public class MessagesController : ControllerBase
 
     [HttpGet]
     [Authorize]
+    [RequestSizeLimit(100 * 1024 * 1024)] // Limite de 100 MB
     public async Task<IActionResult> GetAll()
     {
         var messages = await _getMessagesUseCase.ExecuteAll();
@@ -44,6 +46,7 @@ public class MessagesController : ControllerBase
 
     [HttpGet("{id}")]
     [Authorize]
+    [RequestSizeLimit(100 * 1024 * 1024)] // Limite de 100 MB
     public async Task<IActionResult> GetById(int id)
     {
         var message = await _getMessagesUseCase.ExecuteById(id);
@@ -54,6 +57,7 @@ public class MessagesController : ControllerBase
 
     [HttpGet("phone/{phoneNumber}")]
     [Authorize]
+    [RequestSizeLimit(100 * 1024 * 1024)] // Limite de 100 MB
     public async Task<IActionResult> GetByPhoneNumber(string phoneNumber)
     {
         var messages = await _getMessagesUseCase.ExecuteByPhoneNumber(phoneNumber);
