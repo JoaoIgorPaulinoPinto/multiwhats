@@ -57,7 +57,7 @@ function MessageMedia({ msg }: { msg: { type: MessageType; mediaUrl: string | nu
   const isImage = msg.type === "Image" || msg.mediaMimeType?.startsWith("image/")
   const isVideo = msg.type === "Video" || msg.mediaMimeType?.startsWith("video/")
   const isAudio = msg.type === "Audio" || msg.mediaMimeType?.startsWith("audio/")
-  const isSticker = msg.type === "Sticker"
+  const isSticker = msg.type === "Sticker" || msg.mediaMimeType?.startsWith("image/webp")
 
   if (isSticker) {
     return (

@@ -35,6 +35,7 @@ export interface OccurrenceDetail {
 
 export interface ChatListResponse {
   id: number
+  jid: string
   name: string
   phoneNumber: string | null
   contactId: number | null
@@ -120,12 +121,12 @@ export const chatsService = {
     return api.post<MessageResponse>("/api/messages/send", { jid, text })
   },
 
-  sendMediaMessage(jid: string, type: MessageType, mediaBase64: string, options?: { text?: string; mediaMimeType?: string; mediaFilename?: string; mediaCaption?: string }) {
+  sendMediaMessage(jid: string, type: MessageType, MediaBase64: string, options?: { text?: string; mediaMimeType?: string; mediaFilename?: string; mediaCaption?: string }) {
     return api.post<MessageResponse>("/api/messages/send", {
       jid,
-      type,
-      mediaBase64,
       text: options?.text,
+      type,
+      MediaBase64,
       mediaMimeType: options?.mediaMimeType,
       mediaFilename: options?.mediaFilename,
       mediaCaption: options?.mediaCaption,

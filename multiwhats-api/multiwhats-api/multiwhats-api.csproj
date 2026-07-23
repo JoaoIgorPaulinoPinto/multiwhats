@@ -16,6 +16,10 @@
     <None Remove="src\repostories\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Properties\launchSettings.json" />
+  </ItemGroup>
+
 	<ItemGroup>
 		<!-- Forçando TUDO do Entity Framework para a versão 9.0.0 -->
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
@@ -35,7 +39,6 @@
 
 	<ItemGroup>
 	  <Folder Include="Migrations\" />
-	  <Folder Include="Properties\" />
 	  <Folder Include="src\repositories\repositories\" />
 	  <Folder Include="src\usecases\interfaces\ChatInterfaces\" />
 	</ItemGroup>

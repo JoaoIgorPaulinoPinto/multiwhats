@@ -69,7 +69,7 @@ export function ChatSidebarView({ selectedId, onSelect }: Props) {
           </>
         ) : chats.map((chat) => {
           const phone = chat.phoneNumber ?? ""
-          const jid = phone ? `${phone}@c.us` : ""
+          const jid = chat.jid
           const displayName = chat.contactName ?? chat.name ?? chat.phoneNumber ?? `Chat #${chat.id}`
           const occCount = chat.occurrences?.length ?? 0
 

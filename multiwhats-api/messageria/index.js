@@ -72,15 +72,20 @@ client.on("ready", async () => {
 // FUNÇÃO REUTILIZÁVEL DE PROCESSAMENTO DE MENSAGENS
 // ==========================================
 
-async function processarEMandarParaAspNet(msg, enviadaPorMim = false) {
+async function processarEMandarParaAspNet(msg, enviadaPorMim) {
     
     try {
-        if (msg.from.includes("@newsletter") || msg.from.includes("@g.us") || msg.to?.includes("@g.us")) {
+        if (msg.from.includes("@newsletter")
+            || msg.from.includes("@g.us") 
+            || msg.to?.includes("@g.us")
+            || msg.from.includes("@broadcast")
+            || msg.from.includes("status@broadcast")) {
             return;
         }
 
         const contato = await msg.getContact();
-        const targetJid = enviadaPorMim ? msg.to : msg.from;
+        const deviceJid = client.info?.wid ? `${client.info.wid.user}@c.us` : null;
+        const targetJid = enviadaPorMim ? (deviceJid || msg.from) : msg.from;
         const rawNumber = contato.number || contato.id?.user || targetJid.split("@")[0];
         const numeroReal = rawNumber ? rawNumber.replace(/\D/g, "") : null;
         
@@ -153,6 +158,7 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim = false) {
 }
 
 client.on("message", async (msg) => {
+    if (msg.fromMe) return;
     await processarEMandarParaAspNet(msg, false);
 });
 
