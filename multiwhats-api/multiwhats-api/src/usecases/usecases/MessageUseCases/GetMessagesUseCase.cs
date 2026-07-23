@@ -97,7 +97,11 @@ public class GetMessagesUseCase : IGetMessagesUseCase
             PhoneNumber = message.PhoneNumber,
             NotifyName = message.NotifyName,
             HasMedia = message.HasMedia,
+            MediaUrl = message.MediaUrl,
             MediaMimeType = message.MediaMimeType,
+            MediaFilename = message.MediaFilename,
+            MediaSize = message.MediaSize,
+            MediaCaption = message.MediaCaption,
             DeliveryStatus = message.DeliveryStatus,
             ChatId = message.ChatId,
             CreatedAt = message.CreatedAt

@@ -86,4 +86,11 @@ public class MessageRepository : IMessageRepository
             .OrderByDescending(m => m.Timestamp)
             .ToListAsync();
     }
+
+    public async Task<Message?> GetByMessageIdAsync(string messageId)
+    {
+        return await _context.Messages
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.MessageId == messageId);
+    }
 }

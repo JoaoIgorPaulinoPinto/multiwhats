@@ -21,13 +21,14 @@ public class WebhookController : ControllerBase
 
     [HttpPost("whatsapp")]
     [AllowAnonymous]
+
     public async Task<IActionResult> ReceiveMessage([FromBody] WhatsAppWebhookDto payload)
     {
         try
         {
-            Console.WriteLine($"[Webhook] Recebida msg de {payload.From}: {payload.Body?.Substring(0, Math.Min(50, payload.Body?.Length ?? 0))}");
+            var bodyPreview = payload.Body?.Length > 50 ? payload.Body.Substring(0, 50) + "..." : payload.Body;
+            Console.WriteLine($"[Webhook] Recebida msg de {payload.From} tipo={payload.MessageType} hasMedia={payload.HasMedia} msgId={payload.MessageId} body={bodyPreview}");
 
-            await _hubContext.Clients.All.SendAsync("ReceberNovaMensagem", payload);
             await _saveIncomingMessageUseCase.Execute(payload);
             return Ok(new { message = "Notificação enviada para a Web!" });
         }

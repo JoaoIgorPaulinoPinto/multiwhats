@@ -41,6 +41,16 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
     {
         var phoneNumber = PhoneNumberHelper.Sanitize(payload.PhoneNumber);
 
+        if (!string.IsNullOrEmpty(payload.MessageId))
+        {
+            var existing = await _messageRepository.GetByMessageIdAsync(payload.MessageId);
+            if (existing != null)
+            {
+                Console.WriteLine($"[SaveIncomingMessage] Duplicata ignorada msgId={payload.MessageId} (já existe id={existing.Id})");
+                return false;
+            }
+        }
+
         var device = await _deviceRepository.GetCurrentAsync();
         var deviceJid = device?.Jid;
 
@@ -119,10 +129,13 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
             mediaMimeType: payload.MediaMimeType,
             mediaFilename: payload.MediaFilename,
             mediaSize: payload.MediaSize,
+            mediaCaption: payload.MediaCaption,
             isForwarded: payload.IsForwarded
         );
 
         await _messageRepository.AddAsync(message);
+
+        Console.WriteLine($"[SaveIncomingMessage] Salvo msgId={payload.MessageId} type={messageType} hasMedia={payload.HasMedia} mediaUrlLen={payload.MediaUrl?.Length ?? 0} chatId={chat.Id}");
 
         var sentAt = DateTimeOffset.FromUnixTimeSeconds(timestamp).UtcDateTime;
         chat.UpdateLastMessage(sentAt, payload.Body);

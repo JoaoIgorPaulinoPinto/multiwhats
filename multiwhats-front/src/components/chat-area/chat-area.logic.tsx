@@ -133,7 +133,7 @@ export function useChatArea(chatId: number | null, jid: string, lastMessage?: st
         const oldItems = cache.get(chatId) ?? []
         const isSame =
           newItems.length === oldItems.length &&
-          newItems.every((m, i) => m.id === oldItems[i].id && m.body === oldItems[i].body)
+          newItems.every((m, i) => m.id === oldItems[i].id && m.body === oldItems[i].body && m.mediaUrl === oldItems[i].mediaUrl && m.hasMedia === oldItems[i].hasMedia)
         cache.set(chatId, newItems)
         if (!isSame) setMessages(newItems.slice())
       })

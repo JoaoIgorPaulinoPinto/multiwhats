@@ -1,6 +1,6 @@
 "use client"
 
-import { AlertCircle, Search } from "lucide-react"
+import { AlertCircle, RefreshCw, Search } from "lucide-react"
 import { AvatarView } from "../avatar/avatar.view"
 import { useChatSidebar } from "./chat-sidebar.logic"
 import styles from "./chat-sidebar.module.css"
@@ -40,7 +40,7 @@ function getOccurrenceStatusColor(status: OccurrenceStatus): string {
 }
 
 export function ChatSidebarView({ selectedId, onSelect }: Props) {
-  const { search, setSearch, chats, loading } = useChatSidebar()
+  const { search, setSearch, chats, loading, load } = useChatSidebar()
 
   return (
     <aside className={styles.sidebar}>
@@ -53,6 +53,9 @@ export function ChatSidebarView({ selectedId, onSelect }: Props) {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <button className={styles.syncButton} onClick={load} title="Sincronizar">
+          <RefreshCw size={16} className={loading ? styles.spinning : ""} />
+        </button>
       </header>
 
       <section className={styles.chatList}>

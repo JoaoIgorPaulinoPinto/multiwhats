@@ -24,12 +24,11 @@ export function useChatSidebar() {
 
   useEffect(() => {
     load()
-    const interval = setInterval(load, 5000)
 
     const unsubReceived = ws.on("message:received", load)
     const unsubSent = ws.on("message:sent", load)
 
-    return () => { clearInterval(interval); unsubReceived(); unsubSent() }
+    return () => { unsubReceived(); unsubSent() }
   }, [load])
 
   const filtered = chats.filter((c) => {
@@ -38,5 +37,5 @@ export function useChatSidebar() {
     return display.toLowerCase().includes(q)
   })
 
-  return { search, setSearch, chats: filtered, loading }
+  return { search, setSearch, chats: filtered, loading, load }
 }

@@ -12,7 +12,11 @@ public record MessageSummaryResponse
     public string? PhoneNumber { get; init; }
     public string? NotifyName { get; init; }
     public bool HasMedia { get; init; }
+    public string? MediaUrl { get; init; }
     public string? MediaMimeType { get; init; }
+    public string? MediaFilename { get; init; }
+    public long? MediaSize { get; init; }
+    public string? MediaCaption { get; init; }
     public DeliveryStatus DeliveryStatus { get; init; }
     public int ChatId { get; init; }
     public DateTime CreatedAt { get; init; }

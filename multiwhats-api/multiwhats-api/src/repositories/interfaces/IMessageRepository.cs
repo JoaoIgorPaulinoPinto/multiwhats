@@ -12,4 +12,5 @@ public interface IMessageRepository
     Task<int> GetByChatTotalCountAsync(int chatId);
     Task<List<Message>> GetByOccurrenceAsync(int occurrenceId);
     Task<List<Message>> GetByPhoneNumberAsync(string phoneNumber);
+    Task<Message?> GetByMessageIdAsync(string messageId);
 }

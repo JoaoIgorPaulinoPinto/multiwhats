@@ -3,6 +3,7 @@
 import { Check, CheckCheck, FileWarning, Image, Paperclip, Send, Smile, UserPlus, X, Film, Music, FileText, Sticker } from "lucide-react"
 import { AvatarView } from "../avatar/avatar.view"
 import { useChatArea } from "./chat-area.logic"
+import { useTransformedImage } from "../../utils/use-transformed-image"
 import styles from "./chat-area.module.css"
 import type { MessageType } from "../../services/chats.service"
 
@@ -27,6 +28,29 @@ function MediaIcon({ type }: { type: MessageType }) {
   }
 }
 
+function toDataUrl(raw: string, mime: string | null): string {
+  if (raw.startsWith("data:")) return raw
+  const m = mime || guessMime(raw)
+  return `data:${m};base64,${raw}`
+}
+
+function guessMime(raw: string): string {
+  if (raw.startsWith("/9j/")) return "image/jpeg"
+  if (raw.startsWith("iVBOR")) return "image/png"
+  if (raw.startsWith("UklGR")) return "image/webp"
+  if (raw.startsWith("R0lGO")) return "image/gif"
+  if (raw.startsWith("JVBER")) return "application/pdf"
+  if (raw.startsWith("UEsD")) return "application/zip"
+  return "application/octet-stream"
+}
+
+function MessageImage({ raw, mime, alt, style }: { raw: string; mime: string | null; alt: string; style?: React.CSSProperties }) {
+  const { src, loading } = useTransformedImage(raw, mime)
+  if (loading) return <div className="skeleton" style={{ width: 200, height: 150, borderRadius: 6 }} />
+  if (!src) return null
+  return <img src={src} alt={alt} loading="lazy" style={style} />
+}
+
 function MessageMedia({ msg }: { msg: { type: MessageType; mediaUrl: string | null; mediaMimeType: string | null; mediaFilename: string | null; mediaCaption: string | null; body: string | null } }) {
   if (!msg.mediaUrl) return null
 
@@ -38,7 +62,7 @@ function MessageMedia({ msg }: { msg: { type: MessageType; mediaUrl: string | nu
   if (isSticker) {
     return (
       <div className={styles.mediaSticker}>
-        <img src={msg.mediaUrl} alt="Sticker" style={{ maxWidth: 180, maxHeight: 180 }} />
+        <MessageImage raw={msg.mediaUrl} mime={msg.mediaMimeType} alt="Sticker" style={{ maxWidth: 180, maxHeight: 180 }} />
       </div>
     )
   }
@@ -46,7 +70,7 @@ function MessageMedia({ msg }: { msg: { type: MessageType; mediaUrl: string | nu
   if (isImage) {
     return (
       <div className={styles.mediaImage}>
-        <img src={msg.mediaUrl} alt={msg.mediaCaption || "Imagem"} style={{ maxWidth: 300, maxHeight: 300, borderRadius: 6 }} />
+        <MessageImage raw={msg.mediaUrl} mime={msg.mediaMimeType} alt={msg.mediaCaption || "Imagem"} style={{ maxWidth: 600, maxHeight: 600, borderRadius: 6 }} />
         {msg.mediaCaption && <p className={styles.mediaCaption}>{msg.mediaCaption}</p>}
       </div>
     )
@@ -55,7 +79,7 @@ function MessageMedia({ msg }: { msg: { type: MessageType; mediaUrl: string | nu
   if (isVideo) {
     return (
       <div className={styles.mediaVideo}>
-        <video src={msg.mediaUrl} controls style={{ maxWidth: 300, maxHeight: 300, borderRadius: 6 }} />
+        <video src={toDataUrl(msg.mediaUrl, msg.mediaMimeType)} controls style={{ maxWidth: 300, maxHeight: 300, borderRadius: 6 }} />
         {msg.mediaCaption && <p className={styles.mediaCaption}>{msg.mediaCaption}</p>}
       </div>
     )
@@ -64,7 +88,7 @@ function MessageMedia({ msg }: { msg: { type: MessageType; mediaUrl: string | nu
   if (isAudio) {
     return (
       <div className={styles.mediaAudio}>
-        <audio src={msg.mediaUrl} controls style={{ width: 240 }} />
+        <audio src={toDataUrl(msg.mediaUrl, msg.mediaMimeType)} controls style={{ width: 240 }} />
       </div>
     )
   }
@@ -132,7 +156,7 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
           <strong>{chatId ? contactName ?? `Contato #${chatId}` : "Nenhum contato"}</strong>
           <small>{chatId ? "Online" : "Selecione um contato"}</small>
         </div>
-        {chatId && chatContactId === null && (
+        {chatId && !chatContactId && (
           <button
             className={styles.saveContactBtn}
             onClick={() => openSaveModal(phoneNumber ?? "", contactName ?? "")}
@@ -171,7 +195,7 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
           messages.map((msg) => (
             <div key={msg.id} className={msg.direction === 0 ? styles.received : styles.sent}>
               <div className={styles.bubble}>
-                {msg.hasMedia && msg.mediaUrl ? (
+                {msg.mediaUrl ? (
                   <MessageMedia msg={msg} />
                 ) : null}
                 {msg.body && <div>{msg.body}</div>}
