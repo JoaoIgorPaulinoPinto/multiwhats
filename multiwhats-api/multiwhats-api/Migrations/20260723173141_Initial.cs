@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace multiwhats_api.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -355,7 +355,7 @@ namespace multiwhats_api.Migrations
                     notify_name = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     has_media = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    media_url = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: true)
+                    media_url = table.Column<string>(type: "LONGTEXT", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     media_mime_type = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),

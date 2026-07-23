@@ -112,7 +112,6 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim = false) {
                     mediaFilename = midia.filename || "arquivo";
 
                     mediaUrl = midia.data;
-
                     mediaCaption = msg.caption || msg.body || null;
                     mediaSize = midia.filesize ? Number(midia.filesize) : midia.data.length;
                     

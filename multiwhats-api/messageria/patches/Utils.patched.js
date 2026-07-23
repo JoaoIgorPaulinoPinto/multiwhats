@@ -22,39 +22,46 @@ exports.LoadUtils = () => {
             return null;
         };
 
+        const resolveSerialized = (serialized) => {
+            const parts = serialized.split('_');
+            if (parts.length >= 2 && parts[1].includes('@')) {
+                const fromMe = parts[0] === 'true';
+                const remote = parts[1];
+                return { fromMe, remote };
+            }
+            return null;
+        };
+
         if (typeof msgId === 'object' && msgId !== null) {
-            const idObj = msgId._serialized || msgId;
+            const idObj = msgId._serialized || (typeof msgId === 'string' ? msgId : null);
 
-            let found = tryGet(idObj);
-            if (found) return found;
-
-            found = await tryGetById(idObj);
-            if (found) return found;
-
-            if (typeof idObj === 'string') {
-                found = tryGet(idObj);
+            if (idObj) {
+                let found = tryGet(idObj);
                 if (found) return found;
 
                 found = await tryGetById(idObj);
                 if (found) return found;
 
-                if (idObj.includes('_') && idObj.includes('@')) {
+                if (typeof idObj === 'string' && idObj.includes('_') && idObj.includes('@')) {
                     try {
-                        const parts = idObj.split('_')[0];
-                        const remote = parts.split('@')[0];
-                        const fromMe = idObj.includes('true');
-                        const reconstructed = {
-                            fromMe,
-                            remote: window.Store.WidFactory.createWid(remote),
-                            id: idObj,
-                            _serialized: idObj
-                        };
-                        found = tryGet(reconstructed);
-                        if (found) return found;
-                        found = tryGet(idObj);
-                        if (found) return found;
+                        const resolved = resolveSerialized(idObj);
+                        if (resolved) {
+                            const reconstructed = {
+                                fromMe: resolved.fromMe,
+                                remote: window.Store.WidFactory.createWid(resolved.remote),
+                                id: idObj,
+                                _serialized: idObj
+                            };
+                            found = tryGet(reconstructed);
+                            if (found) return found;
+                        }
                     } catch (_) {}
                 }
+            }
+
+            if (msgId._serialized) {
+                let found = tryGet(msgId._serialized);
+                if (found) return found;
             }
         } else if (typeof msgId === 'string') {
             let found = tryGet(msgId);
@@ -65,28 +72,26 @@ exports.LoadUtils = () => {
 
             if (msgId.includes('_') && msgId.includes('@')) {
                 try {
-                    const parts = msgId.split('_')[0];
-                    const remote = parts.split('@')[0];
-                    const fromMe = msgId.includes('true');
-                    const reconstructed = {
-                        fromMe,
-                        remote: window.Store.WidFactory.createWid(remote),
-                        id: msgId,
-                        _serialized: msgId
-                    };
-                    found = tryGet(reconstructed);
-                    if (found) return found;
+                    const resolved = resolveSerialized(msgId);
+                    if (resolved) {
+                        const reconstructed = {
+                            fromMe: resolved.fromMe,
+                            remote: window.Store.WidFactory.createWid(resolved.remote),
+                            id: msgId,
+                            _serialized: msgId
+                        };
+                        found = tryGet(reconstructed);
+                        if (found) return found;
+                    }
                 } catch (_) {}
             }
         }
 
+        const targetSerialized = typeof msgId === 'object' ? msgId._serialized : msgId;
         const collections = [Msg.getModelsArray?.(), Msg.models, Msg._models].filter(Array.isArray);
         for (const models of collections) {
             for (const m of models) {
-                if (m.id && m.id._serialized === (typeof msgId === 'object' ? msgId._serialized : msgId)) {
-                    return m;
-                }
-                if (m.id && m.id.id === (typeof msgId === 'object' ? msgId.id : msgId)) {
+                if (m.id && targetSerialized && m.id._serialized === targetSerialized) {
                     return m;
                 }
             }

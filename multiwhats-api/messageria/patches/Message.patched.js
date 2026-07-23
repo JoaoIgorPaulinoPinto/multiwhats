@@ -448,46 +448,69 @@ class Message extends Base {
             return undefined;
         }
 
-        const result = await this.client.pupPage.evaluate(async (msgId) => {
-            const msg = await window.WWebJS.getMessageById(msgId);
+        const originalMediaProps = {
+            directPath: this._data?.directPath,
+            encFilehash: this._data?.encFilehash,
+            filehash: this._data?.filehash,
+            mediaKey: this._data?.mediaKey,
+            mediaKeyTimestamp: this._data?.mediaKeyTimestamp,
+            type: this._data?.type || this.type,
+            mimetype: this._data?.mimetype,
+            filename: this._data?.filename,
+            size: this._data?.size
+        };
 
-            if (!msg) {
-                console.log(`[DOWNLOAD] msg NOT FOUND in store. requested=${typeof msgId === 'string' ? msgId : msgId?._serialized}`);
-                return null;
-            }
+        const result = await this.client.pupPage.evaluate(async (msgId, origProps) => {
+            const msg = await window.WWebJS.getMessageById(msgId);
 
             const requestedStr = typeof msgId === 'string' ? msgId : msgId?._serialized;
             const foundStr = msg?.id?._serialized;
-            const idMatch = requestedStr === foundStr;
+            const idMatch = msg ? (requestedStr === foundStr) : false;
 
-            console.log(`[DOWNLOAD] requested=${requestedStr} found=${foundStr} idMatch=${idMatch} type=${msg.type} mimetype=${msg.mimetype} hasMediaData=${!!msg.mediaData} mediaStage=${msg.mediaData?.mediaStage}`);
+            console.log(`[DOWNLOAD] requested=${requestedStr} found=${foundStr} idMatch=${idMatch} hasOrigProps=${!!origProps.directPath}`);
 
-            if (!msg.mediaData) {
-                console.log(`[DOWNLOAD] msg.mediaData is null/undefined`);
+            const directPath = origProps.directPath || msg?.directPath;
+            const encFilehash = origProps.encFilehash || msg?.encFilehash;
+            const filehash = origProps.filehash || msg?.filehash;
+            const mediaKey = origProps.mediaKey || msg?.mediaKey;
+            const mediaKeyTimestamp = origProps.mediaKeyTimestamp || msg?.mediaKeyTimestamp;
+            const type = origProps.type || msg?.type;
+            const mimetype = origProps.mimetype || msg?.mimetype;
+            const filename = origProps.filename || msg?.filename;
+            const size = origProps.size || msg?.size;
+
+            if (!directPath || !mediaKey) {
+                console.log(`[DOWNLOAD] missing directPath or mediaKey, aborting`);
                 return null;
             }
 
-            if (msg.mediaData.mediaStage === 'REUPLOADING') {
-                console.log(`[DOWNLOAD] mediaStage=REUPLOADING (media expired)`);
-                return null;
-            }
+            if (msg && idMatch && msg.mediaData) {
+                console.log(`[DOWNLOAD] mediaStage=${msg.mediaData.mediaStage}`);
 
-            if (msg.mediaData.mediaStage !== 'RESOLVED') {
-                console.log(`[DOWNLOAD] mediaStage=${msg.mediaData.mediaStage}, attempting resolve...`);
-                try {
-                    await msg.downloadMedia({
-                        downloadEvenIfExpensive: true,
-                        rmrReason: 1
-                    });
-                } catch (resolveErr) {
-                    console.log(`[DOWNLOAD] resolve error: ${resolveErr.message}`);
+                if (msg.mediaData.mediaStage === 'REUPLOADING') {
+                    console.log(`[DOWNLOAD] mediaStage=REUPLOADING (media expired)`);
+                    return null;
                 }
-                console.log(`[DOWNLOAD] after resolve, mediaStage=${msg.mediaData.mediaStage}`);
-            }
 
-            if (msg.mediaData.mediaStage.includes('ERROR') || msg.mediaData.mediaStage === 'FETCHING') {
-                console.log(`[DOWNLOAD] mediaStage=${msg.mediaData.mediaStage} → returning undefined`);
-                return undefined;
+                if (msg.mediaData.mediaStage !== 'RESOLVED') {
+                    console.log(`[DOWNLOAD] mediaStage=${msg.mediaData.mediaStage}, attempting resolve...`);
+                    try {
+                        await msg.downloadMedia({
+                            downloadEvenIfExpensive: true,
+                            rmrReason: 1
+                        });
+                    } catch (resolveErr) {
+                        console.log(`[DOWNLOAD] resolve error: ${resolveErr.message}`);
+                    }
+                    console.log(`[DOWNLOAD] after resolve, mediaStage=${msg.mediaData.mediaStage}`);
+                }
+
+                if (msg.mediaData.mediaStage?.includes('ERROR') || msg.mediaData.mediaStage === 'FETCHING') {
+                    console.log(`[DOWNLOAD] mediaStage=${msg.mediaData.mediaStage} → returning undefined`);
+                    return undefined;
+                }
+            } else if (msg && !idMatch) {
+                console.log(`[DOWNLOAD] WARN: store msg mismatch, using original props directly`);
             }
 
             try {
@@ -496,12 +519,12 @@ class Message extends Base {
                     addPoint: function() { return this; }
                 };
                 const decryptedMedia = await window.Store.DownloadManager.downloadAndMaybeDecrypt({
-                    directPath: msg.directPath,
-                    encFilehash: msg.encFilehash,
-                    filehash: msg.filehash,
-                    mediaKey: msg.mediaKey,
-                    mediaKeyTimestamp: msg.mediaKeyTimestamp,
-                    type: msg.type,
+                    directPath,
+                    encFilehash,
+                    filehash,
+                    mediaKey,
+                    mediaKeyTimestamp,
+                    type,
                     signal: (new AbortController).signal,
                     downloadQpl: mockQpl
                 });
@@ -511,16 +534,16 @@ class Message extends Base {
 
                 return {
                     data,
-                    mimetype: msg.mimetype,
-                    filename: msg.filename,
-                    filesize: msg.size
+                    mimetype,
+                    filename,
+                    filesize: size
                 };
             } catch (e) {
                 console.log(`[DOWNLOAD] decrypt/download error: status=${e.status} msg=${e.message}`);
                 if(e.status && e.status === 404) return undefined;
                 throw e;
             }
-        }, this.id);
+        }, this.id, originalMediaProps);
 
         if (!result) return undefined;
         return new MessageMedia(result.mimetype, result.data, result.filename, result.filesize);

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using multiwhats_api.src.data.dtos.Requests;
+using multiwhats_api.src.data.entities;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
 using System.Security.Claims;
 

@@ -12,8 +12,8 @@ using multiwhats_api.src.data.db;
 namespace multiwhats_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260721011142_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20260723173141_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -537,8 +537,7 @@ namespace multiwhats_api.Migrations
                         .HasColumnName("media_size");
 
                     b.Property<string>("MediaUrl")
-                        .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)")
+                        .HasColumnType("LONGTEXT")
                         .HasColumnName("media_url");
 
                     b.Property<string>("MessageId")

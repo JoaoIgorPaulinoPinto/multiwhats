@@ -109,6 +109,7 @@ public class SendMessageUseCase : ISendMessageUseCase
                 mediaSize: fields.mediaSize,
                 mediaCaption: fields.mediaCaption
             );
+            Console.WriteLine(message.MediaUrl);
 
             await _messageRepository.AddAsync(message);
 

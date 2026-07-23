@@ -156,4 +156,8 @@ public class Message : BaseEntity
     {
         OccurrenceId = occurrenceId;
     }
+    public void AddIMG(string txt)
+    {
+        MediaUrl = txt;
+    }
 }
