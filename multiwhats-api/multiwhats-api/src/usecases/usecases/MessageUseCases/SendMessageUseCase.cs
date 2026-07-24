@@ -46,6 +46,7 @@ public class SendMessageUseCase : ISendMessageUseCase
     private readonly MessageStrategyFactory _strategyFactory;  // Factory do Strategy Pattern (escolhe tipo de msg)
     private readonly UseCaseLogger _useCaseLogger;             // Logger de auditoria
     private readonly IHubContext<WhatsappHub> _hubContext;     // SignalR para notificar o Frontend em tempo real
+    private readonly IUserRepository _userRepository;         // Buscar dados do usuário
 
     public SendMessageUseCase(
         HttpClient httpClient,
@@ -55,7 +56,8 @@ public class SendMessageUseCase : ISendMessageUseCase
         IDeviceRepository deviceRepository,
         MessageStrategyFactory strategyFactory,
         UseCaseLogger useCaseLogger,
-        IHubContext<WhatsappHub> hubContext)
+        IHubContext<WhatsappHub> hubContext,
+        IUserRepository userRepository)
     {
         _httpClient = httpClient;
         _messageRepository = messageRepository;
@@ -65,6 +67,7 @@ public class SendMessageUseCase : ISendMessageUseCase
         _strategyFactory = strategyFactory;
         _useCaseLogger = useCaseLogger;
         _hubContext = hubContext;
+        _userRepository = userRepository;
     }
 
     /// <summary>
@@ -103,14 +106,19 @@ public class SendMessageUseCase : ISendMessageUseCase
     {
         try
         {
+            
             // ── PASSO 1: STRATEGY PATTERN ──
             // Obtém a strategy correta para o tipo de mensagem (text, image, audio, etc.)
             // Exemplo: para "text", usa TextMessageStrategy; para "image", usa ImageMessageStrategy
             var strategy = _strategyFactory.Get(request.Type);
 
+            // Busca o nome do usuário para adicionar no início da mensagem
+            var user = await _userRepository.GetByIdAsync(userId);
+            var userName = user?.Name;
+
             // Monta o payload JSON que o Node.js espera receber
             // Exemplo para texto: { "jid": "5511999999999@c.us", "mensagem": "Olá", "type": "text" }
-            var payloadNode = strategy.BuildNodePayload(request.Jid, request);
+            var payloadNode = strategy.BuildNodePayload(request.Jid, request, userName);
 
             // Serializa o payload para JSON e prepara para enviar via HTTP
             var jsonContent = new StringContent(
@@ -169,7 +177,7 @@ public class SendMessageUseCase : ISendMessageUseCase
             var deviceJid = device?.Jid;
 
             // Usa a strategy para extrair os campos da mensagem (body, media, etc.)
-            var fields = strategy.BuildMessageFields(request);
+            var fields = strategy.BuildMessageFields(request, userName);
 
             // Cria a entidade Message com direção "Outgoing" (mensagem enviada por nós)
             var message = new Message(
@@ -190,7 +198,6 @@ public class SendMessageUseCase : ISendMessageUseCase
                 mediaSize: fields.mediaSize,           // Tamanho em bytes
                 mediaCaption: fields.mediaCaption      // Legenda da mídia
             );
-            Console.WriteLine(message.MediaUrl);
 
             await _messageRepository.AddAsync(message);
 

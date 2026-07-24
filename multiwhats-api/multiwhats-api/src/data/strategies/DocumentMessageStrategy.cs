@@ -27,16 +27,20 @@ public class DocumentMessageStrategy : IMessageStrategy
 {
     public MessageType Type => MessageType.Document;
 
-    public object BuildNodePayload(string jid, SendMessageRequest request)
+    public object BuildNodePayload(string jid, SendMessageRequest request, string? userName = null)
     {
+        var mensagem = !string.IsNullOrEmpty(userName)
+            ? $"_*{userName}*_\n{request.Text}"
+            : request.Text;
+
         return new
         {
             jid,
-            mensagem = request.Text,
+            mensagem,
             type = "document",
             mediaBase64 = request.MediaBase64,
-            mediaMimeType = request.MediaMimeType ?? "application/pdf",  // Padrão: PDF
-            filename = request.MediaFilename ?? "document"               // Nome do arquivo ou "document"
+            mediaMimeType = request.MediaMimeType ?? "application/pdf",
+            filename = request.MediaFilename ?? "document"
         };
     }
 
@@ -46,10 +50,10 @@ public class DocumentMessageStrategy : IMessageStrategy
     /// - hasMedia: true
     /// - mediaCaption: null (documentos não têm legenda)
     /// </summary>
-    public (string? body, bool hasMedia, string? mediaUrl, string? mediaMimeType, string? mediaFilename, long? mediaSize, string? mediaCaption) BuildMessageFields(SendMessageRequest request)
+    public (string? body, bool hasMedia, string? mediaUrl, string? mediaMimeType, string? mediaFilename, long? mediaSize, string? mediaCaption) BuildMessageFields(SendMessageRequest request, string? userName = null)
     {
         return (
-            body: request.MediaFilename ?? request.Text,               // Nome do arquivo ou texto
+            body: request.MediaFilename ?? request.Text,
             hasMedia: true,
             mediaUrl: request.MediaBase64,
             mediaMimeType: request.MediaMimeType ?? "application/pdf",

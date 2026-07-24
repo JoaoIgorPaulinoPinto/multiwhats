@@ -35,7 +35,7 @@ public interface IMessageStrategy
     /// - Imagem: { "jid": "...", "type": "image", "mediaBase64": "...", "caption": "..." }
     /// - Áudio: { "jid": "...", "type": "audio", "mediaBase64": "..." }
     /// </summary>
-    object BuildNodePayload(string jid, SendMessageRequest request);
+    object BuildNodePayload(string jid, SendMessageRequest request, string? userName = null);
 
     /// <summary>
     /// Extrai os campos da mensagem para salvar no banco de dados MySQL.
@@ -46,5 +46,5 @@ public interface IMessageStrategy
     /// - Imagem: body = caption ou texto, hasMedia = true, mediaUrl = base64
     /// - Áudio: body = texto, hasMedia = true, mediaUrl = base64
     /// </summary>
-    (string? body, bool hasMedia, string? mediaUrl, string? mediaMimeType, string? mediaFilename, long? mediaSize, string? mediaCaption) BuildMessageFields(SendMessageRequest request);
+    (string? body, bool hasMedia, string? mediaUrl, string? mediaMimeType, string? mediaFilename, long? mediaSize, string? mediaCaption) BuildMessageFields(SendMessageRequest request, string? userName = null);
 }

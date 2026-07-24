@@ -24,12 +24,16 @@ public class TextMessageStrategy : IMessageStrategy
     /// Monta o payload JSON para enviar texto ao Node.js.
     /// Formato: { "jid": "...", "mensagem": "texto", "type": "text" }
     /// </summary>
-    public object BuildNodePayload(string jid, SendMessageRequest request)
+    public object BuildNodePayload(string jid, SendMessageRequest request, string? userName = null)
     {
+        var mensagem = !string.IsNullOrEmpty(userName)
+            ? $"_*{userName}*_\n{request.Text}"
+            : request.Text;
+
         return new
         {
             jid,
-            mensagem = request.Text,
+            mensagem,
             type = "text"
         };
     }
@@ -40,8 +44,11 @@ public class TextMessageStrategy : IMessageStrategy
     /// - hasMedia = false (não tem arquivo de mídia)
     /// - mídia = null (tudo)
     /// </summary>
-    public (string? body, bool hasMedia, string? mediaUrl, string? mediaMimeType, string? mediaFilename, long? mediaSize, string? mediaCaption) BuildMessageFields(SendMessageRequest request)
+    public (string? body, bool hasMedia, string? mediaUrl, string? mediaMimeType, string? mediaFilename, long? mediaSize, string? mediaCaption) BuildMessageFields(SendMessageRequest request, string? userName = null)
     {
-        return (request.Text, false, null, null, null, null, null);
+        var body = !string.IsNullOrEmpty(userName)
+            ? $"_*{userName}*_\n{request.Text}"
+            : request.Text;
+        return (body, false, null, null, null, null, null);
     }
 }

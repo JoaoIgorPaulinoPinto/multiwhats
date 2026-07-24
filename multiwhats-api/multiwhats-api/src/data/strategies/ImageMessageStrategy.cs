@@ -38,16 +38,20 @@ public class ImageMessageStrategy : IMessageStrategy
     /// Monta o payload JSON para enviar imagem ao Node.js.
     /// Inclui: JID, texto, tipo "image", base64 da mídia, MIME type, e legenda.
     /// </summary>
-    public object BuildNodePayload(string jid, SendMessageRequest request)
+    public object BuildNodePayload(string jid, SendMessageRequest request, string? userName = null)
     {
+        var caption = !string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(request.MediaCaption)
+            ? $"_*{userName}*_\n{request.MediaCaption}"
+            : request.MediaCaption;
+
         return new
         {
             jid,
             mensagem = request.Text,
             type = "image",
             mediaBase64 = request.MediaBase64,
-            mediaMimeType = request.MediaMimeType ?? "image/jpeg",  // Padrão: JPEG
-            caption = request.MediaCaption
+            mediaMimeType = request.MediaMimeType ?? "image/jpeg",
+            caption
         };
     }
 
@@ -59,10 +63,13 @@ public class ImageMessageStrategy : IMessageStrategy
     /// - mediaMimeType: tipo MIME da imagem
     /// - mediaSize: tamanho estimado via EstimateBase64Size()
     /// </summary>
-    public (string? body, bool hasMedia, string? mediaUrl, string? mediaMimeType, string? mediaFilename, long? mediaSize, string? mediaCaption) BuildMessageFields(SendMessageRequest request)
+    public (string? body, bool hasMedia, string? mediaUrl, string? mediaMimeType, string? mediaFilename, long? mediaSize, string? mediaCaption) BuildMessageFields(SendMessageRequest request, string? userName = null)
     {
+        var caption = !string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(request.MediaCaption)
+            ? $"_*{userName}*_\n{request.MediaCaption}"
+            : request.MediaCaption;
         return (
-            body: request.MediaCaption ?? request.Text,           // Legenda ou texto
+            body: caption ?? request.Text,
             hasMedia: true,
             mediaUrl: request.MediaBase64,                        // Base64 completo
             mediaMimeType: request.MediaMimeType ?? "image/jpeg", // Padrão: JPEG

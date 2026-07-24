@@ -148,7 +148,7 @@ builder.Services.AddScoped<IAssignContactUseCase, AssignContactUseCase>();
 // Message (Mensagens)
 // NOTA: SendMessageUseCase usa AddHttpClient porque precisa fazer HTTP POST para o Node.js
 builder.Services.AddHttpClient<ISendMessageUseCase, SendMessageUseCase>();
-builder.Services.AddScoped<ISaveIncomingMessageUseCase, SaveIncomingMessageUseCase>();
+builder.Services.AddHttpClient<ISaveIncomingMessageUseCase, SaveIncomingMessageUseCase>();
 builder.Services.AddScoped<IGetMessagesUseCase, GetMessagesUseCase>();
 
 // ═══════════════════════════════════════════════════════════════════════════════

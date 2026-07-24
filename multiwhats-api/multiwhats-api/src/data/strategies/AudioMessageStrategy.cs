@@ -26,15 +26,19 @@ public class AudioMessageStrategy : IMessageStrategy
 {
     public MessageType Type => MessageType.Audio;
 
-    public object BuildNodePayload(string jid, SendMessageRequest request)
+    public object BuildNodePayload(string jid, SendMessageRequest request, string? userName = null)
     {
+        var mensagem = !string.IsNullOrEmpty(userName)
+            ? $"_*{userName}*_\n{request.Text}"
+            : request.Text;
+
         return new
         {
             jid,
-            mensagem = request.Text,
+            mensagem,
             type = "audio",
             mediaBase64 = request.MediaBase64,
-            mediaMimeType = request.MediaMimeType ?? "audio/ogg; codecs=opus"  // Padrão WhatsApp: OGG/Opus
+            mediaMimeType = request.MediaMimeType ?? "audio/ogg; codecs=opus"
         };
     }
 
@@ -44,10 +48,13 @@ public class AudioMessageStrategy : IMessageStrategy
     /// - hasMedia: true
     /// - mediaCaption: null (áudio não tem legenda)
     /// </summary>
-    public (string? body, bool hasMedia, string? mediaUrl, string? mediaMimeType, string? mediaFilename, long? mediaSize, string? mediaCaption) BuildMessageFields(SendMessageRequest request)
+    public (string? body, bool hasMedia, string? mediaUrl, string? mediaMimeType, string? mediaFilename, long? mediaSize, string? mediaCaption) BuildMessageFields(SendMessageRequest request, string? userName = null)
     {
+        var body = !string.IsNullOrEmpty(userName)
+            ? $"_* {userName} *_\n{request.Text}"
+            : request.Text;
         return (
-            body: request.Text,
+            body: body,
             hasMedia: true,
             mediaUrl: request.MediaBase64,
             mediaMimeType: request.MediaMimeType ?? "audio/ogg; codecs=opus",

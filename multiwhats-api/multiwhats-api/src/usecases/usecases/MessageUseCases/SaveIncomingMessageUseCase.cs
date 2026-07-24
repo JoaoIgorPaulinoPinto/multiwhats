@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
+using System.Text;
+using System.Text.Json;
 using multiwhats_api.src.data.dtos.Webhook;
 using multiwhats_api.src.data.enums;
 using multiwhats_api.src.data.entities;
@@ -44,6 +46,7 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
     private readonly IDeviceRepository _deviceRepository;
     private readonly UseCaseLogger _useCaseLogger;
     private readonly IHubContext<WhatsappHub> _hubContext;
+    private readonly HttpClient _httpClient;
 
     public SaveIncomingMessageUseCase(
         IMessageRepository repository,
@@ -52,7 +55,8 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         IUserRepository userRepository,
         IDeviceRepository deviceRepository,
         UseCaseLogger useCaseLogger,
-        IHubContext<WhatsappHub> hubContext)
+        IHubContext<WhatsappHub> hubContext,
+        HttpClient httpClient)
     {
         _messageRepository = repository;
         _chatRepository = chatRepository;
@@ -61,6 +65,7 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         _deviceRepository = deviceRepository;
         _useCaseLogger = useCaseLogger;
         _hubContext = hubContext;
+        _httpClient = httpClient;
     }
 
     /// <summary>
@@ -251,6 +256,34 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         {
             var msgResponse = GetMessagesUseCase.MapToDetailResponse(message);
             await _hubContext.Clients.All.SendAsync("MessageReceived", msgResponse);
+        }
+
+        // ── PASSO 9: RESPOSTA AUTOMÁTICA PARA ÁUDIO ──
+        // Se a mensagem recebida for áudio e não foi auto-enviada, envia uma resposta automática
+        if (!isSelfSent && messageType == MessageType.Audio)
+        {
+            try
+            {
+                var autoReply = new
+                {
+                    jid = payload.From,
+                    mensagem = "Desculpe, não aceitamos áudios. Por favor, envie sua mensagem por texto.",
+                    type = "text"
+                };
+
+                var jsonContent = new StringContent(
+                    JsonSerializer.Serialize(autoReply),
+                    Encoding.UTF8,
+                    "application/json"
+                );
+
+                var response = await _httpClient.PostAsync("http://localhost:3333/api/enviar", jsonContent);
+                Console.WriteLine($"[SaveIncomingMessage] Resposta automática (áudio) enviada para {payload.From} -> Status: {response.StatusCode}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SaveIncomingMessage] Erro ao enviar resposta automática para áudio: {ex.Message}");
+            }
         }
 
         return true;

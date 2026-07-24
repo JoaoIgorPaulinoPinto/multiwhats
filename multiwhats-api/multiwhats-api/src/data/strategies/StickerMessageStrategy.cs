@@ -26,15 +26,14 @@ public class StickerMessageStrategy : IMessageStrategy
 {
     public MessageType Type => MessageType.Sticker;
 
-    public object BuildNodePayload(string jid, SendMessageRequest request)
+    public object BuildNodePayload(string jid, SendMessageRequest request, string? userName = null)
     {
         return new
         {
             jid,
             type = "sticker",
             mediaBase64 = request.MediaBase64,
-            mediaMimeType = request.MediaMimeType ?? "image/webp"  // Padrão: WebP
-            // NOTA: Sticker NÃO envia "mensagem" - stickers são apenas imagens
+            mediaMimeType = request.MediaMimeType ?? "image/webp"
         };
     }
 
@@ -44,7 +43,7 @@ public class StickerMessageStrategy : IMessageStrategy
     /// - hasMedia: true
     /// - mediaCaption: null (stickers não têm legenda)
     /// </summary>
-    public (string? body, bool hasMedia, string? mediaUrl, string? mediaMimeType, string? mediaFilename, long? mediaSize, string? mediaCaption) BuildMessageFields(SendMessageRequest request)
+    public (string? body, bool hasMedia, string? mediaUrl, string? mediaMimeType, string? mediaFilename, long? mediaSize, string? mediaCaption) BuildMessageFields(SendMessageRequest request, string? userName = null)
     {
         return (
             body: null,                                              // Stickers não têm texto
