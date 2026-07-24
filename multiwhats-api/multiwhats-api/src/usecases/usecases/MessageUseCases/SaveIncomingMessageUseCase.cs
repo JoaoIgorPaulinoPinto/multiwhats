@@ -8,6 +8,7 @@ using multiwhats_api.src.helpers;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
+using multiwhats_api.src.data.dtos.Requests;
 
 namespace multiwhats_api.src.usecases.usecases.MessageUseCases;
 
@@ -47,6 +48,7 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
     private readonly UseCaseLogger _useCaseLogger;
     private readonly IHubContext<WhatsappHub> _hubContext;
     private readonly HttpClient _httpClient;
+    private readonly ISendMessageUseCase _sendMessageUseCase;
 
     public SaveIncomingMessageUseCase(
         IMessageRepository repository,
@@ -56,7 +58,8 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         IDeviceRepository deviceRepository,
         UseCaseLogger useCaseLogger,
         IHubContext<WhatsappHub> hubContext,
-        HttpClient httpClient)
+        HttpClient httpClient,
+        ISendMessageUseCase sendMessageUseCase)
     {
         _messageRepository = repository;
         _chatRepository = chatRepository;
@@ -66,6 +69,7 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         _useCaseLogger = useCaseLogger;
         _hubContext = hubContext;
         _httpClient = httpClient;
+        _sendMessageUseCase = sendMessageUseCase;
     }
 
     /// <summary>
@@ -202,6 +206,42 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
 
         var timestamp = payload.Timestamp;
 
+        // ── PASSO 4b: BLOQUEAR ÁUDIO ──
+        // Se a mensagem for áudio, envia resposta automática e NÃO salva
+        if (messageType == MessageType.Audio && !isSelfSent)
+        {
+            Console.WriteLine($"[SaveIncomingMessage] Áudio bloqueado de {payload.From} (msgId={payload.MessageId})");
+
+            if (userId != null)
+            {
+                try
+                {
+                    var audioBlockedMsg = new SendMessageRequest
+                    {
+                        Jid = payload.From,
+                        Text = "Desculpe, não podemos receber áudio. Por gentileza, digite.",
+                        Type = MessageType.Text
+                    };
+                    await _sendMessageUseCase.Execute(audioBlockedMsg, userId.Value);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[SaveIncomingMessage] Erro ao enviar resposta de bloqueio de áudio: {ex.Message}");
+                }
+            }
+
+            await _useCaseLogger.LogAsync(
+                action: "SaveIncomingMessage",
+                entityType: "Message",
+                entityId: null,
+                description: $"Audio blocked from {payload.From} (msgId={payload.MessageId})",
+                explicitUserId: userId,
+                explicitUserName: user?.Name
+            );
+
+            return true;
+        }
+
         // ── PASSO 5: SALVAR A MENSAGEM NO BANCO ──
         var message = new Message(
             fromJid: actualFromJid,                   // Quem enviou (JID)
@@ -258,33 +298,35 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
             await _hubContext.Clients.All.SendAsync("MessageReceived", msgResponse);
         }
 
-        // ── PASSO 9: RESPOSTA AUTOMÁTICA PARA ÁUDIO ──
-        // Se a mensagem recebida for áudio e não foi auto-enviada, envia uma resposta automática
-        if (!isSelfSent && messageType == MessageType.Audio)
-        {
-            try
-            {
-                var autoReply = new
-                {
-                    jid = payload.From,
-                    mensagem = "Desculpe, não aceitamos áudios. Por favor, envie sua mensagem por texto.",
-                    type = "text"
-                };
 
-                var jsonContent = new StringContent(
-                    JsonSerializer.Serialize(autoReply),
-                    Encoding.UTF8,
-                    "application/json"
-                );
 
-                var response = await _httpClient.PostAsync("http://localhost:3333/api/enviar", jsonContent);
-                Console.WriteLine($"[SaveIncomingMessage] Resposta automática (áudio) enviada para {payload.From} -> Status: {response.StatusCode}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[SaveIncomingMessage] Erro ao enviar resposta automática para áudio: {ex.Message}");
-            }
-        }
+        //// ── PASSO 9: RESPOSTA AUTOMÁTICA PARA ÁUDIO ──
+        //// Se a mensagem recebida for áudio e não foi auto-enviada, envia uma resposta automática
+        //if (!isSelfSent && messageType == MessageType.Audio)
+        //{
+        //    try
+        //    {
+        //        var autoReply = new
+        //        {
+        //            jid = payload.From,
+        //            mensagem = "Desculpe, não aceitamos áudios. Por favor, envie sua mensagem por texto.",
+        //            type = "text"
+        //        };
+
+        //        var jsonContent = new StringContent(
+        //            JsonSerializer.Serialize(autoReply),
+        //            Encoding.UTF8,
+        //            "application/json"
+        //        );
+
+        //        var response = await _httpClient.PostAsync("http://localhost:3333/api/enviar", jsonContent);
+        //        Console.WriteLine($"[SaveIncomingMessage] Resposta automática (áudio) enviada para {payload.From} -> Status: {response.StatusCode}");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine($"[SaveIncomingMessage] Erro ao enviar resposta automática para áudio: {ex.Message}");
+        //    }
+        //}
 
         return true;
     }
