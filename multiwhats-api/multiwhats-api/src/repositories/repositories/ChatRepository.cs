@@ -21,12 +21,14 @@ public class ChatRepository : IChatRepository
             .Include(c => c.Contact)
             .Include(c => c.Client)
             .Include(c => c.AssignedTo)
+            .Include(c => c.Messages
+                .OrderByDescending(m => m.CreatedAt) // Substitua por sua coluna de data da mensagem
+                .Take(1))
             .OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
     }
-
     public async Task<int> GetTotalCountAsync()
     {
         return await _context.Chats.CountAsync();

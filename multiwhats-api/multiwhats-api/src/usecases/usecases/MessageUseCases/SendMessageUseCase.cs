@@ -94,7 +94,7 @@ public class SendMessageUseCase : ISendMessageUseCase
     /// - Salva no MySQL via Repository
     /// 
     /// PASSO 5: ATUALIZAR O CHAT
-    /// - Atualiza "LastMessageAt" e "LastMessageBody" do chat
+    /// - Atualiza "LastMessageAt" e "LastMessage" do chat
     /// 
     /// PASSO 6: NOTIFICAR O FRONTEND
     /// - Envia evento "MessageSent" via SignalR para todos os clientes conectados
@@ -204,7 +204,7 @@ public class SendMessageUseCase : ISendMessageUseCase
             // ── PASSO 5: ATUALIZAR O CHAT ──
             // Atualiza a data e o corpo da última mensagem do chat
             // Isso é usado no Frontend para mostrar "última mensagem: Olá..." na lista de chats
-            chat.UpdateLastMessage(DateTime.UtcNow, fields.body);
+            chat.UpdateLastMessage(DateTime.UtcNow, message);
             await _chatRepository.UpdateAsync(chat);
 
             // ── PASSO 6: REGISTRAR AUDITORIA ──

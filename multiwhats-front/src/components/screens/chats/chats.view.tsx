@@ -24,6 +24,17 @@ export function ChatsView() {
     setSelectedLastMessageAt(lastMessageAt)
   }
 
+  function handleStartChat(phone: string, name: string) {
+    const jid = `${phone}@s.whatsapp.net`
+    setSelectedId(-1)
+    setSelectedName(name)
+    setSelectedPhone(phone)
+    setSelectedJid(jid)
+    setSelectedContactId(null)
+    setSelectedLastMessage("")
+    setSelectedLastMessageAt(null)
+  }
+
   return (
     <div className={styles.container}>
       <ChatSidebarView selectedId={selectedId} onSelect={handleSelect} />
@@ -35,6 +46,7 @@ export function ChatsView() {
         chatContactId={selectedContactId}
         lastMessage={selectedLastMessage}
         lastMessageAt={selectedLastMessageAt}
+        onStartChat={handleStartChat}
       />
     </div>
   )

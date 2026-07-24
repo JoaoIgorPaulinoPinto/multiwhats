@@ -40,7 +40,7 @@ public class Chat : BaseEntity
     public DateTime? LastMessageAt { get; private set; }
 
     [Column("last_message_body")]
-    public string? LastMessageBody { get; private set; }
+    public Message? LastMessage { get; private set; }
 
     [Column("assigned_to_user_id")]
     public int? AssignedToUserId { get; private set; }
@@ -84,10 +84,10 @@ public class Chat : BaseEntity
         ContactId = null;
     }
 
-    public void UpdateLastMessage(DateTime timestamp, string? body)
+    public void UpdateLastMessage(DateTime timestamp, Message? body)
     {
         LastMessageAt = timestamp;
-        LastMessageBody = body;
+        LastMessage = body;
     }
 
     public void AssignUser(int userId)

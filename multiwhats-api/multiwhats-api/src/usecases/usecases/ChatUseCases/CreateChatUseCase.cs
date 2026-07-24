@@ -1,6 +1,7 @@
 ﻿using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.data.entities;
+using multiwhats_api.src.data.enums;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.ChatInterfaces;
@@ -57,7 +58,13 @@ public class CreateChatUseCase : ICreateChatUseCase
             ClientId = chat.ClientId,
             ClientName = chat.Client?.Name,
             LastMessageAt = chat.LastMessageAt,
-            LastMessageBody = chat.LastMessageBody,
+            LastMessage = chat.LastMessage == null 
+            ? null
+            : new LastMessageResponse
+            {
+                Type = chat.LastMessage.Type,
+                Body = chat.LastMessage.Body
+            },
             AssignedToUserId = chat.AssignedToUserId,
             AssignedToUserName = chat.AssignedTo?.Name,
             CreatedByUserId = chat.CreatedByUserId,

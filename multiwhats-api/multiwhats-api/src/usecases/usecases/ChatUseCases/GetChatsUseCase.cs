@@ -101,7 +101,9 @@ public class GetChatsUseCase : IGetChatsUseCase
                 ClientId = chat.ClientId,
                 ClientName = chat.Client?.Name,
                 LastMessageAt = chat.LastMessageAt,
-                LastMessageBody = chat.LastMessageBody,
+                LastMessage = chat.LastMessage != null
+                    ? new LastMessageResponse { Type = chat.LastMessage.Type, Body = chat.LastMessage.Body }
+                    : null,
                 AssignedToUserName = chat.AssignedTo?.Name,
                 MessageCount = msgCount,
                 Occurrences = occurrenceSummaries,
@@ -178,7 +180,9 @@ public class GetChatsUseCase : IGetChatsUseCase
             ClientId = chat.ClientId,
             ClientName = chat.Client?.Name,
             LastMessageAt = chat.LastMessageAt,
-            LastMessageBody = chat.LastMessageBody,
+            LastMessage = chat.LastMessage != null
+                ? new LastMessageResponse { Type = chat.LastMessage.Type, Body = chat.LastMessage.Body }
+                : null,
             AssignedToUserId = chat.AssignedToUserId,
             AssignedToUserName = chat.AssignedTo?.Name,
             Occurrences = occurrenceDetails,

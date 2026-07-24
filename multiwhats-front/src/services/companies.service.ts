@@ -36,8 +36,4 @@ export const companiesService = {
   listContacts(clientId: number) {
     return api.get(`/api/clients/${clientId}/contacts`)
   },
-
-  unassignContact(contactId: number) {
-    return api.patch(`/api/contacts/${contactId}/unassign`)
-  },
 }

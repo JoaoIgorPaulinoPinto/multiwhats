@@ -128,10 +128,6 @@ namespace multiwhats_api.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("last_message_at");
 
-                    b.Property<string>("LastMessageBody")
-                        .HasColumnType("longtext")
-                        .HasColumnName("last_message_body");
-
                     b.Property<DateTime>("LastUpdate")
                         .HasColumnType("datetime(6)");
 
@@ -477,6 +473,9 @@ namespace multiwhats_api.Migrations
                         .HasColumnType("int")
                         .HasColumnName("chat_id");
 
+                    b.Property<int?>("ChatId1")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
@@ -584,6 +583,9 @@ namespace multiwhats_api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ChatId");
+
+                    b.HasIndex("ChatId1")
+                        .IsUnique();
 
                     b.HasIndex("MessageId");
 
@@ -802,6 +804,10 @@ namespace multiwhats_api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("multiwhats_api.src.data.entities.Chat", null)
+                        .WithOne("LastMessage")
+                        .HasForeignKey("multiwhats_api.src.data.entities.Message", "ChatId1");
+
                     b.HasOne("multiwhats_api.src.data.entities.Occurrence", "Occurrence")
                         .WithMany("Messages")
                         .HasForeignKey("OccurrenceId");
@@ -849,6 +855,8 @@ namespace multiwhats_api.Migrations
 
             modelBuilder.Entity("multiwhats_api.src.data.entities.Chat", b =>
                 {
+                    b.Navigation("LastMessage");
+
                     b.Navigation("Messages");
 
                     b.Navigation("Occurrences");

@@ -95,7 +95,7 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
     /// - Salva no MySQL via Repository
     /// 
     /// PASSO 5: ATUALIZAR O CHAT
-    /// - Atualiza "LastMessageAt" e "LastMessageBody" do chat
+    /// - Atualiza "LastMessageAt" e "LastMessage" do chat
     /// 
     /// PASSO 6: NOTIFICAR O FRONTEND
     /// - Envia evento "MessageReceived" via SignalR para todos os clientes conectados
@@ -192,16 +192,16 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         // ── PASSO 4: PARSEAR O TIPO DA MENSAGEM ──
         // Converte a string do payload para o enum MessageType
         // Exemplo: "image" → MessageType.Image
-        var messageType = (payload.MessageType?.ToLower()) switch
+        var messageType = payload.MessageType?.ToLowerInvariant() switch
         {
             "image" => MessageType.Image,
-            "audio" => MessageType.Audio,
+            "audio" or "ptt" => MessageType.Audio,
             "video" => MessageType.Video,
             "document" => MessageType.Document,
             "sticker" => MessageType.Sticker,
-            "contact" => MessageType.Contact,
-            "location" => MessageType.Location,
-            _ => MessageType.Text                    // Padrão: texto
+            "vcard" or "contact_card" or "multi_vcard" => MessageType.Contact,
+            "location" or "live_location" => MessageType.Location,
+            _ => MessageType.Text
         };
 
         var timestamp = payload.Timestamp;
@@ -263,14 +263,14 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
             mediaCaption: payload.MediaCaption,        // Legenda
             isForwarded: payload.IsForwarded           // Se foi encaminhada
         );
-
+        Console.WriteLine(messageType);
         await _messageRepository.AddAsync(message);
 
         Console.WriteLine($"[SaveIncomingMessage] Salvo msgId={payload.MessageId} type={messageType} hasMedia={payload.HasMedia} mediaUrlLen={payload.MediaUrl?.Length ?? 0} chatId={chat.Id}");
 
         // ── PASSO 6: ATUALIZAR O CHAT ──
         var sentAt = DateTimeOffset.FromUnixTimeSeconds(timestamp).UtcDateTime;
-        chat.UpdateLastMessage(sentAt, payload.Body);
+        chat.UpdateLastMessage(sentAt, message);
         await _chatRepository.UpdateAsync(chat);
 
         // ── PASSO 7: REGISTRAR AUDITORIA ──

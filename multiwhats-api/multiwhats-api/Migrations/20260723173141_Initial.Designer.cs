@@ -131,7 +131,7 @@ namespace multiwhats_api.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("last_message_at");
 
-                    b.Property<string>("LastMessageBody")
+                    b.Property<string>("LastMessage")
                         .HasColumnType("longtext")
                         .HasColumnName("last_message_body");
 

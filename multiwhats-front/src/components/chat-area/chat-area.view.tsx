@@ -1,11 +1,17 @@
 "use client"
 
-import { Check, CheckCheck, FileWarning, Image, Paperclip, Send, Smile, UserPlus, X, Film, Music, FileText, Sticker } from "lucide-react"
+import { useState, useCallback, useRef } from "react"
+import { Check, CheckCheck, FileWarning, Paperclip, Send, Smile, UserPlus, X, Music, FileText, Upload } from "lucide-react"
 import { AvatarView } from "../avatar/avatar.view"
 import { useChatArea } from "./chat-area.logic"
-import { useTransformedImage } from "../../utils/use-transformed-image"
+import { SaveContactModal, OccurrenceModal } from "./chat-area-modals"
+import { MessageMedia } from "../message-media/message-media.view"
+import { Lightbox } from "../lightbox/lightbox.view"
+import { formatTime, formatDateSeparator, shouldShowDateSeparator } from "../../utils/date-format"
+import { formatMessageText } from "../../utils/message-formatter"
+import { isContactType } from "../../types"
+import { detectMediaType } from "../../utils/media"
 import styles from "./chat-area.module.css"
-import type { MessageType } from "../../services/chats.service"
 
 interface Props {
   chatId: number | null
@@ -15,137 +21,91 @@ interface Props {
   lastMessage: string
   lastMessageAt?: string | null
   chatContactId?: number | null
+  onStartChat?: (phone: string, name: string) => void
 }
 
-function MediaIcon({ type }: { type: MessageType }) {
-  switch (type) {
-    case "Image": return <Image size={14} />
-    case "Video": return <Film size={14} />
-    case "Audio": return <Music size={14} />
-    case "Sticker": return <Sticker size={14} />
-    case "Document": return <FileText size={14} />
-    default: return <Paperclip size={14} />
-  }
-}
-
-function toDataUrl(raw: string, mime: string | null): string {
-  if (raw.startsWith("data:")) return raw
-  const m = mime || guessMime(raw)
-  return `data:${m};base64,${raw}`
-}
-
-function guessMime(raw: string): string {
-  if (raw.startsWith("/9j/")) return "image/jpeg"
-  if (raw.startsWith("iVBOR")) return "image/png"
-  if (raw.startsWith("UklGR")) return "image/webp"
-  if (raw.startsWith("R0lGO")) return "image/gif"
-  if (raw.startsWith("JVBER")) return "application/pdf"
-  if (raw.startsWith("UEsD")) return "application/zip"
-  return "application/octet-stream"
-}
-
-function MessageImage({ raw, mime, alt, style }: { raw: string; mime: string | null; alt: string; style?: React.CSSProperties }) {
-  const { src, loading } = useTransformedImage(raw, mime)
-  if (loading) return <div className="skeleton" style={{ width: 200, height: 150, borderRadius: 6 }} />
-  if (!src) return null
-  return <img src={src} alt={alt} loading="lazy" style={style} />
-}
-
-function MessageMedia({ msg }: { msg: { type: MessageType; mediaUrl: string | null; mediaMimeType: string | null; mediaFilename: string | null; mediaCaption: string | null; body: string | null } }) {
-  if (!msg.mediaUrl) return null
-
-  const isImage = msg.type === "Image" || msg.mediaMimeType?.startsWith("image/")
-  const isVideo = msg.type === "Video" || msg.mediaMimeType?.startsWith("video/")
-  const isAudio = msg.type === "Audio" || msg.mediaMimeType?.startsWith("audio/")
-  const isSticker = msg.type === "Sticker" || msg.mediaMimeType?.startsWith("image/webp")
-
-  if (isSticker) {
-    return (
-      <div className={styles.mediaSticker}>
-        <MessageImage raw={msg.mediaUrl} mime={msg.mediaMimeType} alt="Sticker" style={{ maxWidth: 180, maxHeight: 180 }} />
-      </div>
-    )
-  }
-
-  if (isImage) {
-    return (
-      <div className={styles.mediaImage}>
-        <MessageImage raw={msg.mediaUrl} mime={msg.mediaMimeType} alt={msg.mediaCaption || "Imagem"} style={{ maxWidth: 600, maxHeight: 600, borderRadius: 6 }} />
-        {msg.mediaCaption && <p className={styles.mediaCaption}>{msg.mediaCaption}</p>}
-      </div>
-    )
-  }
-
-  if (isVideo) {
-    return (
-      <div className={styles.mediaVideo}>
-        <video src={toDataUrl(msg.mediaUrl, msg.mediaMimeType)} controls style={{ maxWidth: 300, maxHeight: 300, borderRadius: 6 }} />
-        {msg.mediaCaption && <p className={styles.mediaCaption}>{msg.mediaCaption}</p>}
-      </div>
-    )
-  }
-
-  if (isAudio) {
-    return (
-      <div className={styles.mediaAudio}>
-        <audio src={toDataUrl(msg.mediaUrl, msg.mediaMimeType)} controls style={{ width: 240 }} />
-      </div>
-    )
-  }
-
-  return (
-    <div className={styles.mediaFile}>
-      <MediaIcon type={msg.type} />
-      <span>{msg.mediaFilename || msg.body || "Arquivo"}</span>
-    </div>
-  )
-}
-
-export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContactId, lastMessage}: Props) {
+export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContactId, lastMessage, onStartChat }: Props) {
   const {
     inputValue,
     setInputValue,
     messages,
-    sending,
+    sendingCount,
     sendError,
     sendMessage,
-    showSaveModal,
-    formJid,
-    formPhone,
-    formName,
-    formPushName,
-    assignClientId,
-    clients,
-    saveLoading,
-    saveError,
-    setFormPhone,
-    setFormName,
-    setAssignClientId,
-    openSaveModal,
-    closeSaveModal,
-    createContact,
-    showOccModal,
-    occTitle,
-    setOccTitle,
-    occDescription,
-    setOccDescription,
-    occPriority,
-    setOccPriority,
-    occLoading,
-    occError,
-    openOccModal,
-    closeOccModal,
-    createOccurrence,
     selectedFile,
     mediaPreview,
     mediaType,
     fileInputRef,
     handleFileSelect,
+    handleFileDrop,
     clearMedia,
+    saveContact,
+    occurrence,
   } = useChatArea(chatId, jid, lastMessage)
 
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
+  const [lightboxAlt, setLightboxAlt] = useState<string>("")
+  const [isDragging, setIsDragging] = useState(false)
+  const dragCounter = useRef(0)
+
+  const handleImageClick = useCallback((src: string, alt: string) => {
+    setLightboxSrc(src)
+    setLightboxAlt(alt)
+  }, [])
+
+  const onDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounter.current++
+    if (e.dataTransfer.types.includes("Files")) setIsDragging(true)
+  }, [])
+
+  const onDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounter.current--
+    if (dragCounter.current === 0) setIsDragging(false)
+  }, [])
+
+  const onDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
+
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounter.current = 0
+    setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) handleFileDrop(file)
+  }, [handleFileDrop])
+
+  const onPaste = useCallback((e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].kind === "file") {
+        const file = items[i].getAsFile()
+        if (file) {
+          e.preventDefault()
+          handleFileDrop(file)
+          return
+        }
+      }
+    }
+  }, [handleFileDrop])
+
   return (
-    <main className={styles.chat}>
+    <main
+      className={styles.chat}
+      onDragEnter={onDragEnter}
+      onDragLeave={onDragLeave}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onPaste={onPaste}
+    >
+
       <header className={styles.chatHeader}>
         {chatId ? (
           <AvatarView name={contactName ?? `Contato ${chatId}`} size={36} />
@@ -159,7 +119,7 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
         {chatId && !chatContactId && (
           <button
             className={styles.saveContactBtn}
-            onClick={() => openSaveModal(phoneNumber ?? "", contactName ?? "")}
+            onClick={() => saveContact.openModal(phoneNumber ?? "", contactName ?? "")}
           >
             <UserPlus size={15} />
             Salvar em contatos
@@ -168,7 +128,7 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
         {chatId && (
           <button
             className={styles.occBtn}
-            onClick={openOccModal}
+            onClick={occurrence.openModal}
           >
             <FileWarning size={15} />
             Abrir Ocorrência
@@ -192,32 +152,60 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
             ) : "Selecione um contato para ver as mensagens"}
           </div>
         ) : (
-          messages.map((msg) => (
-            <div key={msg.id} className={msg.direction === 0 ? styles.received : styles.sent}>
-              <div className={styles.bubble}>
-                {msg.mediaUrl ? (
-                  <MessageMedia msg={msg} />
-                ) : null}
-                {msg.body && <div>{msg.body}</div>}
+          messages.map((msg, idx) => {
+            const prev = idx > 0 ? messages[idx - 1] : undefined
+            const showDate = shouldShowDateSeparator(msg, prev)
+            return (
+              <div key={msg.id}>
+                {showDate && (
+                  <div className={styles.dateSeparator}>
+                    <span>{formatDateSeparator(msg.sentAt)}</span>
+                  </div>
+                )}
+                <div className={msg.direction === 0 ? styles.received : styles.sent}>
+                  <div className={styles.messageRow}>
+                    <div className={msg.mediaUrl && !msg.body ? `${styles.bubble} ${styles.bubbleMediaOnly}` : styles.bubble}>
+                      {msg.mediaUrl || isContactType(msg.type) ? <MessageMedia msg={msg} onStartChat={onStartChat} onImageClick={handleImageClick} /> : null}
+                     
+                      { !isContactType(msg.type) &&  msg.body && <div>{formatMessageText(msg.body)}</div>}
+                    </div>
+                    <div className={styles.messageMeta}>
+                      <span className={styles.timestamp}>{formatTime(msg.sentAt)}</span>
+                      {msg.direction === 1 && (
+                        <span className={styles.status}>
+                          {msg.deliveryStatus === "Read" || msg.deliveryStatus === 3 ? (
+                            <CheckCheck size={13} className={styles.read} />
+                          ) : msg.deliveryStatus === "Delivered" || msg.deliveryStatus === 2 ? (
+                            <CheckCheck size={13} />
+                          ) : msg.deliveryStatus === "Sent" || msg.deliveryStatus === 1 ? (
+                            <Check size={13} />
+                          ) : msg.deliveryStatus === "Failed" ? (
+                            <X size={11} className={styles.failed} />
+                          ) : (
+                            <Check size={13} className={styles.pending} />
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-              {msg.direction === 1 && (
-                <span className={styles.status}>
-                  {msg.deliveryStatus === "Read" || msg.deliveryStatus === 3 ? (
-                    <CheckCheck size={14} className={styles.read} />
-                  ) : msg.deliveryStatus === "Delivered" || msg.deliveryStatus === 2 ? (
-                    <CheckCheck size={14} />
-                  ) : msg.deliveryStatus === "Sent" || msg.deliveryStatus === 1 ? (
-                    <Check size={14} />
-                  ) : msg.deliveryStatus === "Failed" ? (
-                    <X size={12} className={styles.failed} />
-                  ) : (
-                    <Check size={14} className={styles.pending} />
-                  )}
-                </span>
-              )}
-            </div>
-          ))
+            )
+          })
         )}
+        {sendingCount > 0 && Array.from({ length: sendingCount }).map((_, i) => (
+          <div key={`sending-${i}`} className={styles.sent}>
+            <div className={styles.messageRow}>
+              <div className={`${styles.bubble} ${styles.sendingBubble}`}>
+                <span className={styles.sendingDots}>
+                  <span className={styles.dot} />
+                  <span className={styles.dot} />
+                  <span className={styles.dot} />
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
       </section>
 
       {mediaPreview && (
@@ -252,134 +240,78 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
         <button onClick={() => fileInputRef.current?.click()}>
           <Paperclip size={20} />
         </button>
-        <input
+        <textarea
           placeholder="Digite uma mensagem..."
+          rows={1}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.ctrlKey && !e.shiftKey) {
+              e.preventDefault()
+              sendMessage()
+            }
+          }}
+          onInput={(e) => {
+            const el = e.currentTarget
+            el.style.height = "auto"
+            el.style.height = Math.min(el.scrollHeight, 120) + "px"
+          }}
+          style={{ resize: "none" }}
         />
         <button
           className={styles.send}
           onClick={sendMessage}
-          disabled={sending || (!inputValue.trim() && !selectedFile)}
+          disabled={sendingCount > 0 || (!inputValue.trim() && !selectedFile)}
         >
-          {sending ? <span className="spinner" /> : <Send size={17} />}
+          <Send size={17} />
         </button>
       </footer>
-      {sendError && <div className={styles.error}>{sendError}</div>}
-
-      {showSaveModal && (
-        <>
-          <div className={styles.overlay} onClick={closeSaveModal} />
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h3>Salvar em contatos</h3>
-              <button className={styles.closeBtn} onClick={closeSaveModal}>
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className={styles.field}>
-              <label>JID (WhatsApp ID)</label>
-              <input value={formJid} readOnly className={styles.readOnly} />
-            </div>
-
-            <div className={styles.field}>
-              <label>Telefone</label>
-              <input value={formPhone} onChange={(e) => setFormPhone(e.target.value)} />
-            </div>
-
-            <div className={styles.field}>
-              <label>Nome</label>
-              <input value={formName} onChange={(e) => setFormName(e.target.value)} />
-            </div>
-
-            <div className={styles.field}>
-              <label>Push Name (WhatsApp)</label>
-              <input value={formPushName} readOnly className={styles.readOnly} />
-            </div>
-
-            <div className={styles.field}>
-              <label>Empresa</label>
-              <select
-                className={styles.select}
-                value={assignClientId ?? ""}
-                onChange={(e) => setAssignClientId(e.target.value ? Number(e.target.value) : null)}
-              >
-                <option value="">Sem empresa</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-
-            {saveError && <div className={styles.saveError}>{saveError}</div>}
-
-            <div className={styles.modalActions}>
-              <button className={styles.cancelBtn} onClick={closeSaveModal}>Cancelar</button>
-              <button className={styles.saveBtn} onClick={createContact} disabled={saveLoading}>
-                {saveLoading ? "Salvando..." : "Salvar"}
-              </button>
-            </div>
+      {isDragging && (
+        <div className={styles.dropOverlay}>
+          <div className={styles.dropContent}>
+            <Upload size={40} />
+            <span>Solte o arquivo aqui</span>
           </div>
-        </>
+        </div>
       )}
 
-      {showOccModal && (
-        <>
-          <div className={styles.overlay} onClick={closeOccModal} />
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h3>Abrir Ocorrência</h3>
-              <button className={styles.closeBtn} onClick={closeOccModal}>
-                <X size={18} />
-              </button>
-            </div>
+      {lightboxSrc && (
+        <Lightbox src={lightboxSrc} alt={lightboxAlt} onClose={() => setLightboxSrc(null)} />
+      )}
 
-            <div className={styles.field}>
-              <label>Título *</label>
-              <input
-                value={occTitle}
-                onChange={(e) => setOccTitle(e.target.value)}
-                placeholder="Ex: Problema com boleto"
-              />
-            </div>
+      {sendError && <div className={styles.error}>{sendError}</div>}
 
-            <div className={styles.field}>
-              <label>Descrição</label>
-              <textarea
-                value={occDescription}
-                onChange={(e) => setOccDescription(e.target.value)}
-                placeholder="Descreva o problema..."
-                rows={3}
-                style={{ resize: "vertical" }}
-              />
-            </div>
+      {saveContact.showModal && (
+        <SaveContactModal
+          formJid={saveContact.formJid}
+          formPhone={saveContact.formPhone}
+          formName={saveContact.formName}
+          formPushName={saveContact.formPushName}
+          assignClientId={saveContact.assignClientId}
+          clients={saveContact.clients}
+          saving={saveContact.saving}
+          error={saveContact.error}
+          setFormPhone={saveContact.setFormPhone}
+          setFormName={saveContact.setFormName}
+          setAssignClientId={saveContact.setAssignClientId}
+          onClose={saveContact.closeModal}
+          onSave={saveContact.createContact}
+        />
+      )}
 
-            <div className={styles.field}>
-              <label>Prioridade</label>
-              <select
-                className={styles.select}
-                value={occPriority}
-                onChange={(e) => setOccPriority(Number(e.target.value))}
-              >
-                <option value={0}>Baixa</option>
-                <option value={1}>Média</option>
-                <option value={2}>Alta</option>
-                <option value={3}>Urgente</option>
-              </select>
-            </div>
-
-            {occError && <div className={styles.saveError}>{occError}</div>}
-
-            <div className={styles.modalActions}>
-              <button className={styles.cancelBtn} onClick={closeOccModal}>Cancelar</button>
-              <button className={styles.saveBtn} onClick={createOccurrence} disabled={occLoading || !occTitle.trim()}>
-                {occLoading ? "Criando..." : "Criar Ocorrência"}
-              </button>
-            </div>
-          </div>
-        </>
+      {occurrence.showModal && (
+        <OccurrenceModal
+          title={occurrence.title}
+          setTitle={occurrence.setTitle}
+          description={occurrence.description}
+          setDescription={occurrence.setDescription}
+          priority={occurrence.priority}
+          setPriority={occurrence.setPriority}
+          saving={occurrence.saving}
+          error={occurrence.error}
+          onClose={occurrence.closeModal}
+          onSave={occurrence.createOccurrence}
+        />
       )}
     </main>
   )

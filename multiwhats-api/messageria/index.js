@@ -89,44 +89,40 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
         const rawNumber = contato.number || contato.id?.user || targetJid.split("@")[0];
         const numeroReal = rawNumber ? rawNumber.replace(/\D/g, "") : null;
         
-        let messageType = "text";
+        let messageType = msg.type;
         let hasMedia = false;
         let mediaUrl = null;
         let mediaMimeType = null;
         let mediaFilename = null;
         let mediaSize = null;
         let mediaCaption = null;
-        
-        if (msg.hasMedia  && msg.type != "ptt" && msg.type != "audio") {
-            const typesMap = {
-                image: "image",
-                video: "video",
-                audio: "audio",
-                ptt: "audio",
-                document: "document",
-                sticker: "sticker"
-            };
-            
+        console.log(msg.type)
+        const typesMap = {
+            image: "image",
+            video: "video",
+            audio: "audio",
+            ptt: "audio",
+            document: "document",
+            sticker: "sticker",
+            contact: "vcard"
+        };  
+        if (msg.hasMedia) {
             messageType = msg.type
-            
             try {
                 const midia = await msg.downloadMedia();
                 if (midia) {
                     hasMedia = true;
                     mediaMimeType = midia.mimetype || "image/jpeg";
                     mediaFilename = midia.filename || "arquivo";
-
                     mediaUrl = midia.data;
                     mediaCaption = msg.caption || msg.body || null;
                     mediaSize = midia.filesize ? Number(midia.filesize) : midia.data.length;
                     
                 } else {
                     hasMedia = false;
-                    messageType = "text";
                 }
             } catch (err) {
                 hasMedia = false;
-                messageType = "text";
             }
         }
 
@@ -148,6 +144,7 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
             fromMe: enviadaPorMim, 
             userId: 1
         };
+        console.log(msg.type)
 
         const response = await axios.post(ASPNET_WEBHOOK_URL, payload);
         console.log(`🚀 Webhook ASP.NET respondido com status: ${response.status}`);

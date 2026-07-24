@@ -1,8 +1,9 @@
 import { api } from "./api"
+import type { OccurrenceStatus, Priority } from "../types"
+import type { OccurrenceResponse } from "../types/occurrence"
+import type { ClientTaskStatus } from "../types"
 
-export type Priority = 0 | 1 | 2 | 3
-export type ClientTaskStatus = "Open" | "InProgress" | "Completed" | "Cancelled"
-export type OccurrenceStatus = "Open" | "InProgress" | "Resolved" | "Closed"
+export type { OccurrenceStatus, Priority, OccurrenceResponse, ClientTaskStatus }
 
 export interface TaskResponse {
   id: number
@@ -17,23 +18,6 @@ export interface TaskResponse {
   assignedToName: string | null
   createdByUserId: number | null
   createdByName: string | null
-  createdAt: string
-  lastUpdate: string
-}
-
-export interface OccurrenceResponse {
-  id: number
-  title: string
-  description: string | null
-  status: OccurrenceStatus
-  priority: Priority
-  chatId: number
-  chatName: string | null
-  assignedToUserId: number | null
-  assignedToName: string | null
-  createdByUserId: number | null
-  createdByName: string | null
-  messageCount: number
   createdAt: string
   lastUpdate: string
 }
