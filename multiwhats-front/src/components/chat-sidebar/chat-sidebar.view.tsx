@@ -73,7 +73,7 @@ export function ChatSidebarView({ selectedId, onSelect }: Props) {
             <div
               key={chat.id}
               className={`${styles.chatItem} ${selectedId === chat.id ? styles.active : ""}`}
-              onClick={() => onSelect(chat.id, displayName, phone, jid, chat.contactId, chat.lastMessage.Body ?? "", chat.lastMessageAt)}
+              onClick={() => onSelect(chat.id, displayName, phone, jid, chat.contactId, "", chat.lastMessageAt)} // colocar o chat.lastmessage.body
             >
               <AvatarView name={displayName} size={42} />
               <div className={styles.chatInfo}>
@@ -110,8 +110,8 @@ export function ChatSidebarView({ selectedId, onSelect }: Props) {
                   </div>
                 )}
                 {
-                  chat.lastMessage?.Type === 1 ? (
-                    <p className={styles.lastMsg}>{chat.lastMessage.Body}</p>
+                  chat.lastMessage?.Type === "Text" ? (
+                    <p className={styles.lastMsg}>{chat.lastMessage.Body  ?? ""}</p>
                   ) : (
                   <p className={styles.lastMsg}></p>
                   )

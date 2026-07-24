@@ -13,7 +13,7 @@ export interface ChatListResponse {
   clientId: number | null
   clientName: string | null
   lastMessageAt: string | null
-  lastMessage: {Type: number, Body:string}
+  lastMessage: {Type: string, Body:string}
   assignedToUserName: string | null
   messageCount: number
   occurrences: OccurrenceSummary[] | null
