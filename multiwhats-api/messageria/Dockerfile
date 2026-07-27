@@ -27,10 +27,10 @@ ENV ASPNET_DEVICE_URL=http://backend:5261/api/device
 
 WORKDIR /app
 
-COPY messageria/package.json messageria/package-lock.json* ./
+COPY package.json package-lock.json* ./
 RUN npm install
 
-COPY messageria/ .
+COPY . .
 
 EXPOSE 3333
 
