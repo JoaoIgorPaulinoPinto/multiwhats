@@ -124,7 +124,7 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
             } catch (err) {
                 hasMedia = false;
             }
-        }
+        } 
 
         const payload = {
             from: targetJid,
@@ -145,7 +145,6 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
             userId: 1
         };
         console.log(msg.type)
-
         const response = await axios.post(ASPNET_WEBHOOK_URL, payload);
         console.log(`🚀 Webhook ASP.NET respondido com status: ${response.status}`);
 

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("multiwhats-api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+65cbb5181c64654fe04e38a9f91e110df7627ce9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+017466acc9ff55f672ca6acfb964d050db941e5b")]
 [assembly: System.Reflection.AssemblyProductAttribute("multiwhats-api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("multiwhats-api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
