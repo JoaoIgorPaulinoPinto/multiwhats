@@ -2,16 +2,21 @@ using Microsoft.EntityFrameworkCore;
 using multiwhats_api.src.data.db;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.repositories.interfaces;
+using multiwhats_api.src.services;
 
 namespace multiwhats_api.src.repositories.repositories;
 
 public class ChatRepository : IChatRepository
 {
     private readonly AppDbContext _context;
+    private readonly ILegacyDbSyncService _legacyDb;
+    private readonly ILogger<ChatRepository> _logger;
 
-    public ChatRepository(AppDbContext context)
+    public ChatRepository(AppDbContext context, ILegacyDbSyncService legacyDb, ILogger<ChatRepository> logger)
     {
         _context = context;
+        _legacyDb = legacyDb;
+        _logger = logger;
     }
 
     public async Task<List<Chat>> GetAllAsync(int page, int pageSize)
@@ -70,6 +75,13 @@ public class ChatRepository : IChatRepository
     {
         _context.Chats.Add(chat);
         await _context.SaveChangesAsync();
+
+        _ = Task.Run(async () =>
+        {
+            try { await _legacyDb.SyncChatAsync(chat); }
+            catch (Exception ex) { _logger.LogError(ex, "Erro ao sincronizar chat com LegacyDB"); }
+        });
+
         return chat;
     }
 

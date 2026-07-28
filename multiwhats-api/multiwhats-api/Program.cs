@@ -194,6 +194,15 @@ builder.Services.AddSingleton<UseCaseLogger>();         // Singleton: logger com
 builder.Services.AddScoped<TokenService>();             // Scoped: um por requisição
 builder.Services.AddScoped<AuditService>();             // Scoped: um por requisição
 
+// ── LEGACY DATABASE SYNC ──
+// Serviço que sincroniza dados com o LegacyDatabaseAdapter (MySQL 4.1)
+// HttpClient configurado para chamar o Node.js na porta 3001
+builder.Services.AddHttpClient<ILegacyDbSyncService, LegacyDbSyncService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["LegacyDb:BaseUrl"] ?? "http://localhost:3001");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONFIGURAÇÃO DE AUTENTICAÇÃO JWT
 // ═══════════════════════════════════════════════════════════════════════════════

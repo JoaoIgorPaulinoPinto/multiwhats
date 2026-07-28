@@ -2,16 +2,21 @@ using Microsoft.EntityFrameworkCore;
 using multiwhats_api.src.data.db;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.repositories.interfaces;
+using multiwhats_api.src.services;
 
 namespace multiwhats_api.src.repositories.repositories;
 
 public class DeviceRepository : IDeviceRepository
 {
     private readonly AppDbContext _context;
+    private readonly ILegacyDbSyncService _legacyDb;
+    private readonly ILogger<DeviceRepository> _logger;
 
-    public DeviceRepository(AppDbContext context)
+    public DeviceRepository(AppDbContext context, ILegacyDbSyncService legacyDb, ILogger<DeviceRepository> logger)
     {
         _context = context;
+        _legacyDb = legacyDb;
+        _logger = logger;
     }
 
     public async Task<Device?> GetCurrentAsync()
@@ -45,6 +50,13 @@ public class DeviceRepository : IDeviceRepository
         }
 
         await _context.SaveChangesAsync();
+
+        _ = Task.Run(async () =>
+        {
+            try { await _legacyDb.SyncDeviceAsync(existing ?? device); }
+            catch (Exception ex) { _logger.LogError(ex, "Erro ao sincronizar dispositivo com LegacyDB"); }
+        });
+
         return existing ?? device;
     }
 }
