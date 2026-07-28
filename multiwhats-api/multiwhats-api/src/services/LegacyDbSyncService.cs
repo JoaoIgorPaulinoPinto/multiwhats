@@ -161,17 +161,17 @@ public class LegacyDbSyncService : ILegacyDbSyncService
     {
         try
         {
-            var json = JsonSerializer.Serialize(payload, JsonOptions);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await _http.PostAsync($"{_baseUrl}/api/{endpoint}", content);
+            //var json = JsonSerializer.Serialize(payload, JsonOptions);
+            //var content = new StringContent(json, Encoding.UTF8, "application/json");
+            //var response = await _http.PostAsync($"{_baseUrl}/api/{endpoint}", content);
 
-            if (!response.IsSuccessStatusCode)
-            {
-                var body = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning(
-                    "LegacyDB sync falhou para {Endpoint}: {StatusCode} - {Body}",
-                    endpoint, response.StatusCode, body);
-            }
+            //if (!response.IsSuccessStatusCode)
+            //{
+            //    var body = await response.Content.ReadAsStringAsync();
+            //    _logger.LogWarning(
+            //        "LegacyDB sync falhou para {Endpoint}: {StatusCode} - {Body}",
+            //        endpoint, response.StatusCode, body);
+            //}
         }
         catch (Exception ex)
         {
