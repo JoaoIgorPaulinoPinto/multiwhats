@@ -42,6 +42,7 @@ public class LegacyDbSyncService : ILegacyDbSyncService
         // salvo por outra API de armazenamento de arquivos (a implementar).
         var payload = new
         {
+            id = message.Id,
             message_id = message.MessageId,
             from_jid = message.FromJid,
             to_jid = message.ToJid,
@@ -73,6 +74,7 @@ public class LegacyDbSyncService : ILegacyDbSyncService
     {
         var payload = new
         {
+            id = contact.Id,
             jid = contact.Jid,
             phone_number = contact.PhoneNumber,
             name = contact.Name,
@@ -88,6 +90,7 @@ public class LegacyDbSyncService : ILegacyDbSyncService
     {
         var payload = new
         {
+            id = client.Id,
             name = client.Name,
             main_phone_number = client.MainPhoneNumber,
             status = client.Status.ToString()
@@ -100,6 +103,7 @@ public class LegacyDbSyncService : ILegacyDbSyncService
     {
         var payload = new
         {
+            id = occurrence.Id,
             title = occurrence.Title,
             description = occurrence.Description,
             status = occurrence.Status.ToString(),
@@ -114,6 +118,7 @@ public class LegacyDbSyncService : ILegacyDbSyncService
     {
         var payload = new
         {
+            id = task.Id,
             title = task.Title,
             description = task.Description,
             status = task.Status.ToString(),
@@ -129,6 +134,7 @@ public class LegacyDbSyncService : ILegacyDbSyncService
     {
         var payload = new
         {
+            id = chat.Id,
             jid = chat.Jid,
             phone_number = chat.PhoneNumber,
             name = chat.Name
@@ -141,6 +147,7 @@ public class LegacyDbSyncService : ILegacyDbSyncService
     {
         var payload = new
         {
+            id = device.Id,
             jid = device.Jid,
             phone_number = device.PhoneNumber,
             push_name = device.PushName,
