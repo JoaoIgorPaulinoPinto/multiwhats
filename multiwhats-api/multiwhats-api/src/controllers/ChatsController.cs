@@ -7,52 +7,33 @@ using multiwhats_api.src.usecases.interfaces.OccurrenceInterfaces;
 
 namespace multiwhats_api.src.controllers;
 
-/// <summary>
-/// CONTROLLER DE CONVERSAS (CHATS).
-/// 
-/// Endpoints: /api/chats/*
-/// 
-/// RESPONSABILIDADES:
-/// - GET /api/chats: Listar conversas (paginado)
-/// - GET /api/chats/{id}: Detalhar uma conversa
-/// - GET /api/chats/{id}/messages: Mensagens de uma conversa (paginado)
-/// - GET /api/chats/{id}/occurrences: Ocorrências de uma conversa
-/// 
-/// NOTA: Todos os endpoints exigem autenticação ([Authorize] no controller)
-/// </summary>
+// Endpoints: /api/chats/* (GET list, detail, messages, occurrences)
 [ApiController]
 [Route("api/chats")]
-[Authorize]  // TODOS os endpoints deste controller exigem login
+[Authorize]
 public class ChatsController : ControllerBase
 {
     private readonly IGetChatsUseCase _getChatsUseCase;
     private readonly ICreateChatUseCase _createChatUseCase;
     private readonly IGetMessagesUseCase _getMessagesUseCase;
     private readonly IGetOccurrencesUseCase _getOccurrencesUseCase;
+    private readonly IMergeChatsUseCase _mergeChatsUseCase;
 
     public ChatsController(
         IGetChatsUseCase getChatsUseCase,
         ICreateChatUseCase createChatUseCase,
+        IMergeChatsUseCase mergeChatsUseCase,
         IGetMessagesUseCase getMessagesUseCase,
         IGetOccurrencesUseCase getOccurrencesUseCase)
     {
+        _mergeChatsUseCase = mergeChatsUseCase;
         _getChatsUseCase = getChatsUseCase;
         _createChatUseCase = createChatUseCase;
         _getMessagesUseCase = getMessagesUseCase;
         _getOccurrencesUseCase = getOccurrencesUseCase;
     }
 
-    /// <summary>
-    /// Lista todas as conversas com paginação.
-    /// 
-    /// GET /api/chats?page=1&pageSize=20
-    /// 
-    /// Parâmetros de query string:
-    /// - page: número da página (padrão: 1)
-    /// - pageSize: itens por página (padrão: 20)
-    /// 
-    /// Response: PaginatedResponse com items, totalCount, page, pageSize, totalPages
-    /// </summary>
+    // GET /api/chats - Listar conversas (paginado)
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
@@ -60,12 +41,7 @@ public class ChatsController : ControllerBase
         return Ok(chats);
     }
 
-    /// <summary>
-    /// Detalha uma conversa específica, incluindo suas ocorrências.
-    /// 
-    /// GET /api/chats/5
-    /// Response: ChatDetailResponse com dados completos + lista de ocorrências
-    /// </summary>
+    // GET /api/chats/{id} - Detalhar conversa
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -75,14 +51,7 @@ public class ChatsController : ControllerBase
         return Ok(chat);
     }
 
-    /// <summary>
-    /// Lista as mensagens de uma conversa com paginação.
-    /// 
-    /// GET /api/chats/5/messages?page=1&pageSize=50
-    /// 
-    /// As mensagens são retornadas em ordem cronológica (mais antiga primeiro).
-    /// O padrão são 50 mensagens por página (mais que os chats, pois conversas são longas).
-    /// </summary>
+    // GET /api/chats/{id}/messages - Mensagens da conversa (paginado)
     [HttpGet("{id}/messages")]
     public async Task<IActionResult> GetMessages(int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
@@ -90,16 +59,18 @@ public class ChatsController : ControllerBase
         return Ok(messages);
     }
 
-    /// <summary>
-    /// Lista todas as ocorrências (chamados) de uma conversa.
-    /// 
-    /// GET /api/chats/5/occurrences
-    /// Response: Lista de OccurrenceDetailResponse
-    /// </summary>
+    // GET /api/chats/{id}/occurrences - Ocorrências da conversa
     [HttpGet("{id}/occurrences")]
     public async Task<IActionResult> GetOccurrences(int id)
     {
         var occurrences = await _getOccurrencesUseCase.ExecuteByChat(id);
         return Ok(occurrences);
+    }
+    // GET /api/chats/{id}/occurrences - Ocorrências da conversa
+    [HttpPatch("/merge")]
+    public async Task<IActionResult> MergeChats(int fromId, int toId)
+    {
+        var merged = await _mergeChatsUseCase.Merge(fromId, toId);
+        return Ok(merged);
     }
 }

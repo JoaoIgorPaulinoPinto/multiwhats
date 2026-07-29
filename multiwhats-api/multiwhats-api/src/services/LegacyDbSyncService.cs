@@ -43,7 +43,7 @@ public class LegacyDbSyncService : ILegacyDbSyncService
         var payload = new
         {
             id = message.Id,
-            message_id = message.MessageId,
+            message_id = message.WhatssAppMessageId,
             from_jid = message.FromJid,
             to_jid = message.ToJid,
             phone_number = message.PhoneNumber,

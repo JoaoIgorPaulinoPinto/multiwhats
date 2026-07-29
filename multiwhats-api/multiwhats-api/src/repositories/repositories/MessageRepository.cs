@@ -67,12 +67,12 @@ public class MessageRepository : IMessageRepository
         var messages = await _context.Messages
             .AsNoTracking()
             .Where(m => m.ChatId == chatId)
-            .OrderByDescending(m => m.Timestamp) // Pega as mais recentes no banco
+            .OrderByDescending(m => m.Timestamp)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
 
-        messages.Reverse(); // Inverte a ordem na memória para o chat exibir corretamente (mais antiga no topo, mais recente embaixo)
+        messages.Reverse();
 
         return messages;
     }
@@ -103,6 +103,6 @@ public class MessageRepository : IMessageRepository
     {
         return await _context.Messages
             .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.MessageId == messageId);
+            .FirstOrDefaultAsync(m => m.WhatssAppMessageId == messageId);
     }
 }

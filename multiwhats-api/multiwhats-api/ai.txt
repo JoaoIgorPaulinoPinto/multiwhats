@@ -1,0 +1,111 @@
+Faça uma varredura completa no projeto e adapte todas as entidades do Entity Framework Core para PostgreSQL utilizando Npgsql.
+
+Objetivos:
+- Não alterar a regra de negócio.
+- Não alterar nomes de propriedades públicas.
+- Alterar apenas o que for necessário para compatibilidade e boas práticas do PostgreSQL.
+
+Verifique e corrija:
+
+1. Remova qualquer configuração específica do MySQL, como:
+   - HasCharSet(...)
+   - UseCollation(...)
+   - ServerVersion.AutoDetect(...)
+   - HasAnnotation("MySql:...")
+   - Qualquer extensão ou configuração exclusiva do Pomelo/MySQL.
+
+2. Revise todos os atributos:
+   - [Column]
+   - [Table]
+   - [DatabaseGenerated]
+   - [MaxLength]
+   - [Precision]
+   - [Unicode]
+   - [Required]
+
+3. Padronize nomes de tabelas e colunas para snake_case.
+Exemplo:
+- CreatedAt -> created_at
+- LastMessageAt -> last_message_at
+- ChatId -> chat_id
+
+4. Revise todos os tipos de dados:
+   - string longa -> TEXT quando apropriado.
+   - decimal -> definir precisão adequada.
+   - DateTime -> utilizar timestamp with time zone quando possível.
+   - bool -> boolean.
+   - Guid -> uuid quando aplicável.
+
+5. Verifique chaves primárias:
+   - Garantir uso de Identity do PostgreSQL.
+   - Remover qualquer configuração AUTO_INCREMENT.
+
+6. Revise índices:
+   - HasIndex(...)
+   - índices únicos
+   - nomes duplicados
+   - índices incompatíveis com PostgreSQL.
+
+7. Revise relacionamentos:
+   - HasOne
+   - HasMany
+   - WithMany
+   - WithOne
+   - DeleteBehavior
+   - Foreign Keys
+   Garantir compatibilidade com PostgreSQL sem alterar a modelagem.
+
+8. Revisar enums:
+   - Garantir mapeamento correto.
+   - Caso estejam armazenados como string, preservar comportamento.
+
+9. Verificar propriedades DateTime:
+   - Garantir consistência de UTC.
+   - Evitar conversões específicas do MySQL.
+
+10. Procurar por SQL bruto (Raw SQL):
+    - comandos MySQL
+    - LIMIT
+    - AUTO_INCREMENT
+    - ENGINE=
+    - COLLATE
+    - CHARSET
+    - IFNULL
+    - NOW()
+    - REPLACE INTO
+    - ON DUPLICATE KEY UPDATE
+    - backticks (`)
+
+    Adaptar para sintaxe PostgreSQL quando necessário.
+
+11. Revisar Fluent API:
+    - ModelBuilder
+    - IEntityTypeConfiguration
+    - HasColumnType
+    - HasDefaultValueSql
+    - ValueGeneratedOnAdd
+    - ValueGeneratedNever
+
+12. Sempre que encontrar um tipo específico do MySQL, substituí-lo pelo equivalente do PostgreSQL.
+
+13. Não alterar:
+    - nomes das classes
+    - propriedades públicas
+    - DTOs
+    - UseCases
+    - Services
+    - Repositories
+    - regras de negócio
+
+14. Ao finalizar, gere um relatório contendo:
+    - Arquivos modificados.
+    - O que foi alterado em cada arquivo.
+    - Pontos que precisam de revisão manual.
+    - Possíveis incompatibilidades restantes.
+    - Sugestões de melhorias para PostgreSQL.
+
+Importante:
+- Faça alterações mínimas e seguras.
+- Preserve o comportamento atual da aplicação.
+- Não introduza refatorações não relacionadas à migração para PostgreSQL.
+- Sempre prefira configurações compatíveis com EF Core + Npgsql.
