@@ -1,35 +1,26 @@
-﻿using multiwhats_api.src.data.entities;
-using multiwhats_api.src.repositories.interfaces;
+﻿using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.usecases.interfaces.ChatInterfaces;
 
-namespace multiwhats_api.src.usecases.interfaces.IChatUseCases
+namespace multiwhats_api.src.usecases.usecases.ChatUseCases;
+
+public class MergeChatsUseCase : IMergeChatsUseCase
 {
-    public class MergeChatsUseCase : IMergeChatsUseCase
+    private readonly IChatRepository _chatRepository;
+
+    public MergeChatsUseCase(IChatRepository chatRepository)
     {
-        private readonly IChatRepository _chatRepository;
+        _chatRepository = chatRepository;
+    }
 
-        public MergeChatsUseCase (IChatRepository chatRepository)
-        {
-            _chatRepository = chatRepository;
-        }
+    public async Task<bool> Execute(string mergeJid, string toJid)
+    {
+        var source = await _chatRepository.GetByJidAsync(mergeJid);
+        var destination = await _chatRepository.GetByJidAsync(toJid);
 
-        public async Task<bool> Merge(int mergeID, int toID)
-        {
-
-            
-            Chat? chatToMerge = await _chatRepository.GetByIdAsync(mergeID);
-            Chat? chatDestiny = await _chatRepository.GetByIdAsync(toID);
-
-            if(chatToMerge != null && chatDestiny != null)
-            {
-                foreach (var item in chatToMerge.Messages)
-                {
-                    item.UpdateChatId(chatDestiny.Id);
-                }
-                await _chatRepository.UpdateAsync(chatDestiny);
-                return true;
-            }
+        if (source is null || destination is null)
             return false;
-        }
+
+        return await _chatRepository.MergeChatAsync(source.Id, destination.Id);
     }
 }
+

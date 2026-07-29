@@ -113,4 +113,42 @@ public class ChatRepository : IChatRepository
     {
         return await _context.Occurrences.CountAsync(o => o.ChatId == chatId);
     }
+
+    public async Task<bool> MergeChatAsync(int sourceId, int destinationId)
+    {
+        var source = await _context.Chats
+            .Include(c => c.Contact)
+            .FirstOrDefaultAsync(c => c.Id == sourceId);
+
+        var destination = await _context.Chats
+            .FirstOrDefaultAsync(c => c.Id == destinationId);
+
+        if (source is null || destination is null)
+            return false;
+
+        var messages = await _context.Messages
+            .Where(m => m.ChatId == sourceId)
+            .ToListAsync();
+
+        foreach (var msg in messages)
+            msg.UpdateChatId(destinationId);
+
+        var occurrences = await _context.Occurrences
+            .Where(o => o.ChatId == sourceId)
+            .ToListAsync();
+
+        foreach (var occ in occurrences)
+            occ.UpdateChatId(destinationId);
+
+        if (source.Contact is not null)
+        {
+            source.UnlinkContact();
+            destination.LinkToContact(source.Contact.Id, source.ClientId);
+        }
+
+        _context.Chats.Remove(source);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
 }

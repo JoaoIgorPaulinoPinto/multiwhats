@@ -26,7 +26,6 @@ using multiwhats_api.src.usecases.usecases.TaskUseCases;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using multiwhats_api.src.usecases.interfaces.IChatUseCases;
 
 // Application entry point. Configures services, middleware, authentication, and routes.
 

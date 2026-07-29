@@ -14,4 +14,5 @@ public interface IChatRepository
     Task<bool> DeleteAsync(int id);
     Task<int> GetMessageCountAsync(int chatId);
     Task<int> GetOccurrenceCountAsync(int chatId);
+    Task<bool> MergeChatAsync(int sourceId, int destinationId);
 }

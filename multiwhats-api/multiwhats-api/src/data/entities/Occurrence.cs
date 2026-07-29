@@ -71,4 +71,9 @@ public class Occurrence : BaseEntity
         if (priority.HasValue) Priority = priority.Value;
         if (assignedToUserId.HasValue) AssignedToUserId = assignedToUserId;
     }
+
+    public void UpdateChatId(int chatId)
+    {
+        ChatId = chatId;
+    }
 }

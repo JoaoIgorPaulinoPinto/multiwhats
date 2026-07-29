@@ -1,9 +1,6 @@
-﻿using multiwhats_api.src.data.entities;
+﻿namespace multiwhats_api.src.usecases.interfaces.ChatInterfaces;
 
-namespace multiwhats_api.src.usecases.interfaces.ChatInterfaces
+public interface IMergeChatsUseCase
 {
-    public interface IMergeChatsUseCase
-    {
-        public Task<bool> Merge(int mergeID, int toID);
-    }
+    Task<bool> Execute(string mergeJid, string toJid);
 }
