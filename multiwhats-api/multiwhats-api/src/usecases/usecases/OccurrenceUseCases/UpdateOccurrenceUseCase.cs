@@ -17,7 +17,7 @@ public class UpdateOccurrenceUseCase : IUpdateOccurrenceUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<OccurrenceResponse> Execute(int id, UpdateOccurrenceRequest request)
+    public async Task<OccurrenceDetailResponse> Execute(int id, UpdateOccurrenceRequest request)
     {
         var occurrence = await _occurrenceRepository.GetByIdAsync(id);
         if (occurrence == null)
@@ -33,7 +33,7 @@ public class UpdateOccurrenceUseCase : IUpdateOccurrenceUseCase
             description: $"Updated occurrence #{id} (Title: \"{updated.Title}\", Status: {updated.Status}, Priority: {updated.Priority})"
         );
 
-        return new OccurrenceResponse
+        return new OccurrenceDetailResponse
         {
             Id = updated.Id,
             Title = updated.Title,

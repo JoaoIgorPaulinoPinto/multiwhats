@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
+using System.Text;
+using System.Text.Json;
 using multiwhats_api.src.data.dtos.Webhook;
 using multiwhats_api.src.data.enums;
 using multiwhats_api.src.data.entities;
@@ -6,9 +8,11 @@ using multiwhats_api.src.helpers;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
+using multiwhats_api.src.data.dtos.Requests;
 
 namespace multiwhats_api.src.usecases.usecases.MessageUseCases;
 
+// Saves incoming webhook messages from WhatsApp, handles dedup, self-sent detection, and auto-creates chats.
 public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
 {
     private readonly IMessageRepository _messageRepository;
@@ -18,6 +22,8 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
     private readonly IDeviceRepository _deviceRepository;
     private readonly UseCaseLogger _useCaseLogger;
     private readonly IHubContext<WhatsappHub> _hubContext;
+    private readonly HttpClient _httpClient;
+    private readonly ISendMessageUseCase _sendMessageUseCase;
 
     public SaveIncomingMessageUseCase(
         IMessageRepository repository,
@@ -26,7 +32,9 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         IUserRepository userRepository,
         IDeviceRepository deviceRepository,
         UseCaseLogger useCaseLogger,
-        IHubContext<WhatsappHub> hubContext)
+        IHubContext<WhatsappHub> hubContext,
+        HttpClient httpClient,
+        ISendMessageUseCase sendMessageUseCase)
     {
         _messageRepository = repository;
         _chatRepository = chatRepository;
@@ -35,12 +43,27 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         _deviceRepository = deviceRepository;
         _useCaseLogger = useCaseLogger;
         _hubContext = hubContext;
+        _httpClient = httpClient;
+        _sendMessageUseCase = sendMessageUseCase;
     }
+
 
     public async Task<bool> Execute(WhatsAppWebhookDto payload)
     {
         var phoneNumber = PhoneNumberHelper.Sanitize(payload.PhoneNumber);
 
+        // Deduplication: ignore messages already processed
+        if (!string.IsNullOrEmpty(payload.MessageId))
+        {
+            var existing = await _messageRepository.GetByMessageIdAsync(payload.MessageId);
+            if (existing != null)
+            {
+                Console.WriteLine($"[SaveIncomingMessage] Duplicata ignorada msgId={payload.MessageId} (já existe id={existing.Id})");
+                return false;
+            }
+        }
+
+        // Self-sent detection: messages from our own device are marked as Outgoing
         var device = await _deviceRepository.GetCurrentAsync();
         var deviceJid = device?.Jid;
 
@@ -52,6 +75,7 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         var actualToJid = isSelfSent ? null : deviceJid;
 
         var chat = await _chatRepository.GetByJidAsync(payload.From);
+
         if (chat == null && !isSelfSent)
         {
             var contact = await _contactRepository.GetByJidAsync(payload.From);
@@ -88,19 +112,54 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         var user = await _userRepository.GetByIdAsync(payload.UserId);
         int? userId = user?.Id;
 
-        var messageType = (payload.MessageType?.ToLower()) switch
+        var messageType = payload.MessageType?.ToLowerInvariant() switch
         {
             "image" => MessageType.Image,
-            "audio" => MessageType.Audio,
+            "audio" or "ptt" => MessageType.Audio,
             "video" => MessageType.Video,
             "document" => MessageType.Document,
             "sticker" => MessageType.Sticker,
-            "contact" => MessageType.Contact,
-            "location" => MessageType.Location,
+            "vcard" or "contact_card" or "multi_vcard" => MessageType.Contact,
+            "location" or "live_location" => MessageType.Location,
             _ => MessageType.Text
         };
 
         var timestamp = payload.Timestamp;
+
+        // Block incoming audio messages
+        if (messageType == MessageType.Audio && !isSelfSent)
+        {
+            Console.WriteLine($"[SaveIncomingMessage] Áudio bloqueado de {payload.From} (msgId={payload.MessageId})");
+
+            if (userId != null)
+            {
+                try
+                {
+                    var audioBlockedMsg = new SendMessageRequest
+                    {
+                        Jid = payload.From,
+                        Text = "Desculpe, não podemos receber áudio. Por gentileza, digite.",
+                        Type = MessageType.Text
+                    };
+                    await _sendMessageUseCase.Execute(audioBlockedMsg, userId.Value);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[SaveIncomingMessage] Erro ao enviar resposta de bloqueio de áudio: {ex.Message}");
+                }
+            }
+
+            await _useCaseLogger.LogAsync(
+                action: "SaveIncomingMessage",
+                entityType: "Message",
+                entityId: null,
+                description: $"Audio blocked from {payload.From} (msgId={payload.MessageId})",
+                explicitUserId: userId,
+                explicitUserName: user?.Name
+            );
+
+            return true;
+        }
 
         var message = new Message(
             fromJid: actualFromJid,
@@ -119,13 +178,16 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
             mediaMimeType: payload.MediaMimeType,
             mediaFilename: payload.MediaFilename,
             mediaSize: payload.MediaSize,
+            mediaCaption: payload.MediaCaption,
             isForwarded: payload.IsForwarded
         );
-
+        Console.WriteLine(messageType);
         await _messageRepository.AddAsync(message);
 
+        Console.WriteLine($"[SaveIncomingMessage] Salvo msgId={payload.MessageId} type={messageType} hasMedia={payload.HasMedia} mediaUrlLen={payload.MediaUrl?.Length ?? 0} chatId={chat.Id}");
+
         var sentAt = DateTimeOffset.FromUnixTimeSeconds(timestamp).UtcDateTime;
-        chat.UpdateLastMessage(sentAt, payload.Body);
+        chat.UpdateLastMessage(sentAt, message);
         await _chatRepository.UpdateAsync(chat);
 
         var userName = user?.Name;
@@ -138,8 +200,13 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
             explicitUserName: userName
         );
 
-        var msgResponse = GetMessagesUseCase.MapToResponse(message);
-        await _hubContext.Clients.All.SendAsync("MessageReceived", msgResponse);
+        // Self-sent messages already broadcast by SendMessageUseCase, skip to avoid duplicates
+        if (!isSelfSent)
+        {
+            var msgResponse = GetMessagesUseCase.MapToDetailResponse(message);
+            await _hubContext.Clients.All.SendAsync("MessageReceived", msgResponse);
+        }
+
 
         return true;
     }

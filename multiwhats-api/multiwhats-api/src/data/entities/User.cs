@@ -4,7 +4,7 @@ using multiwhats_api.src.data.enums;
 
 namespace multiwhats_api.src.data.entities;
 
-[Table("Users")]
+[Table("users")]
 public class User : BaseEntity
 {
     [Key]

@@ -1,30 +1,34 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { chatsService, type ChatResponse } from "../../services/chats.service"
+import { chatsService, type ChatListResponse } from "../../services/chats.service"
 import { ws } from "../../services/websocket"
+
+let cachedChats: ChatListResponse[] | null = null
 
 export function useChatSidebar() {
   const [search, setSearch] = useState("")
-  const [chats, setChats] = useState<ChatResponse[]>([])
-  const [loading, setLoading] = useState(true)
+  const [chats, setChats] = useState<ChatListResponse[]>(() => cachedChats ?? [])
+  const [loading, setLoading] = useState(cachedChats === null)
 
   const load = useCallback(() => {
     chatsService
       .listChats()
-      .then((res) => setChats(res.items))
+      .then((res) => {
+        cachedChats = res.items
+        setChats(res.items)
+      })
       .catch((e) => console.error(`[ChatSidebar] erro ao carregar:`, e))
       .finally(() => setLoading(false))
   }, [])
 
   useEffect(() => {
     load()
-    const interval = setInterval(load, 5000)
 
     const unsubReceived = ws.on("message:received", load)
     const unsubSent = ws.on("message:sent", load)
 
-    return () => { clearInterval(interval); unsubReceived(); unsubSent() }
+    return () => { unsubReceived(); unsubSent() }
   }, [load])
 
   const filtered = chats.filter((c) => {
@@ -32,6 +36,7 @@ export function useChatSidebar() {
     const display = c.contactName ?? c.name ?? c.phoneNumber ?? `Chat #${c.id}`
     return display.toLowerCase().includes(q)
   })
+                  console.log(chats)
 
-  return { search, setSearch, chats: filtered, loading }
+  return { search, setSearch, chats: filtered, loading, load }
 }

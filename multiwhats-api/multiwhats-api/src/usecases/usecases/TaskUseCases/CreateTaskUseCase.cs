@@ -18,7 +18,7 @@ public class CreateTaskUseCase : ICreateTaskUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<TaskResponse> Execute(CreateTaskRequest request, int userId)
+    public async Task<TaskDetailResponse> Execute(CreateTaskRequest request, int userId)
     {
         var task = new ClientTask(
             request.Title,
@@ -39,7 +39,7 @@ public class CreateTaskUseCase : ICreateTaskUseCase
             explicitUserId: userId
         );
 
-        return new TaskResponse
+        return new TaskDetailResponse
         {
             Id = created.Id,
             Title = created.Title,

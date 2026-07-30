@@ -17,7 +17,7 @@ public class UpdateClientUseCase : IUpdateClientUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<ClientResponse> Execute(int id, UpdateClientRequest request)
+    public async Task<ClientDetailResponse> Execute(int id, UpdateClientRequest request)
     {
         var client = await _clientRepository.GetByIdAsync(id);
         if (client == null)
@@ -33,7 +33,7 @@ public class UpdateClientUseCase : IUpdateClientUseCase
             description: $"Updated client #{id} (Name: \"{updated.Name}\", Phone: {updated.MainPhoneNumber}, Status: {updated.Status})"
         );
 
-        return new ClientResponse
+        return new ClientDetailResponse
         {
             Id = updated.Id,
             Name = updated.Name,

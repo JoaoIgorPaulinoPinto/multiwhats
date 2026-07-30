@@ -6,6 +6,7 @@ using multiwhats_api.src.data.entities;
 
 namespace multiwhats_api.src.services;
 
+// JWT token generation service. Creates signed tokens with user claims (ID, name, role). 8-hour expiry.
 public class TokenService
 {
     private readonly IConfiguration _configuration;

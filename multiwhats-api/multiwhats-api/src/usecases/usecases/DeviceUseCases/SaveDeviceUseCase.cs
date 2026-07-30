@@ -1,4 +1,5 @@
 using multiwhats_api.src.data.dtos.Requests;
+using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.usecases.interfaces.DeviceInterfaces;
@@ -14,7 +15,7 @@ public class SaveDeviceUseCase : ISaveDeviceUseCase
         _deviceRepository = deviceRepository;
     }
 
-    public async Task<Device> Execute(DeviceRequest request)
+    public async Task<DeviceResponse> Execute(DeviceRequest request)
     {
         var device = new Device
         {
@@ -24,6 +25,17 @@ public class SaveDeviceUseCase : ISaveDeviceUseCase
             Platform = request.Platform
         };
 
-        return await _deviceRepository.SaveAsync(device);
+        var saved = await _deviceRepository.SaveAsync(device);
+
+        return new DeviceResponse
+        {
+            Id = saved.Id,
+            Jid = saved.Jid,
+            PhoneNumber = saved.PhoneNumber,
+            PushName = saved.PushName,
+            Platform = saved.Platform,
+            ConnectedAt = saved.ConnectedAt,
+            UpdatedAt = saved.UpdatedAt
+        };
     }
 }

@@ -1,8 +1,9 @@
 import { api } from "./api"
+import type { OccurrenceStatus, Priority } from "../types"
+import type { OccurrenceResponse } from "../types/occurrence"
+import type { ClientTaskStatus } from "../types"
 
-export type Priority = "Low" | "Medium" | "High" | "Urgent"
-export type ClientTaskStatus = "Open" | "InProgress" | "Completed" | "Cancelled"
-export type OccurrenceStatus = "Open" | "InProgress" | "Resolved" | "Closed"
+export type { OccurrenceStatus, Priority, OccurrenceResponse, ClientTaskStatus }
 
 export interface TaskResponse {
   id: number
@@ -17,23 +18,6 @@ export interface TaskResponse {
   assignedToName: string | null
   createdByUserId: number | null
   createdByName: string | null
-  createdAt: string
-  lastUpdate: string
-}
-
-export interface OccurrenceResponse {
-  id: number
-  title: string
-  description: string | null
-  status: OccurrenceStatus
-  priority: Priority
-  chatId: number
-  chatName: string | null
-  assignedToUserId: number | null
-  assignedToName: string | null
-  createdByUserId: number | null
-  createdByName: string | null
-  messageCount: number
   createdAt: string
   lastUpdate: string
 }
@@ -71,11 +55,11 @@ export const kanbanService = {
     return api.get<OccurrenceResponse>(`/api/occurrences/${id}`)
   },
 
-  createOccurrence(data: { title: string; description?: string; priority: string; chatId: number }) {
+  createOccurrence(data: { title: string; description?: string; priority: number; chatId: number }) {
     return api.post<OccurrenceResponse>("/api/occurrences", data)
   },
 
-  updateOccurrence(id: number, data: { title?: string; description?: string; status?: string; priority?: string }) {
+  updateOccurrence(id: number, data: { title?: string; description?: string; status?: number; priority?: number }) {
     return api.put<OccurrenceResponse>(`/api/occurrences/${id}`, data)
   },
 

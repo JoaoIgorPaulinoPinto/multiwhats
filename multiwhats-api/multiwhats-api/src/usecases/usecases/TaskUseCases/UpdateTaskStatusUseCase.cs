@@ -6,6 +6,7 @@ using multiwhats_api.src.usecases.interfaces.TaskInterfaces;
 
 namespace multiwhats_api.src.usecases.usecases.TaskUseCases;
 
+// Updates only the status of a task.
 public class UpdateTaskStatusUseCase : IUpdateTaskStatusUseCase
 {
     private readonly IClientTaskRepository _taskRepository;
@@ -17,13 +18,15 @@ public class UpdateTaskStatusUseCase : IUpdateTaskStatusUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<TaskResponse> Execute(int id, UpdateTaskStatusRequest request)
+
+    public async Task<TaskDetailResponse> Execute(int id, UpdateTaskStatusRequest request)
     {
         var task = await _taskRepository.GetByIdAsync(id);
         if (task == null)
             throw new KeyNotFoundException("Tarefa não encontrada");
 
         task.UpdateStatus(request.Status);
+
         var updated = await _taskRepository.UpdateAsync(task);
 
         await _useCaseLogger.LogAsync(
@@ -33,6 +36,6 @@ public class UpdateTaskStatusUseCase : IUpdateTaskStatusUseCase
             description: $"Updated task #{id} status to {updated.Status} (Title: {updated.Title})"
         );
 
-        return GetTasksUseCase.MapResponseStatic(updated);
+        return GetTasksUseCase.MapToDetailResponse(updated);
     }
 }

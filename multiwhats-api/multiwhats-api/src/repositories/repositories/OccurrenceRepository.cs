@@ -2,16 +2,21 @@ using Microsoft.EntityFrameworkCore;
 using multiwhats_api.src.data.db;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.repositories.interfaces;
+using multiwhats_api.src.services;
 
 namespace multiwhats_api.src.repositories.repositories;
 
 public class OccurrenceRepository : IOccurrenceRepository
 {
     private readonly AppDbContext _context;
+    private readonly ILegacyDbSyncService _legacyDb;
+    private readonly ILogger<OccurrenceRepository> _logger;
 
-    public OccurrenceRepository(AppDbContext context)
+    public OccurrenceRepository(AppDbContext context, ILegacyDbSyncService legacyDb, ILogger<OccurrenceRepository> logger)
     {
         _context = context;
+        _legacyDb = legacyDb;
+        _logger = logger;
     }
 
     public async Task<List<Occurrence>> GetAllAsync()
@@ -39,6 +44,13 @@ public class OccurrenceRepository : IOccurrenceRepository
     {
         _context.Occurrences.Add(occurrence);
         await _context.SaveChangesAsync();
+
+        _ = Task.Run(async () =>
+        {
+            try { await _legacyDb.SyncOccurrenceAsync(occurrence); }
+            catch (Exception ex) { _logger.LogError(ex, "Erro ao sincronizar ocorrência com LegacyDB"); }
+        });
+
         return occurrence;
     }
 

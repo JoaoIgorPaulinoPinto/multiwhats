@@ -31,7 +31,6 @@ export function useContacts() {
     })
 
   useEffect(() => {
-    console.log(`[Contacts] carregando lista...`)
     loadData().catch((e) => console.error(`[Contacts] erro ao carregar:`, e)).finally(() => setLoading(false))
   }, [])
 
@@ -73,7 +72,6 @@ export function useContacts() {
   async function saveEdit() {
     if (!editing) return
     setSaving(true)
-    console.log(`[Contacts] salvando contato #${editing.id}...`)
     try {
       await contactsService.update(editing.id, { name: formName, pushName: formPushName })
       if (assignClientId !== editing.clientId) {
@@ -83,7 +81,6 @@ export function useContacts() {
           await contactsService.unassign(editing.id)
         }
       }
-      console.log(`[Contacts] contato #${editing.id} atualizado`)
       const updated = await contactsService.getById(editing.id)
       setContacts((prev) => prev.map((c) => (c.id === editing.id ? updated : c)))
       toast.success("Contato atualizado com sucesso")
@@ -98,7 +95,6 @@ export function useContacts() {
 
   async function createContact() {
     setSaving(true)
-    console.log(`[Contacts] criando contato...`)
     try {
       await contactsService.create({
         jid: formJid,
@@ -106,7 +102,6 @@ export function useContacts() {
         name: formName || undefined,
         pushName: formPushName || undefined,
       })
-      console.log(`[Contacts] contato criado`)
       toast.success("Contato criado com sucesso")
       await loadData()
       cancelEdit()
@@ -121,10 +116,8 @@ export function useContacts() {
   async function handleDeleteContact(id: number) {
     if (!window.confirm("Tem certeza que deseja excluir este contato?")) return
     setDeleting(id)
-    console.log(`[Contacts] deletando contato #${id}...`)
     try {
       await contactsService.delete(id)
-      console.log(`[Contacts] contato #${id} deletado`)
       setContacts((prev) => prev.filter((c) => c.id !== id))
       toast.success("Contato excluído")
     } catch (e) {

@@ -16,7 +16,7 @@ public class GetClientsUseCase : IGetClientsUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<List<ClientResponse>> ExecuteAll()
+    public async Task<List<ClientListResponse>> ExecuteAll()
     {
         var clients = await _clientRepository.GetAllAsync();
 
@@ -27,19 +27,18 @@ public class GetClientsUseCase : IGetClientsUseCase
             description: $"Listed all clients (count: {clients.Count})"
         );
 
-        return clients.Select(c => new ClientResponse
+        return clients.Select(c => new ClientListResponse
         {
             Id = c.Id,
             Name = c.Name,
             MainPhoneNumber = c.MainPhoneNumber,
             Status = c.Status,
             ContactCount = c.Contacts.Count,
-            CreatedAt = c.CreatedAt,
-            LastUpdate = c.LastUpdate
+            CreatedAt = c.CreatedAt
         }).ToList();
     }
 
-    public async Task<ClientResponse?> ExecuteById(int id)
+    public async Task<ClientDetailResponse?> ExecuteById(int id)
     {
         var client = await _clientRepository.GetByIdAsync(id);
         if (client == null) return null;
@@ -51,7 +50,7 @@ public class GetClientsUseCase : IGetClientsUseCase
             description: $"Retrieved client #{id} (Name: {client.Name})"
         );
 
-        return new ClientResponse
+        return new ClientDetailResponse
         {
             Id = client.Id,
             Name = client.Name,

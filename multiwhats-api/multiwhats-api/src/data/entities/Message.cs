@@ -4,7 +4,7 @@ using multiwhats_api.src.data.enums;
 
 namespace multiwhats_api.src.data.entities;
 
-[Table("Messages")]
+[Table("messages")]
 public class Message : BaseEntity
 {
     [Key]
@@ -13,8 +13,8 @@ public class Message : BaseEntity
     public int Id { get; private set; }
 
     [MaxLength(200)]
-    [Column("message_id")]
-    public string? MessageId { get; private set; }
+    [Column("whatsapp_message_id")]
+    public string? WhatssAppMessageId { get; private set; }
 
     [Required]
     [MaxLength(100)]
@@ -51,8 +51,7 @@ public class Message : BaseEntity
     [Column("has_media")]
     public bool HasMedia { get; private set; }
 
-    [MaxLength(1000)]
-    [Column("media_url")]
+    [Column("media_url", TypeName = "TEXT")]
     public string? MediaUrl { get; private set; }
 
     [MaxLength(100)]
@@ -79,7 +78,7 @@ public class Message : BaseEntity
     [Column("chat_id")]
     public int ChatId { get; private set; }
 
-    [ForeignKey(nameof(ChatId))]
+    [ForeignKey(nameof(ChatId))]    
     public Chat Chat { get; private set; } = null!;
 
     [Column("user_id")]
@@ -135,7 +134,7 @@ public class Message : BaseEntity
         UserId = userId;
         OccurrenceId = occurrenceId;
         ToJid = toJid;
-        MessageId = messageId;
+        WhatssAppMessageId = messageId;
         NotifyName = notifyName;
         HasMedia = hasMedia;
         MediaUrl = mediaUrl;
@@ -156,5 +155,13 @@ public class Message : BaseEntity
     public void LinkToOccurrence(int occurrenceId)
     {
         OccurrenceId = occurrenceId;
+    }
+    public void AddIMG(string txt)
+    {
+        MediaUrl = txt;
+    }
+    public void UpdateChatId(int chatId)
+    {
+        ChatId = chatId;
     }
 }

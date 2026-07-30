@@ -4,12 +4,14 @@ using System.Text.Json;
 using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.data.enums;
 using multiwhats_api.src.data.entities;
+using multiwhats_api.src.data.strategies;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
 
 namespace multiwhats_api.src.usecases.usecases.MessageUseCases;
 
+// Sends a WhatsApp message via Node.js, saves it, and notifies the frontend via SignalR.
 public class SendMessageUseCase : ISendMessageUseCase
 {
     private readonly HttpClient _httpClient;
@@ -17,8 +19,10 @@ public class SendMessageUseCase : ISendMessageUseCase
     private readonly IChatRepository _chatRepository;
     private readonly IContactRepository _contactRepository;
     private readonly IDeviceRepository _deviceRepository;
+    private readonly MessageStrategyFactory _strategyFactory;
     private readonly UseCaseLogger _useCaseLogger;
     private readonly IHubContext<WhatsappHub> _hubContext;
+    private readonly IUserRepository _userRepository;
 
     public SendMessageUseCase(
         HttpClient httpClient,
@@ -26,27 +30,34 @@ public class SendMessageUseCase : ISendMessageUseCase
         IChatRepository chatRepository,
         IContactRepository contactRepository,
         IDeviceRepository deviceRepository,
+        MessageStrategyFactory strategyFactory,
         UseCaseLogger useCaseLogger,
-        IHubContext<WhatsappHub> hubContext)
+        IHubContext<WhatsappHub> hubContext,
+        IUserRepository userRepository)
     {
         _httpClient = httpClient;
         _messageRepository = messageRepository;
         _chatRepository = chatRepository;
         _contactRepository = contactRepository;
         _deviceRepository = deviceRepository;
+        _strategyFactory = strategyFactory;
         _useCaseLogger = useCaseLogger;
         _hubContext = hubContext;
+        _userRepository = userRepository;
     }
+
 
     public async Task<bool> Execute(SendMessageRequest request, int userId)
     {
         try
         {
-            var payloadNode = new
-            {
-                jid = request.Jid,
-                mensagem = request.Text
-            };
+            
+            var strategy = _strategyFactory.Get(request.Type);
+
+            var user = await _userRepository.GetByIdAsync(userId);
+            var userName = user?.Name;
+
+            var payloadNode = strategy.BuildNodePayload(request.Jid, request, userName);
 
             var jsonContent = new StringContent(
                 JsonSerializer.Serialize(payloadNode),
@@ -68,6 +79,7 @@ public class SendMessageUseCase : ISendMessageUseCase
             if (chat == null)
             {
                 var phoneNumber = request.Jid.Split('@')[0];
+
                 var contact = await _contactRepository.GetByJidAsync(request.Jid);
 
                 chat = new Chat(
@@ -87,33 +99,41 @@ public class SendMessageUseCase : ISendMessageUseCase
             var device = await _deviceRepository.GetCurrentAsync();
             var deviceJid = device?.Jid;
 
+            var fields = strategy.BuildMessageFields(request, userName);
+
             var message = new Message(
                 fromJid: deviceJid ?? request.Jid,
                 toJid: request.Jid,
                 phoneNumber: phoneNumberFromJid,
-                body: request.Text,
+                body: fields.body,
                 direction: MessageDirection.Outgoing,
-                type: MessageType.Text,
+                type: strategy.Type,
                 timestamp: timestamp,
                 chatId: chat.Id,
                 userId: userId,
-                messageId: messageId
+                messageId: messageId,
+                hasMedia: fields.hasMedia,
+                mediaUrl: fields.mediaUrl,
+                mediaMimeType: fields.mediaMimeType,
+                mediaFilename: fields.mediaFilename,
+                mediaSize: fields.mediaSize,
+                mediaCaption: fields.mediaCaption
             );
 
             await _messageRepository.AddAsync(message);
 
-            chat.UpdateLastMessage(DateTime.UtcNow, request.Text);
+            chat.UpdateLastMessage(DateTime.UtcNow, message);
             await _chatRepository.UpdateAsync(chat);
 
             await _useCaseLogger.LogAsync(
                 action: "SendMessage",
                 entityType: "Message",
                 entityId: null,
-                description: $"Sent message to {request.Jid}: \"{Truncate(request.Text, 80)}\" (direction: Outgoing)",
+                description: $"Sent {strategy.Type} message to {request.Jid}: \"{Truncate(fields.body, 80)}\" (direction: Outgoing)",
                 explicitUserId: userId
             );
 
-            var msgResponse = GetMessagesUseCase.MapToResponse(message);
+            var msgResponse = GetMessagesUseCase.MapToSummaryResponse(message);
             await _hubContext.Clients.All.SendAsync("MessageSent", msgResponse);
 
             return true;

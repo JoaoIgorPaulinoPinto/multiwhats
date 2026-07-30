@@ -4,7 +4,7 @@ namespace multiwhats_api.src.usecases.interfaces.TaskInterfaces;
 
 public interface IGetTasksUseCase
 {
-    Task<List<TaskResponse>> ExecuteAll();
-    Task<TaskResponse?> ExecuteById(int id);
-    Task<List<TaskResponse>> ExecuteByClient(int clientId);
+    Task<List<TaskListResponse>> ExecuteAll();
+    Task<TaskDetailResponse?> ExecuteById(int id);
+    Task<List<TaskListResponse>> ExecuteByClient(int clientId);
 }

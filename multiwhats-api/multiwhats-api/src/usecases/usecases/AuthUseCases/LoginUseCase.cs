@@ -1,11 +1,13 @@
 using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.data.dtos.Responses;
+using multiwhats_api.src.data.entities;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.AuthInterfaces;
 
 namespace multiwhats_api.src.usecases.usecases.AuthUseCases;
 
+// Authenticates a user by name/password and returns a JWT token.
 public class LoginUseCase : ILoginUseCase
 {
     private readonly IUserRepository _userRepository;
@@ -19,9 +21,11 @@ public class LoginUseCase : ILoginUseCase
         _useCaseLogger = useCaseLogger;
     }
 
+
     public async Task<LoginResponse> Execute(LoginRequest request)
     {
         var user = await _userRepository.GetByNameAsync(request.Name);
+
         if (user == null || user.Password != request.Password || !user.IsActive)
             throw new UnauthorizedAccessException("Credenciais inválidas ou usuário inativo.");
 

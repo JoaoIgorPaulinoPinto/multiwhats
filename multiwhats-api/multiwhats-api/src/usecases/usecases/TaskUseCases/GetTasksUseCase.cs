@@ -17,7 +17,7 @@ public class GetTasksUseCase : IGetTasksUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<List<TaskResponse>> ExecuteAll()
+    public async Task<List<TaskListResponse>> ExecuteAll()
     {
         var tasks = await _taskRepository.GetAllAsync();
 
@@ -28,10 +28,10 @@ public class GetTasksUseCase : IGetTasksUseCase
             description: $"Listed all tasks (count: {tasks.Count})"
         );
 
-        return tasks.Select(MapResponseStatic).ToList();
+        return tasks.Select(MapToListResponse).ToList();
     }
 
-    public async Task<TaskResponse?> ExecuteById(int id)
+    public async Task<TaskDetailResponse?> ExecuteById(int id)
     {
         var task = await _taskRepository.GetByIdAsync(id);
 
@@ -44,10 +44,10 @@ public class GetTasksUseCase : IGetTasksUseCase
                 : $"Task #{id} not found"
         );
 
-        return task != null ? MapResponseStatic(task) : null;
+        return task != null ? MapToDetailResponse(task) : null;
     }
 
-    public async Task<List<TaskResponse>> ExecuteByClient(int clientId)
+    public async Task<List<TaskListResponse>> ExecuteByClient(int clientId)
     {
         var tasks = await _taskRepository.GetByClientAsync(clientId);
 
@@ -58,10 +58,22 @@ public class GetTasksUseCase : IGetTasksUseCase
             description: $"Listed tasks for client #{clientId} (count: {tasks.Count})"
         );
 
-        return tasks.Select(MapResponseStatic).ToList();
+        return tasks.Select(MapToListResponse).ToList();
     }
 
-    public static TaskResponse MapResponseStatic(ClientTask t) => new()
+    internal static TaskListResponse MapToListResponse(ClientTask t) => new()
+    {
+        Id = t.Id,
+        Title = t.Title,
+        Status = t.Status,
+        Priority = t.Priority,
+        DueDate = t.DueDate,
+        ClientName = t.Client?.Name,
+        AssignedToName = t.AssignedTo?.Name,
+        CreatedAt = t.CreatedAt
+    };
+
+    internal static TaskDetailResponse MapToDetailResponse(ClientTask t) => new()
     {
         Id = t.Id,
         Title = t.Title,

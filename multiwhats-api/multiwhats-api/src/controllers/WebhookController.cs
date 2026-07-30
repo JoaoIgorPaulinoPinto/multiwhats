@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using multiwhats_api.src.data.dtos.Webhook;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
 
+// Endpoints: /api/webhook/* (POST whatsapp - recebe mensagens do WhatsApp via Node.js)
 [ApiController]
 [Route("api/webhook")]
 public class WebhookController : ControllerBase
@@ -19,15 +20,17 @@ public class WebhookController : ControllerBase
         _saveIncomingMessageUseCase = saveIncomingMessageUseCase;
     }
 
+    // POST /api/webhook/whatsapp - Receber mensagens do WhatsApp via webhook
     [HttpPost("whatsapp")]
     [AllowAnonymous]
+
     public async Task<IActionResult> ReceiveMessage([FromBody] WhatsAppWebhookDto payload)
     {
         try
         {
-            Console.WriteLine($"[Webhook] Recebida msg de {payload.From}: {payload.Body?.Substring(0, Math.Min(50, payload.Body?.Length ?? 0))}");
+            var bodyPreview = payload.Body?.Length > 50 ? payload.Body.Substring(0, 50) + "..." : payload.Body;
+            Console.WriteLine($"[Webhook] Recebida msg de {payload.From} tipo={payload.MessageType} hasMedia={payload.HasMedia} msgId={payload.MessageId} body={bodyPreview}");
 
-            await _hubContext.Clients.All.SendAsync("ReceberNovaMensagem", payload);
             await _saveIncomingMessageUseCase.Execute(payload);
             return Ok(new { message = "Notificação enviada para a Web!" });
         }
@@ -41,6 +44,7 @@ public class WebhookController : ControllerBase
                 Console.WriteLine($"[Webhook] Inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
             }
             Console.ResetColor();
+
             return StatusCode(500, new { error = ex.Message, type = ex.GetType().Name });
         }
     }

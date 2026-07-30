@@ -17,7 +17,7 @@ public class GetOccurrencesUseCase : IGetOccurrencesUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<List<OccurrenceResponse>> ExecuteAll()
+    public async Task<List<OccurrenceListResponse>> ExecuteAll()
     {
         var occurrences = await _occurrenceRepository.GetAllAsync();
 
@@ -28,10 +28,10 @@ public class GetOccurrencesUseCase : IGetOccurrencesUseCase
             description: $"Listed all occurrences (count: {occurrences.Count})"
         );
 
-        return MapResponses(occurrences);
+        return MapToListResponses(occurrences);
     }
 
-    public async Task<OccurrenceResponse?> ExecuteById(int id)
+    public async Task<OccurrenceDetailResponse?> ExecuteById(int id)
     {
         var occurrence = await _occurrenceRepository.GetByIdAsync(id);
 
@@ -44,10 +44,10 @@ public class GetOccurrencesUseCase : IGetOccurrencesUseCase
                 : $"Occurrence #{id} not found"
         );
 
-        return occurrence != null ? MapResponse(occurrence) : null;
+        return occurrence != null ? MapToDetailResponse(occurrence) : null;
     }
 
-    public async Task<List<OccurrenceResponse>> ExecuteByChat(int chatId)
+    public async Task<List<ChatOccurrenceSummaryResponse>> ExecuteByChat(int chatId)
     {
         var occurrences = await _occurrenceRepository.GetByChatAsync(chatId);
 
@@ -58,10 +58,22 @@ public class GetOccurrencesUseCase : IGetOccurrencesUseCase
             description: $"Listed occurrences for chat #{chatId} (count: {occurrences.Count})"
         );
 
-        return MapResponses(occurrences);
+        return occurrences.Select(MapToChatSummaryResponse).ToList();
     }
 
-    private static OccurrenceResponse MapResponse(Occurrence o) => new()
+    private static OccurrenceListResponse MapToListResponse(Occurrence o) => new()
+    {
+        Id = o.Id,
+        Title = o.Title,
+        Status = o.Status,
+        Priority = o.Priority,
+        ChatName = o.Chat?.Name ?? o.Chat?.PhoneNumber,
+        AssignedToName = o.AssignedTo?.Name,
+        MessageCount = o.Messages.Count,
+        CreatedAt = o.CreatedAt
+    };
+
+    private static OccurrenceDetailResponse MapToDetailResponse(Occurrence o) => new()
     {
         Id = o.Id,
         Title = o.Title,
@@ -79,6 +91,17 @@ public class GetOccurrencesUseCase : IGetOccurrencesUseCase
         LastUpdate = o.LastUpdate
     };
 
-    private static List<OccurrenceResponse> MapResponses(List<Occurrence> occurrences) =>
-        occurrences.Select(MapResponse).ToList();
+    private static ChatOccurrenceSummaryResponse MapToChatSummaryResponse(Occurrence o) => new()
+    {
+        Id = o.Id,
+        Title = o.Title,
+        Status = o.Status,
+        Priority = o.Priority,
+        AssignedToName = o.AssignedTo?.Name,
+        MessageCount = o.Messages.Count,
+        CreatedAt = o.CreatedAt
+    };
+
+    private static List<OccurrenceListResponse> MapToListResponses(List<Occurrence> occurrences) =>
+        occurrences.Select(MapToListResponse).ToList();
 }

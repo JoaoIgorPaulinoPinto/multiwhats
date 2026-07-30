@@ -5,6 +5,7 @@ using multiwhats_api.src.usecases.interfaces.AuthInterfaces;
 
 namespace multiwhats_api.src.controllers;
 
+// Endpoints: /api/auth/* (POST register, login, logout)
 [ApiController]
 [Route("api/auth")]
 public class AuthController : ControllerBase
@@ -23,6 +24,7 @@ public class AuthController : ControllerBase
         _logoutUseCase = logoutUseCase;
     }
 
+    // POST /api/auth/register - Criar novo usuário
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
     {
@@ -37,6 +39,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    // POST /api/auth/login - Login e retorno de JWT
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -51,6 +54,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    // POST /api/auth/logout - Revogar token (logout)
     [HttpPost("logout")]
     [Authorize]
     public async Task<IActionResult> Logout()

@@ -1,7 +1,12 @@
 "use client"
 
-import { Plus } from "lucide-react"
+import { ChevronRight, Plus } from "lucide-react"
+import { useState } from "react"
+import type { OccurrenceResponse, Priority } from "../../../services/kanban.service"
 import { useKanban } from "./kanban.logic"
+import { OccurrenceDetailModal } from "./occurrence-detail-modal"
+import { CreateOccurrenceModal } from "./create-occurrence-modal"
+import { OCCURRENCE_STATUS_OPTIONS, PRIORITY_COLORS, PRIORITY_LABELS } from "../../../constants"
 import styles from "./kanban.module.css"
 
 function SkeletonColumn() {
@@ -25,12 +30,18 @@ function SkeletonColumn() {
 }
 
 export function KanbanView() {
-  const { columns, loading } = useKanban()
+  const { columns, loading, load, changeOccurrenceStatus, deleteOccurrence, occurrences } = useKanban()
+  const [detailOcc, setDetailOcc] = useState<OccurrenceResponse | null>(null)
+  const [showCreate, setShowCreate] = useState(false)
 
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <h2>Kanban</h2>
+        <button className={styles.addOccBtn} onClick={() => setShowCreate(true)}>
+          <Plus size={16} />
+          Nova Ocorrência
+        </button>
       </header>
 
       <section className={styles.board}>
@@ -50,22 +61,74 @@ export function KanbanView() {
 
               <div className={styles.cards}>
                 {column.cards.map((card) => (
-                  <div key={`${card.type}-${card.id}`} className={`${styles.card} ${card.type === "occurrence" ? styles.occurrence : ""}`}>
-                    <p>{card.title}</p>
+                  <div
+                    key={`${card.type}-${card.id}`}
+                    className={`${styles.card} ${card.type === "occurrence" ? styles.occurrence : ""}`}
+                    onClick={() => {
+                      if (card.type === "occurrence") {
+                        const full = occurrences.find((o) => o.id === card.id)
+                        if (full) setDetailOcc(full)
+                      }
+                    }}
+                  >
+                    <div className={styles.cardHeader}>
+                      <p>{card.title}</p>
+                      <span
+                        className={styles.priorityDot}
+                        style={{ background: PRIORITY_COLORS[card.priority as Priority] ?? "#6b7280" }}
+                        title={PRIORITY_LABELS[card.priority as Priority] ?? card.priority}
+                      />
+                    </div>
                     <span className={styles.assignee}>{card.subtitle}</span>
-                    <span className={styles.badge}>{card.type === "task" ? "Tarefa" : "Ocorrência"}</span>
+                    <div className={styles.cardFooter}>
+                      <span className={styles.badge}>{card.type === "task" ? "Tarefa" : "Ocorrência"}</span>
+                      {card.type === "occurrence" && (
+                        <div className={styles.statusActions} onClick={(e) => e.stopPropagation()}>
+                          {OCCURRENCE_STATUS_OPTIONS.find((s) => s.value === card.status)?.next && (
+                            <button
+                              className={styles.statusBtn}
+                              onClick={() => {
+                                const next = OCCURRENCE_STATUS_OPTIONS.find((s) => s.value === card.status)?.next
+                                if (next) changeOccurrenceStatus(card.id, next)
+                              }}
+                              title={OCCURRENCE_STATUS_OPTIONS.find((s) => s.value === card.status)?.nextLabel}
+                            >
+                              <ChevronRight size={12} />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
 
-              <button className={styles.addBtn}>
-                <Plus size={16} />
-                Adicionar
-              </button>
+              {column.id === "todo" && (
+                <button className={styles.addBtn} onClick={() => setShowCreate(true)}>
+                  <Plus size={16} />
+                  Adicionar
+                </button>
+              )}
             </div>
           ))
         )}
       </section>
+
+      {detailOcc && (
+        <OccurrenceDetailModal
+          occurrence={detailOcc}
+          onClose={() => setDetailOcc(null)}
+          onStatusChange={changeOccurrenceStatus}
+          onDelete={deleteOccurrence}
+        />
+      )}
+
+      {showCreate && (
+        <CreateOccurrenceModal
+          onClose={() => setShowCreate(false)}
+          onCreated={load}
+        />
+      )}
     </div>
   )
 }

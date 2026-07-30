@@ -3,6 +3,8 @@ using multiwhats_api.src.data.entities;
 
 namespace multiwhats_api.src.services;
 
+// Audit service based on EF Core ChangeTracker.
+// Generates automatic audit logs from entity changes (alternative to UseCaseLogger).
 public class AuditService
 {
     private readonly AppDbContext _context;
@@ -14,6 +16,7 @@ public class AuditService
         _httpContextAccessor = httpContextAccessor;
     }
 
+    // Saves audit logs for pending ChangeTracker changes. Call before SaveChanges().
     public async Task SaveAuditLogsAsync()
     {
         var userId = GetCurrentUserId();

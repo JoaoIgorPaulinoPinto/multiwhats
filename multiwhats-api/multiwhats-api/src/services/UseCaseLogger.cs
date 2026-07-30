@@ -6,6 +6,8 @@ using System.Security.Claims;
 
 namespace multiwhats_api.src.services;
 
+// Centralized audit logger. Logs user actions to DB and broadcasts to frontend via SignalR.
+// Uses a new scope per log (Singleton logger, Scoped DbContext). Fire-and-forget pattern.
 public class UseCaseLogger
 {
     private readonly IServiceScopeFactory _scopeFactory;
@@ -22,6 +24,7 @@ public class UseCaseLogger
         _hubContext = hubContext;
     }
 
+    // Logs an audit action to the database and sends to connected clients via SignalR.
     public async Task LogAsync(
         string action,
         string entityType,

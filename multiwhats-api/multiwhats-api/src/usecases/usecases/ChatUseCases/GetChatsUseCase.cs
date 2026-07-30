@@ -5,6 +5,7 @@ using multiwhats_api.src.usecases.interfaces.ChatInterfaces;
 
 namespace multiwhats_api.src.usecases.usecases.ChatUseCases;
 
+// Lists chats with pagination, message counts, and occurrence summaries.
 public class GetChatsUseCase : IGetChatsUseCase
 {
     private readonly IChatRepository _chatRepository;
@@ -24,35 +25,49 @@ public class GetChatsUseCase : IGetChatsUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<PaginatedResponse<ChatResponse>> ExecuteAll(int page, int pageSize)
+
+    public async Task<PaginatedResponse<ChatListResponse>> ExecuteAll(int page, int pageSize)
     {
         var chats = await _chatRepository.GetAllAsync(page, pageSize);
         var totalCount = await _chatRepository.GetTotalCountAsync();
 
-        var responses = new List<ChatResponse>();
+        var responses = new List<ChatListResponse>();
+
         foreach (var chat in chats)
         {
             var msgCount = await _messageRepository.GetByChatTotalCountAsync(chat.Id);
-            var occCount = await _occurrenceRepository.GetByChatAsync(chat.Id);
-            responses.Add(new ChatResponse
+
+            var occurrences = await _occurrenceRepository.GetByChatAsync(chat.Id);
+
+            var occurrenceSummaries = occurrences.Select(o => new ChatOccurrenceSummaryResponse
+            {
+                Id = o.Id,
+                Title = o.Title,
+                Status = o.Status,
+                Priority = o.Priority,
+                AssignedToName = o.AssignedTo?.Name,
+                MessageCount = o.Messages?.Count ?? 0,
+                CreatedAt = o.CreatedAt
+            }).ToList();
+
+            responses.Add(new ChatListResponse
             {
                 Id = chat.Id,
                 Jid = chat.Jid,
+                Name = chat.Name ?? chat.Contact?.Name ?? chat.PhoneNumber ?? "Desconhecido",
                 PhoneNumber = chat.PhoneNumber,
-                Name = chat.Name ?? chat.Contact?.Name ?? chat.PhoneNumber,
                 ContactId = chat.ContactId,
                 ContactName = chat.Contact?.Name,
                 ClientId = chat.ClientId,
                 ClientName = chat.Client?.Name,
                 LastMessageAt = chat.LastMessageAt,
-                LastMessageBody = chat.LastMessageBody,
-                AssignedToUserId = chat.AssignedToUserId,
+                LastMessage = chat.LastMessage != null
+                    ? new LastMessageResponse { Type = chat.LastMessage.Type, Body = chat.LastMessage.Body }
+                    : null,
                 AssignedToUserName = chat.AssignedTo?.Name,
-                CreatedByUserId = chat.CreatedByUserId,
                 MessageCount = msgCount,
-                OccurrenceCount = occCount.Count,
-                CreatedAt = chat.CreatedAt,
-                LastUpdate = chat.LastUpdate
+                Occurrences = occurrenceSummaries,
+                CreatedAt = chat.CreatedAt
             });
         }
 
@@ -63,7 +78,7 @@ public class GetChatsUseCase : IGetChatsUseCase
             description: $"Listed chats (page {page}, pageSize {pageSize}, total {totalCount})"
         );
 
-        return new PaginatedResponse<ChatResponse>
+        return new PaginatedResponse<ChatListResponse>
         {
             Items = responses,
             TotalCount = totalCount,
@@ -73,12 +88,31 @@ public class GetChatsUseCase : IGetChatsUseCase
         };
     }
 
-    public async Task<ChatResponse?> ExecuteById(int id)
+
+    public async Task<ChatDetailResponse?> ExecuteById(int id)
     {
         var chat = await _chatRepository.GetByIdAsync(id);
         if (chat == null) return null;
 
         var msgCount = await _messageRepository.GetByChatTotalCountAsync(chat.Id);
+        var occurrences = await _occurrenceRepository.GetByChatAsync(chat.Id);
+
+        var occurrenceDetails = occurrences.Select(o => new OccurrenceDetailResponse
+        {
+            Id = o.Id,
+            Title = o.Title,
+            Description = o.Description,
+            Status = o.Status,
+            Priority = o.Priority,
+            ChatId = o.ChatId,
+            AssignedToUserId = o.AssignedToUserId,
+            AssignedToName = o.AssignedTo?.Name,
+            CreatedByUserId = o.CreatedByUserId,
+            CreatedByName = o.CreatedBy?.Name,
+            MessageCount = o.Messages?.Count ?? 0,
+            CreatedAt = o.CreatedAt,
+            LastUpdate = o.LastUpdate
+        }).ToList();
 
         await _useCaseLogger.LogAsync(
             action: "GetChat",
@@ -87,7 +121,7 @@ public class GetChatsUseCase : IGetChatsUseCase
             description: $"Retrieved chat #{id} (Jid: {chat.Jid})"
         );
 
-        return new ChatResponse
+        return new ChatDetailResponse
         {
             Id = chat.Id,
             Jid = chat.Jid,
@@ -98,12 +132,15 @@ public class GetChatsUseCase : IGetChatsUseCase
             ClientId = chat.ClientId,
             ClientName = chat.Client?.Name,
             LastMessageAt = chat.LastMessageAt,
-            LastMessageBody = chat.LastMessageBody,
+            LastMessage = chat.LastMessage != null
+                ? new LastMessageResponse { Type = chat.LastMessage.Type, Body = chat.LastMessage.Body }
+                : null,
             AssignedToUserId = chat.AssignedToUserId,
             AssignedToUserName = chat.AssignedTo?.Name,
+            Occurrences = occurrenceDetails,
             CreatedByUserId = chat.CreatedByUserId,
             MessageCount = msgCount,
-            OccurrenceCount = chat.Occurrences?.Count ?? 0,
+            OccurrenceCount = occurrences.Count,
             CreatedAt = chat.CreatedAt,
             LastUpdate = chat.LastUpdate
         };

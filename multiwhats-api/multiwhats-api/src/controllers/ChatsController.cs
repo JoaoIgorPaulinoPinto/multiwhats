@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using multiwhats_api.src.data.dtos.Requests;
-using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.usecases.interfaces.ChatInterfaces;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
 using multiwhats_api.src.usecases.interfaces.OccurrenceInterfaces;
-using System.Security.Claims;
+using multiwhats_api.src.helpers;
 
 namespace multiwhats_api.src.controllers;
 
+// Endpoints: /api/chats/* (GET list, detail, messages, occurrences)
 [ApiController]
 [Route("api/chats")]
 [Authorize]
@@ -18,19 +18,23 @@ public class ChatsController : ControllerBase
     private readonly ICreateChatUseCase _createChatUseCase;
     private readonly IGetMessagesUseCase _getMessagesUseCase;
     private readonly IGetOccurrencesUseCase _getOccurrencesUseCase;
+    private readonly IMergeChatsUseCase _mergeChatsUseCase;
 
     public ChatsController(
         IGetChatsUseCase getChatsUseCase,
         ICreateChatUseCase createChatUseCase,
+        IMergeChatsUseCase mergeChatsUseCase,
         IGetMessagesUseCase getMessagesUseCase,
         IGetOccurrencesUseCase getOccurrencesUseCase)
     {
+        _mergeChatsUseCase = mergeChatsUseCase;
         _getChatsUseCase = getChatsUseCase;
         _createChatUseCase = createChatUseCase;
         _getMessagesUseCase = getMessagesUseCase;
         _getOccurrencesUseCase = getOccurrencesUseCase;
     }
 
+    // GET /api/chats - Listar conversas (paginado)
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
@@ -38,6 +42,7 @@ public class ChatsController : ControllerBase
         return Ok(chats);
     }
 
+    // GET /api/chats/{id} - Detalhar conversa
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -47,6 +52,7 @@ public class ChatsController : ControllerBase
         return Ok(chat);
     }
 
+    // GET /api/chats/{id}/messages - Mensagens da conversa (paginado)
     [HttpGet("{id}/messages")]
     public async Task<IActionResult> GetMessages(int id, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
@@ -54,10 +60,24 @@ public class ChatsController : ControllerBase
         return Ok(messages);
     }
 
+    // GET /api/chats/{id}/occurrences - Ocorrências da conversa
     [HttpGet("{id}/occurrences")]
     public async Task<IActionResult> GetOccurrences(int id)
     {
         var occurrences = await _getOccurrencesUseCase.ExecuteByChat(id);
         return Ok(occurrences);
+    }
+    // PATCH /api/chats/merge?mergeJid=xxx&toJid=yyy - Merge duas conversas
+    [HttpPatch("merge")]
+    public async Task<IActionResult> MergeChats([FromQuery] string mergeJid, [FromQuery] string toJid)
+    {
+        var sanitizedMergeJid = PhoneNumberHelper.Sanitize(mergeJid);
+        var sanitizedToJid = PhoneNumberHelper.Sanitize(toJid);
+
+        var merged = await _mergeChatsUseCase.Execute(sanitizedMergeJid, sanitizedToJid);
+        if (!merged)
+            return NotFound(new { message = "Uma ou ambas conversas não encontradas." });
+
+        return Ok(new { message = "Conversas mescladas com sucesso." });
     }
 }

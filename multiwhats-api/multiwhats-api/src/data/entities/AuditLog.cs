@@ -4,7 +4,7 @@ using System.ComponentModel;
 
 namespace multiwhats_api.src.data.entities;
 
-[Table("AuditLogs")]
+[Table("audit_logs")]
 public class AuditLog
 {
     [Key]

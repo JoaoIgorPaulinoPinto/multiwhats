@@ -5,6 +5,7 @@ using System.Text.Json;
 
 namespace multiwhats_api.src.data.db;
 
+// Main EF Core database context. Maps entities to PostgreSQL, applies auto-audit (timestamps, soft delete).
 public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
@@ -20,13 +21,15 @@ public class AppDbContext : DbContext
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<Device> Devices { get; set; }
 
+    // Set by the controller before SaveChanges to track who created/modified/deleted.
     public int? CurrentUserId { get; set; }
 
+    // Configures table names, column types, relationships, indexes, enum-to-string conversions, and global soft-delete filters.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Client>(entity =>
         {
-            entity.ToTable("Clients");
+            entity.ToTable("clients");
             entity.Property(e => e.Status)
                   .HasConversion<string>()
                   .HasMaxLength(20);
@@ -35,7 +38,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Chat>(entity =>
         {
-            entity.ToTable("Chats");
+            entity.ToTable("chats");
             entity.HasIndex(e => e.Jid).IsUnique();
             entity.HasIndex(e => e.PhoneNumber);
             entity.HasOne(e => e.Contact)
@@ -55,7 +58,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Contact>(entity =>
         {
-            entity.ToTable("Contacts");
+            entity.ToTable("contacts");
             entity.HasIndex(e => e.Jid).IsUnique();
             entity.HasIndex(e => e.PhoneNumber);
             entity.HasOne(e => e.Client)
@@ -67,8 +70,8 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Message>(entity =>
         {
-            entity.ToTable("Messages");
-            entity.HasIndex(e => e.MessageId);
+            entity.ToTable("messages");
+            entity.HasIndex(e => e.WhatssAppMessageId);
             entity.HasIndex(e => e.PhoneNumber);
             entity.HasIndex(e => e.Timestamp);
             entity.HasOne(e => e.Chat)
@@ -84,7 +87,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Occurrence>(entity =>
         {
-            entity.ToTable("Occurrences");
+            entity.ToTable("occurrences");
             entity.Property(e => e.Status)
                   .HasConversion<string>()
                   .HasMaxLength(20);
@@ -100,7 +103,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<ClientTask>(entity =>
         {
-            entity.ToTable("ClientTasks");
+            entity.ToTable("client_tasks");
             entity.Property(e => e.Status)
                   .HasConversion<string>()
                   .HasMaxLength(20);
@@ -112,13 +115,13 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Group>(entity =>
         {
-            entity.ToTable("Groups");
+            entity.ToTable("groups");
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.ToTable("Users");
+            entity.ToTable("users");
             entity.Property(e => e.Role)
                   .HasConversion<string>()
                   .HasMaxLength(20);
@@ -128,18 +131,19 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Device>(entity =>
         {
-            entity.ToTable("Devices");
+            entity.ToTable("devices");
             entity.HasIndex(e => e.Jid);
         });
 
         modelBuilder.Entity<AuditLog>(entity =>
         {
-            entity.ToTable("AuditLogs");
+            entity.ToTable("audit_logs");
             entity.HasIndex(e => e.Timestamp);
             entity.HasIndex(e => e.EntityType);
         });
     }
 
+    // Applies auto-audit timestamps and soft delete before saving.
     public override int SaveChanges()
     {
         ApplyAudit();
@@ -152,11 +156,14 @@ public class AppDbContext : DbContext
         return base.SaveChangesAsync(cancellationToken);
     }
 
+    // Applies auto-audit: fills timestamps/userId, converts deletes to soft deletes.
     private void ApplyAudit()
     {
         var entries = ChangeTracker.Entries()
             .Where(e => e.Entity is BaseEntity &&
-                        (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted));
+                        (e.State == EntityState.Added ||
+                         e.State == EntityState.Modified ||
+                         e.State == EntityState.Deleted));
 
         foreach (var entry in entries)
         {
@@ -184,9 +191,11 @@ public class AppDbContext : DbContext
         }
     }
 
+    // Generates detailed audit logs with old/new JSON values for each change. Excludes Password field.
     public List<AuditLog> GenerateAuditLogs(int? userId, string? userName, string? userRole)
     {
         var logs = new List<AuditLog>();
+
         var entries = ChangeTracker.Entries()
             .Where(e => e.Entity is BaseEntity &&
                         (e.State == EntityState.Added || e.State == EntityState.Modified));

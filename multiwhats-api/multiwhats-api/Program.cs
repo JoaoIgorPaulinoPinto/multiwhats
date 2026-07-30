@@ -20,20 +20,29 @@ using multiwhats_api.src.usecases.usecases.ClientUseCases;
 using multiwhats_api.src.usecases.usecases.ContactUseCases;
 using multiwhats_api.src.usecases.usecases.DeviceUseCases;
 using multiwhats_api.src.usecases.usecases.MessageUseCases;
+using multiwhats_api.src.data.strategies;
 using multiwhats_api.src.usecases.usecases.OccurrenceUseCases;
 using multiwhats_api.src.usecases.usecases.TaskUseCases;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
+// Application entry point. Configures services, middleware, authentication, and routes.
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Max request body: 100MB for media messages
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 100 * 1024 * 1024;
+});
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
-
 builder.Services.AddHttpContextAccessor();
 
+// Allows frontend (localhost:3000, :5173) to access the API
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("SignalRPolicy", policy =>
@@ -45,14 +54,11 @@ builder.Services.AddCors(options =>
     });
 });
 
+// PostgreSQL via EF Core
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(
-        connectionString,
-        ServerVersion.AutoDetect(connectionString)
-    ));
+    options.UseNpgsql(connectionString));
 
-// Repositories
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IContactRepository, ContactRepository>();
@@ -63,55 +69,73 @@ builder.Services.AddScoped<IGroupRepository, GroupRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
 
-// Auth Use Cases
+// Auth
 builder.Services.AddScoped<IRegisterUserUseCase, RegisterUserUseCase>();
 builder.Services.AddScoped<ILoginUseCase, LoginUseCase>();
 builder.Services.AddScoped<ILogoutUseCase, LogoutUseCase>();
 
-// Chat Use Cases
+// Chat
 builder.Services.AddScoped<ICreateChatUseCase, CreateChatUseCase>();
 builder.Services.AddScoped<IGetChatsUseCase, GetChatsUseCase>();
+builder.Services.AddScoped<IMergeChatsUseCase, MergeChatsUseCase>();
 
-// Contact Use Cases
+// Contacts
 builder.Services.AddScoped<ICreateContactUseCase, CreateContactUseCase>();
 builder.Services.AddScoped<IGetContactsUseCase, GetContactsUseCase>();
 builder.Services.AddScoped<IDeleteContactUseCase, DeleteContactUseCase>();
 builder.Services.AddScoped<IUpdateContactUseCase, UpdateContactUseCase>();
 builder.Services.AddScoped<IAssignContactUseCase, AssignContactUseCase>();
 
-// Message Use Cases
+// Message
 builder.Services.AddHttpClient<ISendMessageUseCase, SendMessageUseCase>();
-builder.Services.AddScoped<ISaveIncomingMessageUseCase, SaveIncomingMessageUseCase>();
+builder.Services.AddHttpClient<ISaveIncomingMessageUseCase, SaveIncomingMessageUseCase>();
 builder.Services.AddScoped<IGetMessagesUseCase, GetMessagesUseCase>();
 
-// Client Use Cases
+// Message Strategies
+builder.Services.AddSingleton<IMessageStrategy, TextMessageStrategy>();
+builder.Services.AddSingleton<IMessageStrategy, ImageMessageStrategy>();
+builder.Services.AddSingleton<IMessageStrategy, VideoMessageStrategy>();
+builder.Services.AddSingleton<IMessageStrategy, AudioMessageStrategy>();
+builder.Services.AddSingleton<IMessageStrategy, DocumentMessageStrategy>();
+builder.Services.AddSingleton<IMessageStrategy, StickerMessageStrategy>();
+builder.Services.AddSingleton<MessageStrategyFactory>();
+
+// Client
 builder.Services.AddScoped<ICreateClientUseCase, CreateClientUseCase>();
 builder.Services.AddScoped<IGetClientsUseCase, GetClientsUseCase>();
 builder.Services.AddScoped<IUpdateClientUseCase, UpdateClientUseCase>();
 builder.Services.AddScoped<IDeleteClientUseCase, DeleteClientUseCase>();
 
-// Occurrence Use Cases
+// Occurrence
 builder.Services.AddScoped<ICreateOccurrenceUseCase, CreateOccurrenceUseCase>();
 builder.Services.AddScoped<IGetOccurrencesUseCase, GetOccurrencesUseCase>();
 builder.Services.AddScoped<IUpdateOccurrenceUseCase, UpdateOccurrenceUseCase>();
 builder.Services.AddScoped<IDeleteOccurrenceUseCase, DeleteOccurrenceUseCase>();
 
-// Task Use Cases
+// Task
 builder.Services.AddScoped<ICreateTaskUseCase, CreateTaskUseCase>();
 builder.Services.AddScoped<IGetTasksUseCase, GetTasksUseCase>();
 builder.Services.AddScoped<IUpdateTaskUseCase, UpdateTaskUseCase>();
 builder.Services.AddScoped<IDeleteTaskUseCase, DeleteTaskUseCase>();
 builder.Services.AddScoped<IUpdateTaskStatusUseCase, UpdateTaskStatusUseCase>();
 
-// Device Use Cases
+// Device
 builder.Services.AddScoped<ISaveDeviceUseCase, SaveDeviceUseCase>();
 
-// Services
+// Auxiliary services
 builder.Services.AddSingleton<TokenBlacklistService>();
 builder.Services.AddSingleton<UseCaseLogger>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuditService>();
 
+// Legacy DB sync (MySQL 4.1)
+builder.Services.AddHttpClient<ILegacyDbSyncService, LegacyDbSyncService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["LegacyDb:BaseUrl"] ?? "http://localhost:3001");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
+
+// JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = Encoding.ASCII.GetBytes(jwtSettings["Secret"]!);
 builder.Services.AddAuthentication(options =>
@@ -135,6 +159,7 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero,
         RoleClaimType = ClaimTypes.Role
     };
+
     options.Events = new JwtBearerEvents
     {
         OnTokenValidated = context =>
@@ -149,6 +174,8 @@ builder.Services.AddAuthentication(options =>
         }
     };
 });
+
+// Swagger docs
 builder.Services.AddSwaggerGen(c =>
 {
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -158,7 +185,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Insira o token JWT desta maneira: Bearer {seu-token}"
+        Description = "Insira o token JWT: Bearer {seu-token}"
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -177,31 +204,29 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-
-
-
+// Swagger only in development
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// Middleware pipeline order matters
 app.UseCors("SignalRPolicy");
 
 if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<WhatsappHub>("/whatsappHub");
-
 
 app.Run();

@@ -4,7 +4,7 @@ namespace multiwhats_api.src.usecases.interfaces.ContactInterfaces;
 
 public interface IGetContactsUseCase
 {
-    Task<List<ContactResponse>> ExecuteAll();
-    Task<ContactResponse?> ExecuteById(int id);
-    Task<ContactResponse?> ExecuteByPhoneNumber(string phoneNumber);
+    Task<List<ContactListResponse>> ExecuteAll();
+    Task<ContactDetailResponse?> ExecuteById(int id);
+    Task<ContactDetailResponse?> ExecuteByPhoneNumber(string phoneNumber);
 }

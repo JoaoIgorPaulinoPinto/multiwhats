@@ -1,9 +1,9 @@
 using multiwhats_api.src.data.dtos.Requests;
-using multiwhats_api.src.data.entities;
+using multiwhats_api.src.data.dtos.Responses;
 
 namespace multiwhats_api.src.usecases.interfaces.DeviceInterfaces;
 
 public interface ISaveDeviceUseCase
 {
-    Task<Device> Execute(DeviceRequest request);
+    Task<DeviceResponse> Execute(DeviceRequest request);
 }

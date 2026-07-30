@@ -1,6 +1,7 @@
 ﻿using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.data.entities;
+using multiwhats_api.src.data.enums;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.ChatInterfaces;
@@ -18,7 +19,7 @@ public class CreateChatUseCase : ICreateChatUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<ChatResponse> Execute(CreateChatRequest request)
+    public async Task<ChatDetailResponse> Execute(CreateChatRequest request)
     {
         var existing = await _chatRepository.GetByJidAsync(request.Jid);
         if (existing != null)
@@ -41,12 +42,12 @@ public class CreateChatUseCase : ICreateChatUseCase
             description: $"Created chat \"{created.Jid}\" (Name: {created.Name ?? "N/A"}, Phone: {created.PhoneNumber})"
         );
 
-        return MapToResponse(created);
+        return MapToDetailResponse(created);
     }
 
-    internal static ChatResponse MapToResponse(Chat chat)
+    internal static ChatDetailResponse MapToDetailResponse(Chat chat)
     {
-        return new ChatResponse
+        return new ChatDetailResponse
         {
             Id = chat.Id,
             Jid = chat.Jid,
@@ -57,7 +58,13 @@ public class CreateChatUseCase : ICreateChatUseCase
             ClientId = chat.ClientId,
             ClientName = chat.Client?.Name,
             LastMessageAt = chat.LastMessageAt,
-            LastMessageBody = chat.LastMessageBody,
+            LastMessage = chat.LastMessage == null 
+            ? null
+            : new LastMessageResponse
+            {
+                Type = chat.LastMessage.Type,
+                Body = chat.LastMessage.Body
+            },
             AssignedToUserId = chat.AssignedToUserId,
             AssignedToUserName = chat.AssignedTo?.Name,
             CreatedByUserId = chat.CreatedByUserId,

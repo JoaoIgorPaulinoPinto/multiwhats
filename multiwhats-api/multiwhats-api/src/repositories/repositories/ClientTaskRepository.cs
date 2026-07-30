@@ -2,16 +2,21 @@ using Microsoft.EntityFrameworkCore;
 using multiwhats_api.src.data.db;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.repositories.interfaces;
+using multiwhats_api.src.services;
 
 namespace multiwhats_api.src.repositories.repositories;
 
 public class ClientTaskRepository : IClientTaskRepository
 {
     private readonly AppDbContext _context;
+    private readonly ILegacyDbSyncService _legacyDb;
+    private readonly ILogger<ClientTaskRepository> _logger;
 
-    public ClientTaskRepository(AppDbContext context)
+    public ClientTaskRepository(AppDbContext context, ILegacyDbSyncService legacyDb, ILogger<ClientTaskRepository> logger)
     {
         _context = context;
+        _legacyDb = legacyDb;
+        _logger = logger;
     }
 
     public async Task<List<ClientTask>> GetAllAsync()
@@ -38,6 +43,13 @@ public class ClientTaskRepository : IClientTaskRepository
     {
         _context.ClientTasks.Add(task);
         await _context.SaveChangesAsync();
+
+        _ = Task.Run(async () =>
+        {
+            try { await _legacyDb.SyncTaskAsync(task); }
+            catch (Exception ex) { _logger.LogError(ex, "Erro ao sincronizar tarefa com LegacyDB"); }
+        });
+
         return task;
     }
 

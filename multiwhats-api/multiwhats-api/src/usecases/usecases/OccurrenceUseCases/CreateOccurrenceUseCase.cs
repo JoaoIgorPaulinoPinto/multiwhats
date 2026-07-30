@@ -7,6 +7,7 @@ using multiwhats_api.src.usecases.interfaces.OccurrenceInterfaces;
 
 namespace multiwhats_api.src.usecases.usecases.OccurrenceUseCases;
 
+// Creates an occurrence (ticket/incident) linked to a chat.
 public class CreateOccurrenceUseCase : ICreateOccurrenceUseCase
 {
     private readonly IOccurrenceRepository _occurrenceRepository;
@@ -18,7 +19,8 @@ public class CreateOccurrenceUseCase : ICreateOccurrenceUseCase
         _useCaseLogger = useCaseLogger;
     }
 
-    public async Task<OccurrenceResponse> Execute(CreateOccurrenceRequest request, int userId)
+
+    public async Task<OccurrenceDetailResponse> Execute(CreateOccurrenceRequest request, int userId)
     {
         var occurrence = new Occurrence(
             request.Title,
@@ -38,7 +40,7 @@ public class CreateOccurrenceUseCase : ICreateOccurrenceUseCase
             explicitUserId: userId
         );
 
-        return new OccurrenceResponse
+        return new OccurrenceDetailResponse
         {
             Id = created.Id,
             Title = created.Title,

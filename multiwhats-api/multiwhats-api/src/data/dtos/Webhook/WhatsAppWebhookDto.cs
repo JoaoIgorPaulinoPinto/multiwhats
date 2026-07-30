@@ -15,6 +15,7 @@ public record WhatsAppWebhookDto
     public string? MediaMimeType { get; init; }
     public string? MediaFilename { get; init; }
     public long? MediaSize { get; init; }
+    public string? MediaCaption { get; init; }
     public string? MessageId { get; init; }
     public bool IsForwarded { get; init; }
     public int UserId { get; init; }

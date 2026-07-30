@@ -2,16 +2,21 @@ using Microsoft.EntityFrameworkCore;
 using multiwhats_api.src.data.db;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.repositories.interfaces;
+using multiwhats_api.src.services;
 
 namespace multiwhats_api.src.repositories.repositories;
 
 public class ChatRepository : IChatRepository
 {
     private readonly AppDbContext _context;
+    private readonly ILegacyDbSyncService _legacyDb;
+    private readonly ILogger<ChatRepository> _logger;
 
-    public ChatRepository(AppDbContext context)
+    public ChatRepository(AppDbContext context, ILegacyDbSyncService legacyDb, ILogger<ChatRepository> logger)
     {
         _context = context;
+        _legacyDb = legacyDb;
+        _logger = logger;
     }
 
     public async Task<List<Chat>> GetAllAsync(int page, int pageSize)
@@ -21,12 +26,14 @@ public class ChatRepository : IChatRepository
             .Include(c => c.Contact)
             .Include(c => c.Client)
             .Include(c => c.AssignedTo)
+            .Include(c => c.Messages
+                .OrderByDescending(m => m.CreatedAt)
+                .Take(1))
             .OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
     }
-
     public async Task<int> GetTotalCountAsync()
     {
         return await _context.Chats.CountAsync();
@@ -68,6 +75,13 @@ public class ChatRepository : IChatRepository
     {
         _context.Chats.Add(chat);
         await _context.SaveChangesAsync();
+
+        _ = Task.Run(async () =>
+        {
+            try { await _legacyDb.SyncChatAsync(chat); }
+            catch (Exception ex) { _logger.LogError(ex, "Erro ao sincronizar chat com LegacyDB"); }
+        });
+
         return chat;
     }
 
@@ -98,5 +112,43 @@ public class ChatRepository : IChatRepository
     public async Task<int> GetOccurrenceCountAsync(int chatId)
     {
         return await _context.Occurrences.CountAsync(o => o.ChatId == chatId);
+    }
+
+    public async Task<bool> MergeChatAsync(int sourceId, int destinationId)
+    {
+        var source = await _context.Chats
+            .Include(c => c.Contact)
+            .FirstOrDefaultAsync(c => c.Id == sourceId);
+
+        var destination = await _context.Chats
+            .FirstOrDefaultAsync(c => c.Id == destinationId);
+
+        if (source is null || destination is null)
+            return false;
+
+        var messages = await _context.Messages
+            .Where(m => m.ChatId == sourceId)
+            .ToListAsync();
+
+        foreach (var msg in messages)
+            msg.UpdateChatId(destinationId);
+
+        var occurrences = await _context.Occurrences
+            .Where(o => o.ChatId == sourceId)
+            .ToListAsync();
+
+        foreach (var occ in occurrences)
+            occ.UpdateChatId(destinationId);
+
+        if (source.Contact is not null)
+        {
+            source.UnlinkContact();
+            destination.LinkToContact(source.Contact.Id, source.ClientId);
+        }
+
+        _context.Chats.Remove(source);
+        await _context.SaveChangesAsync();
+
+        return true;
     }
 }

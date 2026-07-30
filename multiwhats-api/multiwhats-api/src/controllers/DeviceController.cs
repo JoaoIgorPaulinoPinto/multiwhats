@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using multiwhats_api.src.data.dtos.Requests;
+using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.usecases.interfaces.DeviceInterfaces;
 
@@ -27,15 +28,7 @@ public class DeviceController : ControllerBase
 
         Console.WriteLine($"[Device] Device info saved: Jid={device.Jid}, Phone={device.PhoneNumber}, PushName={device.PushName}, Platform={device.Platform}");
 
-        return Ok(new
-        {
-            device.Id,
-            device.Jid,
-            device.PhoneNumber,
-            device.PushName,
-            device.Platform,
-            device.ConnectedAt
-        });
+        return Ok(device);
     }
 
     [HttpGet]
@@ -46,15 +39,15 @@ public class DeviceController : ControllerBase
         if (device == null)
             return NotFound(new { message = "Nenhum dispositivo conectado." });
 
-        return Ok(new
+        return Ok(new DeviceResponse
         {
-            device.Id,
-            device.Jid,
-            device.PhoneNumber,
-            device.PushName,
-            device.Platform,
-            device.ConnectedAt,
-            device.UpdatedAt
+            Id = device.Id,
+            Jid = device.Jid,
+            PhoneNumber = device.PhoneNumber,
+            PushName = device.PushName,
+            Platform = device.Platform,
+            ConnectedAt = device.ConnectedAt,
+            UpdatedAt = device.UpdatedAt
         });
     }
 }
