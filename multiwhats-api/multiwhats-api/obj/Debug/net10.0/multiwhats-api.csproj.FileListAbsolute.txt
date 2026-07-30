@@ -130,12 +130,6 @@ C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net1
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\appsettings.Development.json
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\appsettings.json
-C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\launchSettings.json
-C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\messageria\launchSettings.json
-C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\messageria\package-lock.json
-C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\messageria\package.json
-C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\package-lock.json
-C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\package.json
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\multiwhats-api.staticwebassets.endpoints.json
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\multiwhats-api.exe
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\multiwhats-api.deps.json
@@ -144,7 +138,6 @@ C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\n
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\multiwhats-api.pdb
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Humanizer.dll
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
-C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Microsoft.AspNetCore.OpenApi.dll
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Microsoft.Bcl.AsyncInterfaces.dll
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Microsoft.Bcl.Cryptography.dll
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Microsoft.Build.Locator.dll
@@ -169,7 +162,6 @@ C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\n
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Mono.TextTemplating.dll
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\MySqlConnector.dll
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Pomelo.EntityFrameworkCore.MySql.dll
-C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Scalar.AspNetCore.dll
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\System.CodeDom.dll
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\System.Composition.AttributedModel.dll
 C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\System.Composition.Convention.dll
@@ -269,3 +261,6 @@ C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\obj\Debug\n
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Swashbuckle.AspNetCore.Swagger.dll
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Users\User\source\multiwhtas-api\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\joaoi\source\repos\multiwhats\multiwhats-api\multiwhats-api\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerUI.dll

@@ -1,7 +1,7 @@
-import express from "express";
-import pkg from "whatsapp-web.js";
-import qrcode from "qrcode-terminal";
 import axios from "axios";
+import express from "express";
+import qrcode from "qrcode-terminal";
+import pkg from "whatsapp-web.js";
 const { Client, LocalAuth, MessageMedia } = pkg;
 
 const app = express();
@@ -17,6 +17,7 @@ const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
+        executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
         args: [
             "--no-sandbox",
             "--disable-setuid-sandbox",
@@ -49,7 +50,6 @@ client.on("change_state", state => {
 
 client.on("ready", async () => {
     console.log("✅ WhatsApp pronto e conectado.");
-
     try {
         const version = await client.getWWebVersion();
         console.log(`Versão Web do WhatsApp: ${version}`);
@@ -73,10 +73,10 @@ client.on("ready", async () => {
 // ==========================================
 
 async function processarEMandarParaAspNet(msg, enviadaPorMim) {
-    
+
     try {
         if (msg.from.includes("@newsletter")
-            || msg.from.includes("@g.us") 
+            || msg.from.includes("@g.us")
             || msg.to?.includes("@g.us")
             || msg.from.includes("@broadcast")
             || msg.from.includes("status@broadcast")) {
@@ -88,7 +88,7 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
         const targetJid = enviadaPorMim ? (deviceJid || msg.from) : msg.from;
         const rawNumber = contato.number || contato.id?.user || targetJid.split("@")[0];
         const numeroReal = rawNumber ? rawNumber.replace(/\D/g, "") : null;
-        
+
         let messageType = "text";
         let hasMedia = false;
         let mediaUrl = null;
@@ -96,7 +96,7 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
         let mediaFilename = null;
         let mediaSize = null;
         let mediaCaption = null;
-        
+
         if (msg.hasMedia  && msg.type != "ptt" && msg.type != "audio") {
             const typesMap = {
                 image: "image",
@@ -106,9 +106,9 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
                 document: "document",
                 sticker: "sticker"
             };
-            
+
             messageType = msg.type
-            
+
             try {
                 const midia = await msg.downloadMedia();
                 if (midia) {
@@ -119,7 +119,7 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
                     mediaUrl = midia.data;
                     mediaCaption = msg.caption || msg.body || null;
                     mediaSize = midia.filesize ? Number(midia.filesize) : midia.data.length;
-                    
+
                 } else {
                     hasMedia = false;
                     messageType = "text";
@@ -145,7 +145,7 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
             mediaCaption,
             messageId: msg.id?._serialized || null,
             isForwarded: msg.hasQuotedMsg || false,
-            fromMe: enviadaPorMim, 
+            fromMe: enviadaPorMim,
             userId: 1
         };
 
