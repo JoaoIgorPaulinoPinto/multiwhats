@@ -3,6 +3,7 @@ using multiwhats_api.src.data.db;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.services;
+using Npgsql;
 
 namespace multiwhats_api.src.repositories.repositories;
 
@@ -38,8 +39,26 @@ public class MessageRepository : IMessageRepository
 
     public async Task<Message> AddAsync(Message message)
     {
-        _context.Messages.Add(message);
-        await _context.SaveChangesAsync();
+        try
+        {
+            _context.Messages.Add(message);
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
+        {
+            _logger.LogWarning(ex, "Unique constraint violation ao salvar mensagem msgId={MessageId}", message.WhatssAppMessageId);
+
+            if (!string.IsNullOrEmpty(message.WhatssAppMessageId))
+            {
+                var existing = await _context.Messages
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(m => m.WhatssAppMessageId == message.WhatssAppMessageId);
+                if (existing != null)
+                    return existing;
+            }
+
+            throw;
+        }
 
         _ = Task.Run(async () =>
         {

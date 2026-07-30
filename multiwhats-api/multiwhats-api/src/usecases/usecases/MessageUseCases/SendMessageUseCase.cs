@@ -105,6 +105,17 @@ public class SendMessageUseCase : ISendMessageUseCase
                 return false;
             }
 
+            // Dedup: se o webhook já salvou esta mensagem com o mesmo messageId, não salvar novamente
+            if (!string.IsNullOrEmpty(messageId))
+            {
+                var existing = await _messageRepository.GetByMessageIdAsync(messageId);
+                if (existing != null)
+                {
+                    Console.WriteLine($"[SendMessage] Duplicata ignorada msgId={messageId} (já existe id={existing.Id})");
+                    return true;
+                }
+            }
+
             var fields = strategy.BuildMessageFields(request, userName);
 
             var message = new Message(

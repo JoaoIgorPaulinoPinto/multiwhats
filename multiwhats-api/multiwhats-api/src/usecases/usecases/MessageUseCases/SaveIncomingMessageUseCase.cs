@@ -69,7 +69,7 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
 
         var isSelfSent = payload.FromMe;
 
-        var actualFromJid = isSelfSent ? deviceJid : payload.From;
+        var actualFromJid = isSelfSent ? (deviceJid ?? payload.From) : payload.From;
         var direction = isSelfSent ? MessageDirection.Outgoing : MessageDirection.Incoming;
         var actualToJid = isSelfSent ? payload.From : deviceJid;
 
