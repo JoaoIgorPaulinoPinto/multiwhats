@@ -10,17 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Migrations\**" />
-    <Compile Remove="src\repostories\**" />
-    <Content Remove="Migrations\**" />
-    <Content Remove="src\repostories\**" />
-    <EmbeddedResource Remove="Migrations\**" />
-    <EmbeddedResource Remove="src\repostories\**" />
-    <None Remove="Migrations\**" />
-    <None Remove="src\repostories\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="Properties\launchSettings.json" />
   </ItemGroup>
 

@@ -127,7 +127,7 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
             mediaSize,
             mediaCaption,
             messageId: msg.id?._serialized || null,
-            isForwarded: msg.hasQuotedMsg || false,
+            isForwarded: msg.isForwarded || false,
             fromMe: enviadaPorMim,
             userId: 1
         };

@@ -63,16 +63,15 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
             }
         }
 
-        // Self-sent detection: messages from our own device are marked as Outgoing
+        // Self-sent detection: use FromMe flag from webhook payload (more reliable than JID comparison)
         var device = await _deviceRepository.GetCurrentAsync();
         var deviceJid = device?.Jid;
 
-        var isSelfSent = deviceJid != null &&
-            string.Equals(payload.From, deviceJid, StringComparison.OrdinalIgnoreCase);
+        var isSelfSent = payload.FromMe;
 
-        var actualFromJid = isSelfSent ? deviceJid! : payload.From;
+        var actualFromJid = isSelfSent ? deviceJid : payload.From;
         var direction = isSelfSent ? MessageDirection.Outgoing : MessageDirection.Incoming;
-        var actualToJid = isSelfSent ? null : deviceJid;
+        var actualToJid = isSelfSent ? payload.From : deviceJid;
 
         var chat = await _chatRepository.GetByJidAsync(payload.From);
 

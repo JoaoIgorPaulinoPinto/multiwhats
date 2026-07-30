@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace multiwhats_api.Migrations
 {
     /// <inheritdoc />
-    public partial class InitalPostgresSQLMigration : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -208,6 +208,7 @@ namespace multiwhats_api.Migrations
                     contact_id = table.Column<int>(type: "integer", nullable: true),
                     client_id = table.Column<int>(type: "integer", nullable: true),
                     last_message_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    last_message_id = table.Column<int>(type: "integer", nullable: true),
                     assigned_to_user_id = table.Column<int>(type: "integer", nullable: true),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     last_update = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -288,7 +289,7 @@ namespace multiwhats_api.Migrations
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    message_id = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    whatsapp_message_id = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     from_jid = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     to_jid = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     phone_number = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
@@ -310,7 +311,6 @@ namespace multiwhats_api.Migrations
                     user_id = table.Column<int>(type: "integer", nullable: true),
                     occurrence_id = table.Column<int>(type: "integer", nullable: true),
                     reply_to_id = table.Column<int>(type: "integer", nullable: true),
-                    ChatId1 = table.Column<int>(type: "integer", nullable: true),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     last_update = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
@@ -320,11 +320,6 @@ namespace multiwhats_api.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_messages", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_messages_chats_ChatId1",
-                        column: x => x.ChatId1,
-                        principalTable: "chats",
-                        principalColumn: "id");
                     table.ForeignKey(
                         name: "FK_messages_chats_chat_id",
                         column: x => x.chat_id,
@@ -387,6 +382,11 @@ namespace multiwhats_api.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_chats_last_message_id",
+                table: "chats",
+                column: "last_message_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_chats_phone_number",
                 table: "chats",
                 column: "phone_number");
@@ -443,17 +443,6 @@ namespace multiwhats_api.Migrations
                 column: "chat_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_messages_ChatId1",
-                table: "messages",
-                column: "ChatId1",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_messages_message_id",
-                table: "messages",
-                column: "message_id");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_messages_occurrence_id",
                 table: "messages",
                 column: "occurrence_id");
@@ -479,6 +468,11 @@ namespace multiwhats_api.Migrations
                 column: "user_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_messages_whatsapp_message_id",
+                table: "messages",
+                column: "whatsapp_message_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_occurrences_assigned_to_user_id",
                 table: "occurrences",
                 column: "assigned_to_user_id");
@@ -498,11 +492,34 @@ namespace multiwhats_api.Migrations
                 table: "users",
                 column: "name",
                 unique: true);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_chats_messages_last_message_id",
+                table: "chats",
+                column: "last_message_id",
+                principalTable: "messages",
+                principalColumn: "id");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_chats_clients_client_id",
+                table: "chats");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_contacts_clients_client_id",
+                table: "contacts");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_chats_contacts_contact_id",
+                table: "chats");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_chats_messages_last_message_id",
+                table: "chats");
+
             migrationBuilder.DropTable(
                 name: "audit_logs");
 
@@ -513,6 +530,15 @@ namespace multiwhats_api.Migrations
                 name: "devices");
 
             migrationBuilder.DropTable(
+                name: "clients");
+
+            migrationBuilder.DropTable(
+                name: "contacts");
+
+            migrationBuilder.DropTable(
+                name: "groups");
+
+            migrationBuilder.DropTable(
                 name: "messages");
 
             migrationBuilder.DropTable(
@@ -520,15 +546,6 @@ namespace multiwhats_api.Migrations
 
             migrationBuilder.DropTable(
                 name: "chats");
-
-            migrationBuilder.DropTable(
-                name: "contacts");
-
-            migrationBuilder.DropTable(
-                name: "clients");
-
-            migrationBuilder.DropTable(
-                name: "groups");
 
             migrationBuilder.DropTable(
                 name: "users");

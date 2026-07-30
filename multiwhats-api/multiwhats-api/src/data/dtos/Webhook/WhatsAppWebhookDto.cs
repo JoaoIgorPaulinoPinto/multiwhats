@@ -19,4 +19,5 @@ public record WhatsAppWebhookDto
     public string? MessageId { get; init; }
     public bool IsForwarded { get; init; }
     public int UserId { get; init; }
+    public bool FromMe { get; init; }
 }

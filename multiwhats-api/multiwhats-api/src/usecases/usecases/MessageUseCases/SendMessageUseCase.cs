@@ -99,10 +99,16 @@ public class SendMessageUseCase : ISendMessageUseCase
             var device = await _deviceRepository.GetCurrentAsync();
             var deviceJid = device?.Jid;
 
+            if (deviceJid == null)
+            {
+                Console.WriteLine("[SendMessage] Dispositivo não encontrado. Não é possível enviar mensagem.");
+                return false;
+            }
+
             var fields = strategy.BuildMessageFields(request, userName);
 
             var message = new Message(
-                fromJid: deviceJid ?? request.Jid,
+                fromJid: deviceJid,
                 toJid: request.Jid,
                 phoneNumber: phoneNumberFromJid,
                 body: fields.body,

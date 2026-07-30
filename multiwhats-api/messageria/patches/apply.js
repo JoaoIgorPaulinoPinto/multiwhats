@@ -14,7 +14,7 @@ const files = [
         src: path.join(__dirname, "Message.patched.js"),
         dest: path.join(WWEBJS, "src", "structures", "Message.js"),
     },
-];
+];  
 
 for (const { src, dest } of files) {
     if (fs.existsSync(src) && fs.existsSync(path.dirname(dest))) {
@@ -22,3 +22,7 @@ for (const { src, dest } of files) {
         console.log(`[patch] ${path.basename(dest)} aplicado`);
     }
 }
+
+import("./client-fixes.js").catch((err) => {
+    console.error("[patch] Erro ao aplicar client-fixes:", err.message || err);
+});

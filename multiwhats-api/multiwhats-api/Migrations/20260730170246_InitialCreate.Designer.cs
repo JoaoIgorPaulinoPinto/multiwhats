@@ -12,8 +12,8 @@ using multiwhats_api.src.data.db;
 namespace multiwhats_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260729134722_EditFksFromchatsAndMessages")]
-    partial class EditFksFromchatsAndMessages
+    [Migration("20260730170246_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -156,6 +156,44 @@ Se o `node_modules/whatsapp-web.js` for reinstalado ou atualizado:
    cp node_modules/whatsapp-web.js/src/structures/Message.js patches/Message.patched.js
    ```
 
+## Erro "Cannot read properties of undefined (reading 'WidFactory')" ao enviar mensagem
+
+### Causa raiz (descoberta em 30/07/2026)
+
+O `package.json` especifica `"whatsapp-web.js": "^1.34.6"` (com circunflexo), o que fez
+com que o npm instalasse a versao **1.34.7** (a mais recente no range 1.34.x).
+
+A versao 1.34.7 **removeu o arquivo `Store.js`** que existia na 1.34.6. Esse arquivo era
+responsavel por mapear `window.require()` para `window.Store.*`, permitindo que o
+`Utils.js` acessasse modulos internos do WhatsApp Web via `window.Store.WidFactory`,
+`window.Store.Msg`, etc.
+
+Sem `Store.js`, `window.Store` fica `undefined`. Quando `window.WWebJS.getChat()`
+tenta acessar `window.Store.WidFactory.createWid()`, o JavaScript lanca:
+
+```
+TypeError: Cannot read properties of undefined (reading 'WidFactory')
+```
+
+### Correcao aplicada
+
+O `Utils.patched.js` agora inclui um **Store bridge** interno (funcao `exposeStore`)
+que e executado no inicio de `LoadUtils()`. Esse bridge:
+
+1. Verifica se `window.Store` ja existe (v1.34.6 com Store.js) - se sim, nao faz nada
+2. Se nao existir, popula `window.Store` com os mesmos modulos que o antigo Store.js
+   expunha, usando `window.require()` internamente
+3. Cada `window.require()` e envolvido em try-catch para evitar que um modulo ausente
+   quebre todo o carregamento
+
+Isso torna o patch compativel tanto com v1.34.6 (Store.js nativo) quanto com v1.34.7
+(sem Store.js).
+
+### Recomendacao adicional
+
+Para evitar que o npm instale uma versao diferente no futuro, altere o `package.json`
+de `"whatsapp-web.js": "^1.34.6"` para `"whatsapp-web.js": "1.34.6"` (removendo o `^`).
+
 ## Como reverter
 
 1. Remova `patches/` e a linha `postinstall` do `package.json`

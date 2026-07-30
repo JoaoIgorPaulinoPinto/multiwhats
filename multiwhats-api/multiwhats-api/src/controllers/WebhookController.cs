@@ -29,8 +29,6 @@ public class WebhookController : ControllerBase
         try
         {
             var bodyPreview = payload.Body?.Length > 50 ? payload.Body.Substring(0, 50) + "..." : payload.Body;
-            Console.WriteLine($"[Webhook] Recebida msg de {payload.From} tipo={payload.MessageType} hasMedia={payload.HasMedia} msgId={payload.MessageId} body={bodyPreview}");
-
             await _saveIncomingMessageUseCase.Execute(payload);
             return Ok(new { message = "Notificação enviada para a Web!" });
         }
