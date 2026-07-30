@@ -101,8 +101,7 @@ public class SendMessageUseCase : ISendMessageUseCase
 
             if (deviceJid == null)
             {
-                Console.WriteLine("[SendMessage] Dispositivo não encontrado. Não é possível enviar mensagem.");
-                return false;
+                Console.WriteLine("[SendMessage] Aviso: Dispositivo não encontrado. fromJid usará o JID da requisição como fallback.");
             }
 
             // Dedup: se o webhook já salvou esta mensagem com o mesmo messageId, não salvar novamente
@@ -119,7 +118,7 @@ public class SendMessageUseCase : ISendMessageUseCase
             var fields = strategy.BuildMessageFields(request, userName);
 
             var message = new Message(
-                fromJid: deviceJid,
+                fromJid: deviceJid ?? request.Jid,
                 toJid: request.Jid,
                 phoneNumber: phoneNumberFromJid,
                 body: fields.body,
