@@ -2,16 +2,21 @@ using Microsoft.EntityFrameworkCore;
 using multiwhats_api.src.data.db;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.repositories.interfaces;
+using multiwhats_api.src.services;
 
 namespace multiwhats_api.src.repositories.repositories;
 
 public class MessageRepository : IMessageRepository
 {
     private readonly AppDbContext _context;
+    private readonly ILegacyDbSyncService _legacyDb;
+    private readonly ILogger<MessageRepository> _logger;
 
-    public MessageRepository(AppDbContext context)
+    public MessageRepository(AppDbContext context, ILegacyDbSyncService legacyDb, ILogger<MessageRepository> logger)
     {
         _context = context;
+        _legacyDb = legacyDb;
+        _logger = logger;
     }
 
     public async Task<List<Message>> GetAllAsync()
@@ -35,6 +40,13 @@ public class MessageRepository : IMessageRepository
     {
         _context.Messages.Add(message);
         await _context.SaveChangesAsync();
+
+        _ = Task.Run(async () =>
+        {
+            try { await _legacyDb.SyncMessageAsync(message); }
+            catch (Exception ex) { _logger.LogError(ex, "Erro ao sincronizar mensagem com LegacyDB"); }
+        });
+
         return message;
     }
 
@@ -55,12 +67,12 @@ public class MessageRepository : IMessageRepository
         var messages = await _context.Messages
             .AsNoTracking()
             .Where(m => m.ChatId == chatId)
-            .OrderByDescending(m => m.Timestamp) // Pega as mais recentes no banco
+            .OrderByDescending(m => m.Timestamp)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
 
-        messages.Reverse(); // Inverte a ordem na memória para o chat exibir corretamente (mais antiga no topo, mais recente embaixo)
+        messages.Reverse();
 
         return messages;
     }
@@ -91,6 +103,6 @@ public class MessageRepository : IMessageRepository
     {
         return await _context.Messages
             .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.MessageId == messageId);
+            .FirstOrDefaultAsync(m => m.WhatssAppMessageId == messageId);
     }
 }

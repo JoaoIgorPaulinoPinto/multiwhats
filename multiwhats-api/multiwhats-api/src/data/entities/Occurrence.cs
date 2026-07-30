@@ -4,7 +4,7 @@ using multiwhats_api.src.data.enums;
 
 namespace multiwhats_api.src.data.entities;
 
-[Table("Occurrences")]
+[Table("occurrences")]
 public class Occurrence : BaseEntity
 {
     [Key]
@@ -70,5 +70,10 @@ public class Occurrence : BaseEntity
         if (status.HasValue) Status = status.Value;
         if (priority.HasValue) Priority = priority.Value;
         if (assignedToUserId.HasValue) AssignedToUserId = assignedToUserId;
+    }
+
+    public void UpdateChatId(int chatId)
+    {
+        ChatId = chatId;
     }
 }

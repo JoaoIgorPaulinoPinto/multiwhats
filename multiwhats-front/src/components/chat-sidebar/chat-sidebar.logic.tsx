@@ -36,6 +36,7 @@ export function useChatSidebar() {
     const display = c.contactName ?? c.name ?? c.phoneNumber ?? `Chat #${c.id}`
     return display.toLowerCase().includes(q)
   })
+                  console.log(chats)
 
   return { search, setSearch, chats: filtered, loading, load }
 }

@@ -1,10 +1,12 @@
 "use client"
 
-import { AlertCircle, RefreshCw, Search } from "lucide-react"
+import { AlertCircle, MessageSquarePlus, RefreshCw, Search } from "lucide-react"
+import { useState } from "react"
 import { AvatarView } from "../avatar/avatar.view"
 import { useChatSidebar } from "./chat-sidebar.logic"
+import { NewChatModal } from "./new-chat-modal"
 import styles from "./chat-sidebar.module.css"
-import type { OccurrenceStatus } from "../../services/chats.service"
+import { OCCURRENCE_STATUS_LABELS, OCCURRENCE_STATUS_COLORS } from "../../constants"
 
 interface Props {
   selectedId: number | null
@@ -23,24 +25,15 @@ function SkeletonChatItem() {
   )
 }
 
-function getOccurrenceStatusLabel(status: OccurrenceStatus): string {
-  if (status === "Open" || status === 0) return "Aberta"
-  if (status === "InProgress" || status === 1) return "Em andamento"
-  if (status === "Resolved" || status === 2) return "Resolvida"
-  if (status === "Closed" || status === 3) return "Fechada"
-  return "Desconhecido"
-}
-
-function getOccurrenceStatusColor(status: OccurrenceStatus): string {
-  if (status === "Open" || status === 0) return "#d97706"
-  if (status === "InProgress" || status === 1) return "#2563eb"
-  if (status === "Resolved" || status === 2) return "#16a34a"
-  if (status === "Closed" || status === 3) return "#6b7280"
-  return "#6b7280"
-}
-
 export function ChatSidebarView({ selectedId, onSelect }: Props) {
   const { search, setSearch, chats, loading, load } = useChatSidebar()
+  const [showNewChat, setShowNewChat] = useState(false)
+
+  function handleNewChatStart(phone: string, name: string) {
+    const jid = `${phone}@s.whatsapp.net`
+    onSelect(-1, name, phone, jid, null, "", null)
+    setShowNewChat(false)
+  }
 
   return (
     <aside className={styles.sidebar}>
@@ -53,6 +46,9 @@ export function ChatSidebarView({ selectedId, onSelect }: Props) {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <button className={styles.syncButton} onClick={() => setShowNewChat(true)} title="Novo chat">
+          <MessageSquarePlus size={16} />
+        </button>
         <button className={styles.syncButton} onClick={load} title="Sincronizar">
           <RefreshCw size={16} className={loading ? styles.spinning : ""} />
         </button>
@@ -77,7 +73,7 @@ export function ChatSidebarView({ selectedId, onSelect }: Props) {
             <div
               key={chat.id}
               className={`${styles.chatItem} ${selectedId === chat.id ? styles.active : ""}`}
-              onClick={() => onSelect(chat.id, displayName, phone, jid, chat.contactId, chat.lastMessageBody ?? "", chat.lastMessageAt)}
+              onClick={() => onSelect(chat.id, displayName, phone, jid, chat.contactId, "", chat.lastMessageAt)} // colocar o chat.lastmessage.body
             >
               <AvatarView name={displayName} size={42} />
               <div className={styles.chatInfo}>
@@ -100,11 +96,11 @@ export function ChatSidebarView({ selectedId, onSelect }: Props) {
                       <span
                         key={occ.id}
                         className={styles.occItem}
-                        style={{ borderLeftColor: getOccurrenceStatusColor(occ.status) }}
+                        style={{ borderLeftColor: OCCURRENCE_STATUS_COLORS[occ.status] }}
                       >
                         <span className={styles.occTitle}>{occ.title}</span>
-                        <span className={styles.occStatus} style={{ color: getOccurrenceStatusColor(occ.status) }}>
-                          {getOccurrenceStatusLabel(occ.status)}
+                        <span className={styles.occStatus} style={{ color: OCCURRENCE_STATUS_COLORS[occ.status] }}>
+                          {OCCURRENCE_STATUS_LABELS[occ.status]}
                         </span>
                       </span>
                     ))}
@@ -113,12 +109,25 @@ export function ChatSidebarView({ selectedId, onSelect }: Props) {
                     )}
                   </div>
                 )}
-                {chat.lastMessageBody && <p className={styles.lastMsg}>{chat.lastMessageBody}</p>}
+                {
+                  chat.lastMessage?.Type === "Text" ? (
+                    <p className={styles.lastMsg}>{chat.lastMessage.Body  ?? ""}</p>
+                  ) : (
+                  <p className={styles.lastMsg}></p>
+                  )
+                }
               </div>
             </div>
           )
         })}
       </section>
+
+      {showNewChat && (
+        <NewChatModal
+          onClose={() => setShowNewChat(false)}
+          onStart={handleNewChatStart}
+        />
+      )}
     </aside>
   )
 }

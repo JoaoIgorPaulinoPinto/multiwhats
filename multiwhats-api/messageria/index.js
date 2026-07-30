@@ -88,14 +88,20 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
         const targetJid = enviadaPorMim ? (deviceJid || msg.from) : msg.from;
         const rawNumber = contato.number || contato.id?.user || targetJid.split("@")[0];
         const numeroReal = rawNumber ? rawNumber.replace(/\D/g, "") : null;
+<<<<<<< HEAD
 
         let messageType = "text";
+=======
+        
+        let messageType = msg.type;
+>>>>>>> 99b897fc24ca15e300edcc372926040d38fd6ffe
         let hasMedia = false;
         let mediaUrl = null;
         let mediaMimeType = null;
         let mediaFilename = null;
         let mediaSize = null;
         let mediaCaption = null;
+<<<<<<< HEAD
 
         if (msg.hasMedia  && msg.type != "ptt" && msg.type != "audio") {
             const typesMap = {
@@ -109,26 +115,37 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
 
             messageType = msg.type
 
+=======
+        console.log(msg.type)
+        const typesMap = {
+            image: "image",
+            video: "video",
+            audio: "audio",
+            ptt: "audio",
+            document: "document",
+            sticker: "sticker",
+            contact: "vcard"
+        };  
+        if (msg.hasMedia) {
+            messageType = msg.type
+>>>>>>> 99b897fc24ca15e300edcc372926040d38fd6ffe
             try {
                 const midia = await msg.downloadMedia();
                 if (midia) {
                     hasMedia = true;
                     mediaMimeType = midia.mimetype || "image/jpeg";
                     mediaFilename = midia.filename || "arquivo";
-
                     mediaUrl = midia.data;
                     mediaCaption = msg.caption || msg.body || null;
                     mediaSize = midia.filesize ? Number(midia.filesize) : midia.data.length;
 
                 } else {
                     hasMedia = false;
-                    messageType = "text";
                 }
             } catch (err) {
                 hasMedia = false;
-                messageType = "text";
             }
-        }
+        } 
 
         const payload = {
             from: targetJid,
@@ -148,7 +165,7 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
             fromMe: enviadaPorMim,
             userId: 1
         };
-
+        console.log(msg.type)
         const response = await axios.post(ASPNET_WEBHOOK_URL, payload);
         console.log(`🚀 Webhook ASP.NET respondido com status: ${response.status}`);
 

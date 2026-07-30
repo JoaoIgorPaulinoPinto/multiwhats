@@ -29,7 +29,6 @@ export function useCompanies() {
   [])
 
   useEffect(() => {
-    console.log(`[Companies] carregando lista...`)
     loadData().catch((e) => console.error(`[Companies] erro ao carregar:`, e)).finally(() => setLoading(false))
   }, [loadData])
 
@@ -54,14 +53,12 @@ export function useCompanies() {
   async function saveEdit() {
     if (!editing) return
     setSaving(true)
-    console.log(`[Companies] salvando empresa #${editing.id}...`)
     try {
       await companiesService.update(editing.id, {
         name: formName,
         mainPhoneNumber: formPhone || null,
         status: formStatus,
       })
-      console.log(`[Companies] empresa #${editing.id} atualizada`)
       toast.success("Empresa atualizada com sucesso")
       await loadData()
       cancelEdit()
@@ -75,10 +72,8 @@ export function useCompanies() {
 
   async function createNewCompany() {
     setSaving(true)
-    console.log(`[Companies] criando empresa...`)
     try {
       await companiesService.create({ name: formName, mainPhoneNumber: formPhone || null })
-      console.log(`[Companies] empresa criada`)
       toast.success("Empresa criada com sucesso")
       await loadData()
       cancelEdit()
@@ -93,10 +88,8 @@ export function useCompanies() {
   async function handleDeleteCompany(id: number) {
     if (!window.confirm("Tem certeza que deseja excluir esta empresa?")) return
     setDeleting(id)
-    console.log(`[Companies] deletando empresa #${id}...`)
     try {
       await companiesService.delete(id)
-      console.log(`[Companies] empresa #${id} deletada`)
       setCompanies((prev) => prev.filter((c) => c.id !== id))
       toast.success("Empresa excluída")
     } catch (e) {
@@ -111,10 +104,8 @@ export function useCompanies() {
     allContacts.filter((c) => c.clientId === clientId)
 
   async function handleUnassignContact(contactId: number) {
-    console.log(`[Companies] removendo contato #${contactId} da empresa...`)
     try {
-      await companiesService.unassignContact(contactId)
-      console.log(`[Companies] contato #${contactId} removido`)
+      await contactsService.unassign(contactId)
       toast.success("Contato desvinculado")
       const updated = await contactsService.list()
       setAllContacts(updated)

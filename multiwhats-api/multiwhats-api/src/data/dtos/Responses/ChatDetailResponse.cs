@@ -1,3 +1,5 @@
+using multiwhats_api.src.data.entities;
+
 namespace multiwhats_api.src.data.dtos.Responses;
 
 public record ChatDetailResponse
@@ -11,7 +13,7 @@ public record ChatDetailResponse
     public int? ClientId { get; init; }
     public string? ClientName { get; init; }
     public DateTime? LastMessageAt { get; init; }
-    public string? LastMessageBody { get; init; }
+    public LastMessageResponse? LastMessage { get; init; }
     public List<OccurrenceDetailResponse>? Occurrences { get; init; }
     public int? AssignedToUserId { get; init; }
     public string? AssignedToUserName { get; init; }

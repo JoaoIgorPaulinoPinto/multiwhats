@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { kanbanService, type TaskResponse, type OccurrenceResponse, type Priority, type OccurrenceStatus } from "../../../services/kanban.service"
+import { kanbanService, type TaskResponse, type OccurrenceResponse, type OccurrenceStatus } from "../../../services/kanban.service"
+import { PRIORITY_LABELS } from "../../../constants"
 
 export interface KanbanCard {
   id: number
@@ -41,11 +42,11 @@ const COLUMN_LABELS: Record<string, string> = {
   done: "Concluído",
 }
 
-const PRIORITY_DISPLAY: Record<number, string> = {
-  0: "Baixa",
-  1: "Média",
-  2: "Alta",
-  3: "Urgente",
+const STATUS_TO_INT: Record<string, number> = {
+  Open: 0,
+  InProgress: 1,
+  Resolved: 2,
+  Closed: 3,
 }
 
 function buildColumns(tasks: TaskResponse[], occurrences: OccurrenceResponse[]): KanbanColumn[] {
@@ -55,7 +56,7 @@ function buildColumns(tasks: TaskResponse[], occurrences: OccurrenceResponse[]):
       .map((t) => ({
         id: t.id,
         title: t.title,
-        subtitle: t.clientName ?? `Prioridade: ${PRIORITY_DISPLAY[t.priority] ?? t.priority}`,
+        subtitle: t.clientName ?? `Prioridade: ${PRIORITY_LABELS[t.priority] ?? t.priority}`,
         type: "task" as const,
         status: t.status,
         priority: t.priority,
@@ -69,7 +70,7 @@ function buildColumns(tasks: TaskResponse[], occurrences: OccurrenceResponse[]):
       .map((o) => ({
         id: o.id,
         title: o.title,
-        subtitle: o.chatName ?? `Prioridade: ${PRIORITY_DISPLAY[o.priority] ?? o.priority}`,
+        subtitle: o.chatName ?? `Prioridade: ${PRIORITY_LABELS[o.priority] ?? o.priority}`,
         type: "occurrence" as const,
         status: o.status,
         priority: o.priority,
@@ -108,14 +109,7 @@ export function useKanban() {
     load()
   }, [load])
 
-  const STATUS_TO_INT: Record<string, number> = {
-  Open: 0,
-  InProgress: 1,
-  Resolved: 2,
-  Closed: 3,
-}
-
-async function changeOccurrenceStatus(id: number, newStatus: OccurrenceStatus) {
+  async function changeOccurrenceStatus(id: number, newStatus: OccurrenceStatus) {
     try {
       await kanbanService.updateOccurrence(id, { status: STATUS_TO_INT[newStatus] })
       setOccurrences((prev) =>

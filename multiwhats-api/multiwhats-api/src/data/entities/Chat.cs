@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace multiwhats_api.src.data.entities;
 
-[Table("Chats")]
+[Table("chats")]
 public class Chat : BaseEntity
 {
     [Key]
@@ -39,8 +39,10 @@ public class Chat : BaseEntity
     [Column("last_message_at")]
     public DateTime? LastMessageAt { get; private set; }
 
-    [Column("last_message_body")]
-    public string? LastMessageBody { get; private set; }
+    [Column("last_message_id")]
+    public int? lastMessageId { get; private set; }
+    [ForeignKey(nameof(lastMessageId))]
+    public Message? LastMessage { get; private set; }
 
     [Column("assigned_to_user_id")]
     public int? AssignedToUserId { get; private set; }
@@ -78,16 +80,15 @@ public class Chat : BaseEntity
         if (clientId.HasValue)
             ClientId = clientId;
     }
-
     public void UnlinkContact()
     {
         ContactId = null;
     }
 
-    public void UpdateLastMessage(DateTime timestamp, string? body)
+    public void UpdateLastMessage(DateTime timestamp, Message? body)
     {
         LastMessageAt = timestamp;
-        LastMessageBody = body;
+        LastMessage = body;
     }
 
     public void AssignUser(int userId)

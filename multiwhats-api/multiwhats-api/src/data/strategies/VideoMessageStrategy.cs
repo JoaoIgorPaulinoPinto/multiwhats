@@ -3,46 +3,35 @@ using multiwhats_api.src.data.enums;
 
 namespace multiwhats_api.src.data.strategies;
 
-/// <summary>
-/// STRATEGY PARA MENSAGENS DE VÍDEO.
-/// 
-/// Envia vídeos no formato MP4 com legenda opcional.
-/// 
-/// Payload para o Node.js:
-/// {
-///   "jid": "5511999999999@c.us",
-///   "mensagem": "Olá",
-///   "type": "video",
-///   "mediaBase64": "data:video/mp4;base64,...",
-///   "mediaMimeType": "video/mp4",
-///   "caption": "Legenda do vídeo"
-/// }
-/// 
-/// COMPORTAMENTO:
-/// - Similar à imagem: body usa a legenda ou texto
-/// - O formato padrão é MP4 (padrão do WhatsApp para vídeos)
-/// </summary>
+// Strategy for video messages (MP4 format) with optional caption.
 public class VideoMessageStrategy : IMessageStrategy
 {
     public MessageType Type => MessageType.Video;
 
-    public object BuildNodePayload(string jid, SendMessageRequest request)
+    public object BuildNodePayload(string jid, SendMessageRequest request, string? userName = null)
     {
+        var caption = !string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(request.MediaCaption)
+            ? $"_*{userName}_*\n{request.MediaCaption}"
+            : request.MediaCaption;
+
         return new
         {
             jid,
             mensagem = request.Text,
             type = "video",
             mediaBase64 = request.MediaBase64,
-            mediaMimeType = request.MediaMimeType ?? "video/mp4",  // Padrão: MP4
-            caption = request.MediaCaption
+            mediaMimeType = request.MediaMimeType ?? "video/mp4",
+            caption
         };
     }
 
-    public (string? body, bool hasMedia, string? mediaUrl, string? mediaMimeType, string? mediaFilename, long? mediaSize, string? mediaCaption) BuildMessageFields(SendMessageRequest request)
+    public (string? body, bool hasMedia, string? mediaUrl, string? mediaMimeType, string? mediaFilename, long? mediaSize, string? mediaCaption) BuildMessageFields(SendMessageRequest request, string? userName = null)
     {
+        var caption = !string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(request.MediaCaption)
+            ? $"_**{userName}_**\n{request.MediaCaption}"
+            : request.MediaCaption;
         return (
-            body: request.MediaCaption ?? request.Text,
+            body: caption ?? request.Text,
             hasMedia: true,
             mediaUrl: request.MediaBase64,
             mediaMimeType: request.MediaMimeType ?? "video/mp4",

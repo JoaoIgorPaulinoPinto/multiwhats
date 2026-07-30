@@ -2,16 +2,21 @@ using Microsoft.EntityFrameworkCore;
 using multiwhats_api.src.data.db;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.repositories.interfaces;
+using multiwhats_api.src.services;
 
 namespace multiwhats_api.src.repositories.repositories;
 
 public class ContactRepository : IContactRepository
 {
     private readonly AppDbContext _context;
+    private readonly ILegacyDbSyncService _legacyDb;
+    private readonly ILogger<ContactRepository> _logger;
 
-    public ContactRepository(AppDbContext context)
+    public ContactRepository(AppDbContext context, ILegacyDbSyncService legacyDb, ILogger<ContactRepository> logger)
     {
         _context = context;
+        _legacyDb = legacyDb;
+        _logger = logger;
     }
 
     public async Task<List<Contact>> GetAllAsync()
@@ -55,6 +60,13 @@ public class ContactRepository : IContactRepository
     {
         _context.Contacts.Add(contact);
         await _context.SaveChangesAsync();
+
+        _ = Task.Run(async () =>
+        {
+            try { await _legacyDb.SyncContactAsync(contact); }
+            catch (Exception ex) { _logger.LogError(ex, "Erro ao sincronizar contato com LegacyDB"); }
+        });
+
         return contact;
     }
 

@@ -4,7 +4,7 @@ using multiwhats_api.src.data.enums;
 
 namespace multiwhats_api.src.data.entities;
 
-[Table("ClientTasks")]
+[Table("client_tasks")]
 public class ClientTask : BaseEntity
 {
     [Key]

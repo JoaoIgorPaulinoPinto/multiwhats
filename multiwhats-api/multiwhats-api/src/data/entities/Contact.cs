@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace multiwhats_api.src.data.entities;
 
-[Table("Contacts")]
+[Table("contacts")]
 public class Contact : BaseEntity
 {
     [Key]
