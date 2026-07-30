@@ -73,7 +73,6 @@ client.on("ready", async () => {
 // ==========================================
 
 async function processarEMandarParaAspNet(msg, enviadaPorMim) {
-
     try {
         if (msg.from.includes("@newsletter")
             || msg.from.includes("@g.us")
@@ -83,52 +82,22 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
             return;
         }
 
-        const contato = await msg.getContact();
-        const deviceJid = client.info?.wid ? `${client.info.wid.user}@c.us` : null;
-        const targetJid = enviadaPorMim ? (deviceJid || msg.from) : msg.from;
-        const rawNumber = contato.number || contato.id?.user || targetJid.split("@")[0];
-        const numeroReal = rawNumber ? rawNumber.replace(/\D/g, "") : null;
-<<<<<<< HEAD
+        const targetJid = enviadaPorMim ? msg.to : msg.from;
 
-        let messageType = "text";
-=======
+        // Obtém o contato do destinatário ou remetente real
+        const contato = await msg.getContact();
+        const rawNumber = targetJid.split("@")[0];
+        const numeroReal = rawNumber ? rawNumber.replace(/\D/g, "") : null;
         
         let messageType = msg.type;
->>>>>>> 99b897fc24ca15e300edcc372926040d38fd6ffe
         let hasMedia = false;
         let mediaUrl = null;
         let mediaMimeType = null;
         let mediaFilename = null;
         let mediaSize = null;
         let mediaCaption = null;
-<<<<<<< HEAD
 
-        if (msg.hasMedia  && msg.type != "ptt" && msg.type != "audio") {
-            const typesMap = {
-                image: "image",
-                video: "video",
-                audio: "audio",
-                ptt: "audio",
-                document: "document",
-                sticker: "sticker"
-            };
-
-            messageType = msg.type
-
-=======
-        console.log(msg.type)
-        const typesMap = {
-            image: "image",
-            video: "video",
-            audio: "audio",
-            ptt: "audio",
-            document: "document",
-            sticker: "sticker",
-            contact: "vcard"
-        };  
         if (msg.hasMedia) {
-            messageType = msg.type
->>>>>>> 99b897fc24ca15e300edcc372926040d38fd6ffe
             try {
                 const midia = await msg.downloadMedia();
                 if (midia) {
@@ -138,9 +107,6 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
                     mediaUrl = midia.data;
                     mediaCaption = msg.caption || msg.body || null;
                     mediaSize = midia.filesize ? Number(midia.filesize) : midia.data.length;
-
-                } else {
-                    hasMedia = false;
                 }
             } catch (err) {
                 hasMedia = false;
@@ -148,7 +114,7 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
         } 
 
         const payload = {
-            from: targetJid,
+            from: targetJid, // ✅ Agora sempre conterá o JID do Cliente (ex: 5511999999999@c.us)
             phoneNumber: numeroReal,
             body: msg.body,
             timestamp: msg.timestamp,
@@ -165,9 +131,9 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim) {
             fromMe: enviadaPorMim,
             userId: 1
         };
-        console.log(msg.type)
+
         const response = await axios.post(ASPNET_WEBHOOK_URL, payload);
-        console.log(`🚀 Webhook ASP.NET respondido com status: ${response.status}`);
+        console.log(`🚀 Webhook ASP.NET respondido com status: ${response.status} (enviadaPorMim: ${enviadaPorMim})`);
 
     } catch (err) {
         console.error("Erro no processamento do webhook:", err.message || err);

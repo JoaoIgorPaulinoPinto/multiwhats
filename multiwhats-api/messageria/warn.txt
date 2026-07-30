@@ -1,0 +1,171 @@
+# WARN - Correcao do bug "r" no downloadMedia()
+
+## Problema
+
+O metodo `downloadMedia()` do whatsapp-web.js falha silenciosamente com um erro que
+retorna apenas a letra **"r"** (variavel minificada do JavaScript interno do WhatsApp Web).
+
+Isso acontece porque o `Msg.get(msgId)` lancado dentro do `page.evaluate()` recebe
+apenas `this.id._serialized` (uma string como `true1234567890@c.us`). Em determinadas
+versoes do WhatsApp Web, o `IDBObjectStore` do navegador recusa a busca:
+
+```
+DataError: Failed to execute 'get' on 'IDBObjectStore': No key or key range specified.
+```
+
+Quando `Msg.get()` retorna `undefined`, qualquer acesso subsequente a propriedades
+como `mediaData.mediaStage` estoura dentro do contexto minificado do WhatsApp Web,
+produzindo o erro "r".
+
+## Versoes afetadas
+
+- `whatsapp-web.js` **1.34.6** (usada neste projeto) - afetada de forma intermitente
+- `whatsapp-web.js` **1.34.7** - afetada de forma consistente (nao possui `Store.js`,
+  usa `window.require('WAWebDownloadManager')` que depende de modulos internos instaveis)
+
+## Causa raiz
+
+A diferenca entre as versoes esta em como os modulos internos do WhatsApp Web sao
+acessados:
+
+| | v1.34.6 (funciona) | v1.34.7 (quebrado) |
+|---|---|---|
+| `Store.js` | Existe em `src/util/Injected/` | Nao existe |
+| Acesso a modulos | `window.Store.Msg` | `window.require('WAWebCollections').Msg` |
+| Download de midia | `window.Store.DownloadManager` | `window.require('WAWebDownloadManager').downloadManager` |
+
+A versao 1.34.6 usa um arquivo `Store.js` que mapeia modulos internos para
+`window.Store.*`. A versao 1.34.7 removeu esse arquivo e passou a usar
+`window.require()` diretamente, que depende de nomes de modulos que o WhatsApp Web
+renomeia sem aviso.
+
+Alem disso, a forma como `Msg.get()` recebe o ID mudou em versoes recentes do
+WhatsApp Web. Passar apenas a string `_serialized` nao e mais suficiente em todos
+os casos - o objeto ID completo (com `remote`, `fromMe`, `id`, `_serialized`) e
+necessario para a busca no IndexedDB.
+
+## Solucao implementada
+
+### 1. Downgrade para whatsapp-web.js@1.34.6
+
+```bash
+npm install whatsapp-web.js@1.34.6
+```
+
+Restaura o `Store.js` que mapeia modulos internos de forma estavel.
+
+### 2. Remocao do puppeteer extra
+
+```bash
+npm uninstall puppeteer
+```
+
+O projeto nao precisa de puppeteer separado. A versao 1.34.6 ja usa seu proprio
+puppeteer bundled (v24.37.5). Ter puppeteer@25.3.0 no topo causava conflito de
+versoes.
+
+### 3. Helper `getMessageById()` em `Utils.js`
+
+Adicionado em `node_modules/whatsapp-web.js/src/util/Injected/Utils.js`:
+
+```javascript
+window.WWebJS.getMessageById = async (msgId) => {
+    // Tenta resolver a mensagem usando multipas estrategias:
+    // 1. Msg.get(candidate) com string
+    // 2. Msg.getMessagesById([candidate])
+    // 3. Objeto _serialized direto
+    // 4. Reconstruct via WidFactory.createWid()
+    // 5. Fallback scan no Msg.getModelsArray() / Msg.models / Msg._models
+};
+```
+
+Estrategias de resolucao (em ordem):
+
+1. `Msg.get(string)` - busca direta pela string `_serialized`
+2. `Msg.getMessagesById([string])` - busca por array de IDs
+3. Para objetos: extrai `_serialized` e repete os passos 1-2
+4. Para strings no formato `true1234567890@c.us`: reconstrói o objeto ID com
+   `WidFactory.createWid()` e tenta `Msg.get(objeto)`
+5. Fallback: varre todos os modelos em `Msg.getModelsArray()`, `Msg.models` e
+   `Msg._models` comparando `id._serialized` e `id.id`
+
+### 4. Alteracao em `Message.downloadMedia()`
+
+Em `node_modules/whatsapp-web.js/src/structures/Message.js`:
+
+**Antes:**
+```javascript
+const result = await this.client.pupPage.evaluate(async (msgId) => {
+    const msg = window.Store.Msg.get(msgId) ||
+        (await window.Store.Msg.getMessagesById([msgId]))?.messages?.[0];
+    // ...
+}, this.id._serialized);  // <-- passava apenas a string
+```
+
+**Depois:**
+```javascript
+const result = await this.client.pupPage.evaluate(async (msgId) => {
+    const msg = await window.WWebJS.getMessageById(msgId);  // <-- usa helper
+    // ...
+}, this.id);  // <-- passa o objeto ID completo
+```
+
+Mudancas:
+- O parametro passado para `page.evaluate()` mudou de `this.id._serialized` para
+  `this.id` (objeto completo)
+- A resolucao da mensagem dentro do `evaluate()` usa o novo helper `getMessageById`
+  que tenta multiplas estrategias em vez de `Msg.get()` direto
+
+### 5. Sistema de persistencia via `postinstall`
+
+Como `patch-package` nao funciona neste ambiente (puppeteer postinstall quebra no
+temp folder), foi criado um sistema manual:
+
+**Arquivos:**
+
+| Arquivo | Descricao |
+|---|---|
+| `patches/apply.js` | Script de postinstall que copia os arquivos patched |
+| `patches/Utils.patched.js` | Copia do Utils.js com o helper `getMessageById` |
+| `patches/Message.patched.js` | Copia do Message.js com `downloadMedia` corrigido |
+
+**Fluxo apos `npm install`:**
+
+1. `postinstall` executa `node patches/apply.js`
+2. O script copia `Utils.patched.js` -> `node_modules/whatsapp-web.js/src/util/Injected/Utils.js`
+3. O script copia `Message.patched.js` -> `node_modules/whatsapp-web.js/src/structures/Message.js`
+
+**`package.json`:**
+```json
+{
+  "scripts": {
+    "postinstall": "node patches/apply.js",
+    "start": "node index.js"
+  }
+}
+```
+
+## Como atualizar os patches
+
+Se o `node_modules/whatsapp-web.js` for reinstalado ou atualizado:
+
+1. Edite os arquivos diretamente em `node_modules/whatsapp-web.js/src/`
+2. Copie as versoes finais para `patches/`:
+   ```bash
+   cp node_modules/whatsapp-web.js/src/util/Injected/Utils.js patches/Utils.patched.js
+   cp node_modules/whatsapp-web.js/src/structures/Message.js patches/Message.patched.js
+   ```
+
+## Como reverter
+
+1. Remova `patches/` e a linha `postinstall` do `package.json`
+2. Delete `node_modules/` e reinstale: `rm -rf node_modules && npm install`
+
+## Notas adicionais
+
+- O monkey-patch original (`const OriginalMessage = pkg.Message;`) na linha 13 do
+  `index.js` foi removido - estava declarado mas nunca implementado
+- O campo `allowScripts` do `package.json` foi removido junto com a remocao do
+  puppeteer extra
+- O timeout de 3 segundos antes do `downloadMedia` (linhas 104-108 do `index.js`)
+  nao foi alterado, pois serve como debounce para mensagens que chegam em sequencia
