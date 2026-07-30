@@ -12,8 +12,8 @@ using multiwhats_api.src.data.db;
 namespace multiwhats_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260729131314_InitalPostgresSQLMigration")]
-    partial class InitalPostgresSQLMigration
+    [Migration("20260730170246_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -152,6 +152,10 @@ namespace multiwhats_api.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("phone_number");
 
+                    b.Property<int?>("lastMessageId")
+                        .HasColumnType("integer")
+                        .HasColumnName("last_message_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AssignedToUserId");
@@ -167,6 +171,8 @@ namespace multiwhats_api.Migrations
                         .IsUnique();
 
                     b.HasIndex("PhoneNumber");
+
+                    b.HasIndex("lastMessageId");
 
                     b.ToTable("chats", (string)null);
                 });
@@ -501,9 +507,6 @@ namespace multiwhats_api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("chat_id");
 
-                    b.Property<int?>("ChatId1")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -569,11 +572,6 @@ namespace multiwhats_api.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("media_url");
 
-                    b.Property<string>("MessageId")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("message_id");
-
                     b.Property<string>("NotifyName")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
@@ -613,14 +611,14 @@ namespace multiwhats_api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("user_id");
 
+                    b.Property<string>("WhatssAppMessageId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("whatsapp_message_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ChatId");
-
-                    b.HasIndex("ChatId1")
-                        .IsUnique();
-
-                    b.HasIndex("MessageId");
 
                     b.HasIndex("OccurrenceId");
 
@@ -631,6 +629,8 @@ namespace multiwhats_api.Migrations
                     b.HasIndex("Timestamp");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("WhatssAppMessageId");
 
                     b.ToTable("messages", (string)null);
                 });
@@ -785,6 +785,10 @@ namespace multiwhats_api.Migrations
                         .WithMany()
                         .HasForeignKey("CreatedByUserId");
 
+                    b.HasOne("multiwhats_api.src.data.entities.Message", "LastMessage")
+                        .WithMany()
+                        .HasForeignKey("lastMessageId");
+
                     b.Navigation("AssignedTo");
 
                     b.Navigation("Client");
@@ -792,6 +796,8 @@ namespace multiwhats_api.Migrations
                     b.Navigation("Contact");
 
                     b.Navigation("CreatedBy");
+
+                    b.Navigation("LastMessage");
                 });
 
             modelBuilder.Entity("multiwhats_api.src.data.entities.ClientTask", b =>
@@ -847,10 +853,6 @@ namespace multiwhats_api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("multiwhats_api.src.data.entities.Chat", null)
-                        .WithOne("LastMessage")
-                        .HasForeignKey("multiwhats_api.src.data.entities.Message", "ChatId1");
-
                     b.HasOne("multiwhats_api.src.data.entities.Occurrence", "Occurrence")
                         .WithMany("Messages")
                         .HasForeignKey("OccurrenceId");
@@ -898,8 +900,6 @@ namespace multiwhats_api.Migrations
 
             modelBuilder.Entity("multiwhats_api.src.data.entities.Chat", b =>
                 {
-                    b.Navigation("LastMessage");
-
                     b.Navigation("Messages");
 
                     b.Navigation("Occurrences");

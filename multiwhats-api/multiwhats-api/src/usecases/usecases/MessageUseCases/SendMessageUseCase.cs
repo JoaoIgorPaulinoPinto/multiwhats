@@ -99,6 +99,22 @@ public class SendMessageUseCase : ISendMessageUseCase
             var device = await _deviceRepository.GetCurrentAsync();
             var deviceJid = device?.Jid;
 
+            if (deviceJid == null)
+            {
+                Console.WriteLine("[SendMessage] Aviso: Dispositivo não encontrado. fromJid usará o JID da requisição como fallback.");
+            }
+
+            // Dedup: se o webhook já salvou esta mensagem com o mesmo messageId, não salvar novamente
+            if (!string.IsNullOrEmpty(messageId))
+            {
+                var existing = await _messageRepository.GetByMessageIdAsync(messageId);
+                if (existing != null)
+                {
+                    Console.WriteLine($"[SendMessage] Duplicata ignorada msgId={messageId} (já existe id={existing.Id})");
+                    return true;
+                }
+            }
+
             var fields = strategy.BuildMessageFields(request, userName);
 
             var message = new Message(

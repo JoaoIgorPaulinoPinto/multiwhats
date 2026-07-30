@@ -22,8 +22,7 @@ export function useChatMessaging(chatId: number | null, jid: string, lastMessage
   const [mediaType, setMediaType] = useState<MessageType | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleNewMessage = useCallback((payload: unknown) => {
-    const msg = payload as MessageResponse
+  const handleNewMessage = useCallback((msg: MessageResponse) => {
     if (msg.chatId === chatId) {
       setMessages((prev) => [...prev, msg])
       if (chatId !== null) cache.delete(chatId)

@@ -12,8 +12,8 @@ using multiwhats_api.src.data.db;
 namespace multiwhats_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260729134722_EditFksFromchatsAndMessages")]
-    partial class EditFksFromchatsAndMessages
+    [Migration("20260730203228_FIXDUPLICATEDMESSAGES")]
+    partial class FIXDUPLICATEDMESSAGES
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -630,7 +630,9 @@ namespace multiwhats_api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("WhatssAppMessageId");
+                    b.HasIndex("WhatssAppMessageId")
+                        .IsUnique()
+                        .HasFilter("\"whatsapp_message_id\" IS NOT NULL");
 
                     b.ToTable("messages", (string)null);
                 });

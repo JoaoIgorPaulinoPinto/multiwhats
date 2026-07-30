@@ -3,6 +3,130 @@
 exports.LoadUtils = () => {
     window.WWebJS = {};
 
+    // ============================================================
+    // Store bridge: expoe modulos internos do WWeb em window.Store
+    // Necessario porque v1.34.7 removeu Store.js do pacote original
+    // ============================================================
+    (function exposeStore() {
+        if (window.Store && window.Store.WidFactory && window.Store.Msg) return;
+
+        const _req = (mod) => { try { return window.require(mod); } catch (_) { return undefined; } };
+
+        window.compareWwebVersions = window.compareWwebVersions || ((lOperand, operator, rOperand) => {
+            if (!['>', '>=', '<', '<=', '='].includes(operator)) return false;
+            if (typeof lOperand !== 'string' || typeof rOperand !== 'string') return false;
+            lOperand = lOperand.replace(/-beta$/, '');
+            rOperand = rOperand.replace(/-beta$/, '');
+            while (lOperand.length !== rOperand.length) {
+                lOperand.length > rOperand.length ? rOperand += '0' : lOperand += '0';
+            }
+            lOperand = Number(lOperand.replace(/\./g, ''));
+            rOperand = Number(rOperand.replace(/\./g, ''));
+            return operator === '>' ? lOperand > rOperand
+                : operator === '>=' ? lOperand >= rOperand
+                : operator === '<' ? lOperand < rOperand
+                : operator === '<=' ? lOperand <= rOperand
+                : operator === '=' ? lOperand === rOperand : false;
+        });
+
+        const collections = _req('WAWebCollections');
+        if (window.Store) {
+            Object.assign(window.Store, collections || {});
+        } else {
+            window.Store = Object.assign({}, collections || {});
+        }
+
+        const assign = (key, mod) => { const m = _req(mod); if (m) window.Store[key] = m; };
+        const assignNested = (key, ...mods) => {
+            const resolved = {};
+            for (const mod of mods) {
+                const m = _req(mod);
+                if (m) Object.assign(resolved, m);
+            }
+            if (Object.keys(resolved).length) window.Store[key] = resolved;
+        };
+
+        assign('AppState', 'WAWebSocketModel');
+        if (window.Store.AppState) window.Store.AppState = window.Store.AppState.Socket;
+        assign('BlockContact', 'WAWebBlockContactAction');
+        assign('Conn', 'WAWebConnModel');
+        if (window.Store.Conn) window.Store.Conn = window.Store.Conn.Conn;
+        assign('Cmd', 'WAWebCmd');
+        if (window.Store.Cmd) window.Store.Cmd = window.Store.Cmd.Cmd;
+        assign('DownloadManager', 'WAWebDownloadManager');
+        if (window.Store.DownloadManager) window.Store.DownloadManager = window.Store.DownloadManager.downloadManager;
+        assign('GroupQueryAndUpdate', 'WAWebGroupQueryJob');
+        if (window.Store.GroupQueryAndUpdate) window.Store.GroupQueryAndUpdate = window.Store.GroupQueryAndUpdate.queryAndUpdateGroupMetadataById;
+        assign('MediaPrep', 'WAWebPrepRawMedia');
+        assign('MediaObject', 'WAWebMediaStorage');
+        assign('MediaTypes', 'WAWebMmsMediaTypes');
+        assignNested('MediaUpload', 'WAWebMediaMmsV4Upload', 'WAWebStartMediaUploadQpl');
+        assign('MediaUpdate', 'WAWebMediaUpdateMsg');
+        assign('MsgKey', 'WAWebMsgKey');
+        assign('OpaqueData', 'WAWebMediaOpaqueData');
+        assign('QueryProduct', 'WAWebBizProductCatalogBridge');
+        assign('QueryOrder', 'WAWebBizOrderBridge');
+        assign('SendClear', 'WAWebChatClearBridge');
+        assign('SendDelete', 'WAWebDeleteChatAction');
+        assign('SendMessage', 'WAWebSendMsgChatAction');
+        assign('EditMessage', 'WAWebSendMessageEditAction');
+        assign('MediaDataUtils', 'WAWebMediaDataUtils');
+        assign('BlobCache', 'WAWebMediaInMemoryBlobCache');
+        assign('SendSeen', 'WAWebUpdateUnreadChatAction');
+        assign('User', 'WAWebUserPrefsMeUser');
+        assignNested('ContactMethods', 'WAWebContactGetters', 'WAWebFrontendContactGetters');
+        assign('Validators', 'WALinkify');
+        assign('WidFactory', 'WAWebWidFactory');
+        assign('ProfilePicThumb', 'WAWebContactProfilePicThumbBridge');
+        if (!window.Store.ProfilePicThumb) window.Store.ProfilePicThumb = _req('WAWebContactProfilePicThumbBridge');
+        assign('PresenceUtils', 'WAWebPresenceChatAction');
+        assign('ChatState', 'WAWebChatStateBridge');
+        assign('Label', 'WAWebCollections');
+        if (window.Store.Label && typeof window.Store.Label === 'object') window.Store.Label = window.Store.Label.Label;
+        if (!window.Store.Label) { const c = _req('WAWebCollections'); if (c) window.Store.Label = c.Label; }
+        assign('EphemeralFields', 'WAWebGetEphemeralFieldsMsgActionsUtils');
+        assign('MsgActionChecks', 'WAWebMsgActionCapability');
+        assign('QuotedMsg', 'WAWebQuotedMsgModelUtils');
+        assign('LinkPreview', 'WAWebLinkPreviewChatAction');
+        assign('Socket', 'WADeprecatedSendIq');
+        assign('SocketWap', 'WAWap');
+        assign('LidUtils', 'WAWebApiContact');
+        assign('WidToJid', 'WAWebWidToJid');
+        assign('JidToWid', 'WAWebJidToWid');
+        assignNested('ForwardUtils', 'WAWebChatForwardMessage');
+        assign('ReplyUtils', 'WAWebMsgReply');
+        assign('BotSecret', 'WAWebBotMessageSecret');
+        assign('BotProfiles', 'WAWebBotProfileCollection');
+        assign('ChatGetters', 'WAWebChatGetters');
+        assign('UploadUtils', 'WAWebUploadManager');
+        assign('WAWebStreamModel', 'WAWebStreamModel');
+        assign('FindOrCreateChat', 'WAWebFindChatAction');
+        assignNested('PinnedMsgUtils', 'WAWebPinInChatSchema', 'WAWebSendPinMessageAction');
+        assignNested('ScheduledEventMsgUtils', 'WAWebGenerateEventCallLink', 'WAWebSendEventEditMsgAction', 'WAWebSendEventResponseMsgAction');
+        assignNested('VCard', 'WAWebFrontendVcardUtils', 'WAWebVcardParsingUtils', 'WAWebVcardGetNameFromParsed');
+        assignNested('StickerTools', 'WAWebImageUtils', 'WAWebAddWebpMetadata');
+        assignNested('GroupUtils', 'WAWebGroupCreateJob', 'WAWebGroupModifyInfoJob', 'WAWebExitGroupAction', 'WAWebContactProfilePicThumbBridge', 'WAWebSetPropertyGroupAction');
+        assignNested('GroupParticipants', 'WAWebModifyParticipantsGroupAction', 'WASmaxGroupsAddParticipantsRPC');
+        assignNested('MembershipRequestUtils', 'WAWebApiMembershipApprovalRequestStore', 'WASmaxGroupsMembershipRequestsActionRPC');
+        assignNested('ChannelUtils', 'WAWebLoadNewsletterPreviewChatAction', 'WAWebNewsletterMetadataQueryJob', 'WAWebNewsletterCreateQueryJob', 'WAWebEditNewsletterMetadataAction', 'WAWebNewsletterDeleteAction', 'WAWebNewsletterSubscribeAction', 'WAWebNewsletterUnsubscribeAction', 'WAWebNewsletterDirectorySearchAction', 'WAWebNewsletterGatingUtils', 'WAWebNewsletterModelUtils');
+        assignNested('SendChannelMessage', 'WAWebNewsletterUpdateMsgsRecordsJob', 'WAWebMsgDataFromModel', 'WAWebNewsletterSendMessageJob', 'WAWebNewsletterSendMsgAction', 'WAMediaCalculateFilehash');
+        assignNested('StatusUtils', 'WAWebContactStatusBridge', 'WAWebSendStatusMsgAction', 'WAWebRevokeStatusAction', 'WAWebStatusGatingUtils');
+        assign('Reactions', 'WAWebDBCreateOrUpdateReactions');
+
+        if (!window.Store.WAWebNewsletterMetadataCollection) {
+            const nmc = _req('WAWebNewsletterMetadataCollection');
+            if (nmc) window.Store.WAWebNewsletterMetadataCollection = nmc;
+        }
+
+        if (window.Store.Chat && (!window.Store.Chat._find || !window.Store.Chat.findImpl)) {
+            window.Store.Chat._find = e => {
+                const target = window.Store.Chat.get(e);
+                return target ? Promise.resolve(target) : Promise.resolve({ id: e });
+            };
+            window.Store.Chat.findImpl = window.Store.Chat._find;
+        }
+    })();
+
     window.WWebJS.getMessageById = async (msgId) => {
         const Msg = window.Store.Msg;
 
@@ -638,10 +762,16 @@ exports.LoadUtils = () => {
 
         msg.isEphemeral = message.isEphemeral;
         msg.isStatusV3 = message.isStatusV3;
-        msg.links = (window.Store.Validators.findLinks(message.mediaObject ? message.caption : message.body)).map((link) => ({
-            link: link.href,
-            isSuspicious: Boolean(link.suspiciousCharacters && link.suspiciousCharacters.size)
-        }));
+        try {
+            const validators = window.Store.Validators;
+            const text = message.mediaObject ? message.caption : message.body;
+            msg.links = (validators && validators.findLinks ? validators.findLinks(text) : []).map((link) => ({
+                link: link.href,
+                isSuspicious: Boolean(link.suspiciousCharacters && link.suspiciousCharacters.size)
+            }));
+        } catch (_) {
+            msg.links = [];
+        }
 
         if (msg.buttons) {
             msg.buttons = msg.buttons.serialize();

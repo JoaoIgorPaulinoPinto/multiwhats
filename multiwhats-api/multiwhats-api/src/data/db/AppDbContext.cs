@@ -71,7 +71,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Message>(entity =>
         {
             entity.ToTable("messages");
-            entity.HasIndex(e => e.WhatssAppMessageId);
+            entity.HasIndex(e => e.WhatssAppMessageId)
+                  .IsUnique()
+                  .HasFilter("\"whatsapp_message_id\" IS NOT NULL");
             entity.HasIndex(e => e.PhoneNumber);
             entity.HasIndex(e => e.Timestamp);
             entity.HasOne(e => e.Chat)
