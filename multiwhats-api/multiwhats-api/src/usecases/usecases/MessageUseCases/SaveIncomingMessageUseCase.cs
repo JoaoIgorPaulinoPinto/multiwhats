@@ -252,6 +252,16 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         chat.UpdateLastMessage(sentAt, message);
         await _chatRepository.UpdateAsync(chat);
 
+        // Mensagens do sistema já são broadcastadas pelo SendMessageUseCase (MessageSent).
+        // Auto-enviadas pelo celular e recebidas precisam ser broadcastadas aqui para
+        // aparecerem em tempo real no frontend. Mensagens de sync são históricas, não broadcastam.
+        // O broadcast roda ANTES do log para que uma falha no log não impeça a propagação.
+        if (!payload.IsSync && (!isSelfSent || source == MessageSource.Phone))
+        {
+            var msgResponse = GetMessagesUseCase.MapToDetailResponse(message);
+            await _hubContext.Clients.All.SendAsync("MessageReceived", msgResponse);
+        }
+
         var userName = user?.Name;
         await _useCaseLogger.LogAsync(
             action: "SaveIncomingMessage",
@@ -261,16 +271,6 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
             explicitUserId: userId,
             explicitUserName: userName
         );
-
-        // Mensagens do sistema já são broadcastadas pelo SendMessageUseCase (MessageSent).
-        // Auto-enviadas pelo celular e recebidas precisam ser broadcastadas aqui para
-        // aparecerem em tempo real no frontend. Mensagens de sync são históricas, não broadcastam.
-        if (!payload.IsSync && (!isSelfSent || source == MessageSource.Phone))
-        {
-            var msgResponse = GetMessagesUseCase.MapToDetailResponse(message);
-            await _hubContext.Clients.All.SendAsync("MessageReceived", msgResponse);
-        }
-
 
         return true;
     }

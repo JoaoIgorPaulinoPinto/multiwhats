@@ -22,13 +22,25 @@ function log(...args) {
   } catch (_) {}
 }
 
+// Resolve o ID serializado da mensagem de forma robusta. Versões recentes do
+// WhatsApp Web expõem o campo minificado `$1` no lugar de `_serialized`.
+function serializedId(msg) {
+  const id = msg?.id || {}
+  if (id._serialized) return id._serialized
+  if (id.$1) return id.$1
+  if (id.remote && id.id) {
+    return `${id.fromMe ? 'true' : 'false'}_${id.remote}_${id.id}`
+  }
+  return null
+}
+
 // Log compacto dos campos relevantes de uma mensagem do whatsapp-web.js
 function describeMsg(msg, extra = {}) {
   const id = msg.id || {}
   return {
     event: extra.event,
     id: id.id ?? null,
-    serialized: id._serialized ?? null,
+    serialized: serializedId(msg),
     idObj: JSON.stringify(id),
     fromMe: msg.fromMe,
     deviceType: msg.deviceType,
@@ -141,6 +153,29 @@ client.on('ready', async () => {
 // FUNÇÃO REUTILIZÁVEL DE PROCESSAMENTO DE MENSAGENS
 // ==========================================
 
+// Envia o payload ao ASP.NET com retentativas. O retry é seguro porque o
+// backend deduplica por messageId.
+async function postWebhook(payload) {
+  const MAX_TENTATIVAS = 3
+  let lastError
+  for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
+    try {
+      return await axios.post(ASPNET_WEBHOOK_URL, payload, { timeout: 15000 })
+    } catch (err) {
+      lastError = err
+      if (tentativa < MAX_TENTATIVAS) {
+        log('WEBHOOK_RETRY', {
+          messageId: payload.messageId,
+          tentativa,
+          error: err.message || String(err),
+        })
+        await new Promise((resolve) => setTimeout(resolve, tentativa * 1000))
+      }
+    }
+  }
+  throw lastError
+}
+
 // options: { source: "system" | "phone" | "contact", isSync: boolean }
 async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
   const { source, isSync = false } = options
@@ -160,8 +195,21 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
 
     const targetJid = enviadaPorMim ? msg.to : msg.from
 
-    // Obtém o contato do destinatário ou remetente real
-    const contato = await msg.getContact()
+    // Obtém o contato do destinatário ou remetente real. Consulta não
+    // essencial: se falhar (ex.: author LID não resolvível), seguimos sem
+    // o pushname em vez de descartar a mensagem inteira.
+    let contatoPushname = null
+    try {
+      const contato = await msg.getContact()
+      contatoPushname = contato?.pushname ?? null
+    } catch (err) {
+      log('GETCONTACT_ERRO', {
+        messageId: serializedId(msg),
+        source: source || '?',
+        error: err.message || String(err),
+      })
+    }
+
     const rawNumber = targetJid.split('@')[0]
     const numeroReal = rawNumber ? rawNumber.replace(/\D/g, '') : null
 
@@ -196,7 +244,7 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
       phoneNumber: numeroReal,
       body: msg.body,
       timestamp: msg.timestamp,
-      notifyName: msg._data?.notifyName || contato.pushname || null,
+      notifyName: msg._data?.notifyName || contatoPushname || null,
       messageType,
       hasMedia,
       mediaUrl,
@@ -204,7 +252,7 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
       mediaFilename,
       mediaSize,
       mediaCaption,
-      messageId: msg.id?._serialized || null,
+      messageId: serializedId(msg),
       isForwarded: msg.isForwarded || false,
       fromMe: enviadaPorMim,
       source: source || (enviadaPorMim ? 'phone' : 'contact'),
@@ -212,10 +260,10 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
       userId: 1,
     }
 
-    const response = await axios.post(ASPNET_WEBHOOK_URL, payload)
+    await postWebhook(payload)
   } catch (err) {
     log('WEBHOOK_ERRO', {
-      messageId: msg.id?._serialized ?? msg.id?.id ?? null,
+      messageId: serializedId(msg) ?? msg.id?.id ?? null,
       source: source || '?',
       isSync,
       error: err.message || String(err),
@@ -235,14 +283,14 @@ client.on('message', async (msg) => {
 client.on('message_create', async (msg) => {
   log('EVENTO_MESSAGE_CREATE', describeMsg(msg, { event: 'message_create' }))
   if (msg.fromMe) {
-    const msgId = msg.id?._serialized
+    const msgId = serializedId(msg)
     const isApiSent = !!msgId && apiSentMessageIds.has(msgId)
     log(
       'MESSAGE_CREATE_FROMME',
       describeMsg(msg, {
         event: 'message_create',
         isApiSent,
-        inApiSentSet: apiSentMessageIds.has(msgId),
+        inApiSentSet: !!msgId && apiSentMessageIds.has(msgId),
       }),
     )
     if (isApiSent) {
@@ -266,8 +314,6 @@ process.on('uncaughtException', (err) => {
     stack: err.stack,
   })
 })
-
-client.initialize()
 
 // ==========================================
 // ENDPOINTS HTTP (API)
@@ -332,9 +378,10 @@ app.post('/api/enviar', async (req, res) => {
         : await client.sendMessage(jid, media, options)
     }
 
-    const messageId = resposta?.id?._serialized ?? `fallback-${Date.now()}`
-    if (resposta?.id?._serialized) {
-      apiSentMessageIds.add(resposta.id._serialized)
+    const realId = serializedId(resposta)
+    const messageId = realId ?? `fallback-${Date.now()}`
+    if (realId) {
+      apiSentMessageIds.add(realId)
     }
     log('ENVIAR_API_OK', {
       jid,
@@ -446,8 +493,18 @@ app.post('/api/sync', async (req, res) => {
 // INICIALIZAÇÃO DO SERVIDOR
 // ==========================================
 
-app.listen(PORT, () => {
+// O servidor HTTP sobe primeiro. Se a porta já estiver em uso (outra instância
+// rodando), o processo encerra antes de inicializar o WhatsApp, evitando a
+// disputa pela mesma sessão do navegador (.wwebjs_auth).
+const server = app.listen(PORT, () => {
   console.log('--------------------------------')
   console.log(`Servidor Gateway rodando na porta: ${PORT}`)
   console.log('--------------------------------')
+  client.initialize()
+})
+
+server.on('error', (err) => {
+  console.error(`Erro ao iniciar o servidor na porta ${PORT}:`, err.message || err)
+  log('SERVER_ERRO', { error: err.message || String(err) })
+  process.exit(1)
 })
