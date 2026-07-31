@@ -30,6 +30,7 @@ public class GetChatFullInfoUseCase : IGetChatFullInfoUseCase
             .Include(c => c.Client)
             .Include(c => c.AssignedTo)
             .Include(c => c.CreatedBy)
+            .Include(c => c.LastMessage)
             .Include(c => c.Occurrences)
                 .ThenInclude(o => o.AssignedTo)
             .FirstOrDefaultAsync(c => c.Id == id);

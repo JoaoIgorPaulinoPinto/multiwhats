@@ -87,6 +87,14 @@
   flex-shrink: 0;
 }
 
+.chatTime {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
 .lastMsg {
   font-size: 12px;
   color: var(--text-muted);

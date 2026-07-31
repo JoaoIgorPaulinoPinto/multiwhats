@@ -6,8 +6,9 @@ import {
   OCCURRENCE_STATUS_COLORS,
   OCCURRENCE_STATUS_LABELS,
 } from '../../constants'
-import { MESSAGE_TYPE_MAP } from '../../types'
 import type { ChatListResponse } from '../../services/chats.service'
+import { MESSAGE_TYPE_MAP } from '../../types'
+import { formatTime } from '../../utils/date-format'
 import { AvatarView } from '../avatar/avatar.view'
 import styles from './chat-sidebar.module.css'
 import { NewChatModal } from './new-chat-modal'
@@ -128,7 +129,7 @@ export function ChatSidebarView({
                     phone,
                     jid,
                     chat.contactId,
-                    chat.lastMessage?.body ?? '',
+                    chat.lastMessage?.body ?? '...',
                     chat.lastMessageAt,
                   )
                 }
@@ -144,6 +145,11 @@ export function ChatSidebarView({
                       </span>
                     )}
                     <label>{phone}</label>
+                    {chat.lastMessageAt && (
+                      <span className={styles.chatTime}>
+                        {formatTime(chat.lastMessageAt)}
+                      </span>
+                    )}
                   </div>
                   {chat.clientName && (
                     <span className={styles.clientName}>{chat.clientName}</span>

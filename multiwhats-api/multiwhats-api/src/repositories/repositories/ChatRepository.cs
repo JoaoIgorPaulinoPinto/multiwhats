@@ -27,9 +27,7 @@ public class ChatRepository : IChatRepository
                 .ThenInclude(c => c.Client)
             .Include(c => c.Client)
             .Include(c => c.AssignedTo)
-            .Include(c => c.Messages
-                .OrderByDescending(m => m.CreatedAt)
-                .Take(1))
+            .Include(c => c.LastMessage)
             .OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -48,7 +46,7 @@ public class ChatRepository : IChatRepository
                 .ThenInclude(c => c.Client)
             .Include(c => c.Client)
             .Include(c => c.AssignedTo)
-            .Include(c => c.Messages.OrderByDescending(m => m.Timestamp).Take(1))
+            .Include(c => c.LastMessage)
             .Include(c => c.Occurrences)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
