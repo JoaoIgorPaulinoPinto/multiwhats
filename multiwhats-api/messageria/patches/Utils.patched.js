@@ -586,7 +586,14 @@ exports.LoadUtils = () => {
 
         if (options.waitUntilMsgSent) await sendMsgResultPromise;
 
-        return window.Store.Msg.get(newMsgKey._serialized);
+        const storedMsg = window.Store.Msg.get(newMsgKey._serialized);
+        if (storedMsg) return storedMsg;
+
+        try {
+            return new window.Store.Msg.modelClass(message);
+        } catch (_) {
+            return undefined;
+        }
     };
 	
     window.WWebJS.editMessage = async (msg, content, options = {}) => {

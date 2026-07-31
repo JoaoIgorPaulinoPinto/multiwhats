@@ -5,6 +5,7 @@ namespace multiwhats_api.src.data.dtos.Responses;
 public record MessageSummaryResponse
 {
     public int Id { get; init; }
+    public string? MessageId { get; init; }
     public string? Body { get; init; }
     public MessageDirection Direction { get; init; }
     public MessageType Type { get; init; }

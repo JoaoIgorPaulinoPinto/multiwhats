@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import { isContactType } from '../../types'
+import type { ChatListResponse } from '../../services/chats.service'
 import {
   formatDateSeparator,
   formatTime,
@@ -37,6 +38,7 @@ interface Props {
   chatContactId?: number | null
   onStartChat?: (phone: string, name: string) => void
   onOccurrenceCreated?: () => void
+  onMerged?: (result: { survivorJid: string; survivor?: ChatListResponse }) => void
 }
 
 export function ChatAreaView({
@@ -49,6 +51,7 @@ export function ChatAreaView({
   lastMessageAt,
   onStartChat,
   onOccurrenceCreated,
+  onMerged,
 }: Props) {
   const {
     inputValue,
@@ -398,6 +401,10 @@ export function ChatAreaView({
           phoneNumber={phoneNumber ?? ''}
           jid={jid}
           onClose={() => setShowInfoPanel(false)}
+          onMerged={(result) => {
+            setShowInfoPanel(false)
+            onMerged?.(result)
+          }}
         />
       )}
     </main>

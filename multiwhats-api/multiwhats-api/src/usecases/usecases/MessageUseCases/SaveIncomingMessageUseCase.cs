@@ -252,11 +252,15 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         chat.UpdateLastMessage(sentAt, message);
         await _chatRepository.UpdateAsync(chat);
 
-        // Mensagens do sistema já são broadcastadas pelo SendMessageUseCase (MessageSent).
-        // Auto-enviadas pelo celular e recebidas precisam ser broadcastadas aqui para
-        // aparecerem em tempo real no frontend. Mensagens de sync são históricas, não broadcastam.
-        // O broadcast roda ANTES do log para que uma falha no log não impeça a propagação.
-        if (!payload.IsSync && (!isSelfSent || source == MessageSource.Phone))
+        // Broadcast de tempo real. O webhook é a fonte canônica: para toda
+        // mensagem não-sync o broadcast acontece AQUI. O SendMessageUseCase
+        // só broadcasta (MessageSent) quando ELE salva a mensagem; se o
+        // webhook já a salvou, o dedup acima retorna antes e evita o
+        // broadcast duplicado. Isso garante exatamente UM broadcast por
+        // mensagem, inclusive para envios via API (antes, na corrida em que
+        // o webhook ganhava do dedup do SendMessageUseCase, nenhum broadcast
+        // acontecia e a mensagem não aparecia em tempo real).
+        if (!payload.IsSync)
         {
             var msgResponse = GetMessagesUseCase.MapToDetailResponse(message);
             await _hubContext.Clients.All.SendAsync("MessageReceived", msgResponse);

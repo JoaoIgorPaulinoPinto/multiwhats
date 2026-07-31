@@ -31,7 +31,7 @@ public class GenerateRegistrationCodeUseCase : IGenerateRegistrationCodeUseCase
 
         for (int i = 0; i < request.Quantity; i++)
         {
-            var codeValue = GenerateCode();
+            var codeValue = await GenerateUniqueCodeAsync();
             var registrationCode = new RegistrationCode(codeValue, userId, expiryHours);
             var created = await _registrationCodeRepository.AddAsync(registrationCode);
 
@@ -58,6 +58,18 @@ public class GenerateRegistrationCodeUseCase : IGenerateRegistrationCodeUseCase
 
     private static string GenerateCode()
     {
-        return Convert.ToHexString(RandomNumberGenerator.GetBytes(4)).ToUpper();
+        return Convert.ToHexString(RandomNumberGenerator.GetBytes(4));
+    }
+
+    private async Task<string> GenerateUniqueCodeAsync()
+    {
+        for (int attempt = 0; attempt < 10; attempt++)
+        {
+            var code = GenerateCode();
+            if (!await _registrationCodeRepository.ExistsAsync(code))
+                return code;
+        }
+
+        throw new InvalidOperationException("Não foi possível gerar um código único. Tente novamente.");
     }
 }

@@ -504,7 +504,10 @@ const server = app.listen(PORT, () => {
 })
 
 server.on('error', (err) => {
-  console.error(`Erro ao iniciar o servidor na porta ${PORT}:`, err.message || err)
+  console.error(
+    `Erro ao iniciar o servidor na porta ${PORT}:`,
+    err.message || err,
+  )
   log('SERVER_ERRO', { error: err.message || String(err) })
   process.exit(1)
 })

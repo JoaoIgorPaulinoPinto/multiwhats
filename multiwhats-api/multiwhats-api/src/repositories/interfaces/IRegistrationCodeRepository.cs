@@ -6,6 +6,7 @@ public interface IRegistrationCodeRepository
 {
     Task<RegistrationCode?> GetByCodeAsync(string code);
     Task<RegistrationCode?> GetTrackedByCodeAsync(string code);
+    Task<bool> ExistsAsync(string code);
     Task<RegistrationCode> AddAsync(RegistrationCode registrationCode);
     Task<RegistrationCode> UpdateAsync(RegistrationCode registrationCode);
     Task<List<RegistrationCode>> GetByCreatorAsync(int userId);

@@ -4,7 +4,6 @@ using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.usecases.interfaces.ChatInterfaces;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
 using multiwhats_api.src.usecases.interfaces.OccurrenceInterfaces;
-using multiwhats_api.src.helpers;
 
 namespace multiwhats_api.src.controllers;
 
@@ -84,10 +83,7 @@ public class ChatsController : ControllerBase
     [HttpPatch("merge")]
     public async Task<IActionResult> MergeChats([FromQuery] string mergeJid, [FromQuery] string toJid)
     {
-        var sanitizedMergeJid = PhoneNumberHelper.Sanitize(mergeJid);
-        var sanitizedToJid = PhoneNumberHelper.Sanitize(toJid);
-
-        var merged = await _mergeChatsUseCase.Execute(sanitizedMergeJid, sanitizedToJid);
+        var merged = await _mergeChatsUseCase.Execute(mergeJid, toJid);
         if (!merged)
             return NotFound(new { message = "Uma ou ambas conversas não encontradas." });
 

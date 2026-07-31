@@ -117,6 +117,9 @@ public class ChatRepository : IChatRepository
 
     public async Task<bool> MergeChatAsync(int sourceId, int destinationId)
     {
+        if (sourceId == destinationId)
+            return true;
+
         var source = await _context.Chats
             .Include(c => c.Contact)
             .FirstOrDefaultAsync(c => c.Id == sourceId);
@@ -141,10 +144,19 @@ public class ChatRepository : IChatRepository
         foreach (var occ in occurrences)
             occ.UpdateChatId(destinationId);
 
-        if (source.Contact is not null)
+        var latestMovedMessage = messages
+            .OrderByDescending(m => m.SentAt)
+            .FirstOrDefault();
+
+        if (latestMovedMessage is not null
+            && (destination.LastMessageAt is null || latestMovedMessage.SentAt > destination.LastMessageAt.Value))
         {
-            source.UnlinkContact();
-            destination.LinkToContact(source.Contact.Id, source.ClientId);
+            destination.UpdateLastMessage(latestMovedMessage.SentAt, latestMovedMessage);
+        }
+
+        if (source.Contact is not null && destination.ContactId is null)
+        {
+            destination.LinkToContact(source.Contact.Id, destination.ClientId ?? source.ClientId);
         }
 
         _context.Chats.Remove(source);

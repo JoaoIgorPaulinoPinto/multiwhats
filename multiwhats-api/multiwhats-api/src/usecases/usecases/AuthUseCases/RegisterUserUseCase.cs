@@ -34,12 +34,13 @@ public class RegisterUserUseCase : IRegisterUserUseCase
             throw new InvalidOperationException($"A senha deve ter no mínimo {minLength} caracteres.");
 
         var requireCode = await _config.GetBoolAsync("Auth:RequireRegistrationCode", false);
+        var normalizedCode = request.RegistrationCode?.Trim().ToUpperInvariant();
         if (requireCode)
         {
-            if (string.IsNullOrWhiteSpace(request.RegistrationCode))
+            if (string.IsNullOrWhiteSpace(normalizedCode))
                 throw new InvalidOperationException("Código de registro é obrigatório.");
 
-            var code = await _registrationCodeRepository.GetTrackedByCodeAsync(request.RegistrationCode);
+            var code = await _registrationCodeRepository.GetTrackedByCodeAsync(normalizedCode);
             if (code == null || !code.IsValid())
                 throw new InvalidOperationException("Código de registro inválido ou expirado.");
         }
@@ -51,9 +52,9 @@ public class RegisterUserUseCase : IRegisterUserUseCase
         var user = new User(request.Name, PasswordHelper.Hash(request.Password));
         var created = await _userRepository.AddAsync(user);
 
-        if (requireCode && !string.IsNullOrWhiteSpace(request.RegistrationCode))
+        if (requireCode && !string.IsNullOrWhiteSpace(normalizedCode))
         {
-            var code = await _registrationCodeRepository.GetTrackedByCodeAsync(request.RegistrationCode);
+            var code = await _registrationCodeRepository.GetTrackedByCodeAsync(normalizedCode);
             if (code != null)
             {
                 code.MarkAsUsed(created.Id);

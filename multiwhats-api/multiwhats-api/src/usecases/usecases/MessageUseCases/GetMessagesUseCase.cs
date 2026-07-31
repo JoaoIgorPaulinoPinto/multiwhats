@@ -95,6 +95,7 @@ public class GetMessagesUseCase : IGetMessagesUseCase
         return new MessageSummaryResponse
         {
             Id = message.Id,
+            MessageId = message.WhatssAppMessageId,
             Body = message.Body,
             Direction = message.Direction,
             Type = message.Type,
