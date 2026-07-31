@@ -107,13 +107,16 @@ public class SendMessageUseCase : ISendMessageUseCase
                 Console.WriteLine("[SendMessage] Aviso: Dispositivo não encontrado. fromJid usará o JID da requisição como fallback.");
             }
 
-            // Dedup: se o webhook já salvou esta mensagem com o mesmo messageId, não salvar novamente
+            // Dedup: se o webhook já salvou esta mensagem com o mesmo messageId,
+            // corrige a origem para System (o message_create do Node pode ter
+            // classificado como "phone" por causa da corrida) e não salva de novo.
             if (!string.IsNullOrEmpty(messageId))
             {
                 var existing = await _messageRepository.GetByMessageIdAsync(messageId);
                 if (existing != null)
                 {
-                    Console.WriteLine($"[SendMessage] Duplicata ignorada msgId={messageId} (já existe id={existing.Id})");
+                    Console.WriteLine($"[SendMessage] Duplicata encontrada msgId={messageId} (já existe id={existing.Id}); corrigindo origem para System");
+                    await _messageRepository.MarkAsSystemAsync(messageId);
                     return true;
                 }
             }
@@ -136,7 +139,9 @@ public class SendMessageUseCase : ISendMessageUseCase
                 mediaMimeType: fields.mediaMimeType,
                 mediaFilename: fields.mediaFilename,
                 mediaSize: fields.mediaSize,
-                mediaCaption: fields.mediaCaption
+                mediaCaption: fields.mediaCaption,
+                source: MessageSource.System,
+                fromMe: true
             );
 
             await _messageRepository.AddAsync(message);

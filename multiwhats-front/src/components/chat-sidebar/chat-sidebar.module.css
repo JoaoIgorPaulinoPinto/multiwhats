@@ -48,6 +48,7 @@
   padding: 10px 14px;
   cursor: pointer;
   transition: background 0.15s;
+  border-bottom: 1px solid #ffffff07;
 }
 
 .chatItem:hover {

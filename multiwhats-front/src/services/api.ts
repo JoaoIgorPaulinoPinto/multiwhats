@@ -70,4 +70,12 @@ class ApiClient {
   }
 }
 
-export const api = new ApiClient(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5261")
+function resolveApiUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL
+  if (typeof window !== "undefined") {
+    return `${window.location.protocol}//${window.location.hostname}:5261`
+  }
+  return "http://localhost:5261"
+}
+
+export const api = new ApiClient(resolveApiUrl())

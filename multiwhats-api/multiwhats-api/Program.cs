@@ -43,17 +43,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
 builder.Services.AddHttpContextAccessor();
 
-// Allows any localhost/127.0.0.1 origin (dev frontend can run on any port)
+// Allows requests from any origin
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("SignalRPolicy", policy =>
     {
-        policy.SetIsOriginAllowed(origin =>
-        {
-            if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
-                return uri.Host is "localhost" or "127.0.0.1" or "::1";
-            return false;
-        })
+        policy.SetIsOriginAllowed(_ => true)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();

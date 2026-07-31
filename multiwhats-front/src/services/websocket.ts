@@ -1,7 +1,15 @@
 import * as signalR from "@microsoft/signalr"
 import type { MessageResponse } from "../types/chat"
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5261"
+function resolveApiUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL
+  if (typeof window !== "undefined") {
+    return `${window.location.protocol}//${window.location.hostname}:5261`
+  }
+  return "http://localhost:5261"
+}
+
+const BASE_URL = resolveApiUrl()
 
 export type WsConnectionState = "disconnected" | "connecting" | "connected" | "reconnecting"
 

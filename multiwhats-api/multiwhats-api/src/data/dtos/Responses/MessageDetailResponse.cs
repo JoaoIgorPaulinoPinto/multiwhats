@@ -23,6 +23,8 @@ public record MessageDetailResponse
     public string? MediaCaption { get; init; }
     public DeliveryStatus DeliveryStatus { get; init; }
     public bool IsForwarded { get; init; }
+    public MessageSource Source { get; init; }
+    public bool FromMe { get; init; }
     public int ChatId { get; init; }
     public int? UserId { get; init; }
     public int? OccurrenceId { get; init; }

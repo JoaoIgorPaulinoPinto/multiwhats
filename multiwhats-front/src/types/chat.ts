@@ -13,7 +13,7 @@ export interface ChatListResponse {
   clientId: number | null
   clientName: string | null
   lastMessageAt: string | null
-  lastMessage: {Type: string, Body:string}
+  lastMessage: { type: number; body: string | null } | null
   assignedToUserName: string | null
   messageCount: number
   occurrences: OccurrenceSummary[] | null
@@ -30,7 +30,7 @@ export interface ChatDetailResponse {
   clientId: number | null
   clientName: string | null
   lastMessageAt: string | null
-  lastMessage: {messageType: string, messgeBody:string}
+  lastMessage: { type: number; body: string | null } | null
   occurrences: OccurrenceDetail[] | null
   assignedToUserId: number | null
   assignedToUserName: string | null
@@ -61,6 +61,8 @@ export interface MessageResponse {
   mediaCaption: string | null
   deliveryStatus: DeliveryStatus
   isForwarded: boolean
+  source?: number | null
+  fromMe?: boolean
   chatId: number
   userId: number | null
   occurrenceId: number | null

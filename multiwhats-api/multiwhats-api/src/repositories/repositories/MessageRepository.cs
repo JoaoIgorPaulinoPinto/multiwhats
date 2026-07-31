@@ -124,4 +124,15 @@ public class MessageRepository : IMessageRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(m => m.WhatssAppMessageId == messageId);
     }
+
+    public async Task<bool> MarkAsSystemAsync(string messageId)
+    {
+        var message = await _context.Messages
+            .FirstOrDefaultAsync(m => m.WhatssAppMessageId == messageId);
+        if (message == null) return false;
+
+        message.MarkAsSystem();
+        await _context.SaveChangesAsync();
+        return true;
+    }
 }

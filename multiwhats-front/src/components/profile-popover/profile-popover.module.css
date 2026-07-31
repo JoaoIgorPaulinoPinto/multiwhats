@@ -2,7 +2,7 @@
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.397);
   border-radius: 25%;
-background: linear-gradient(to right, #323750, #224b6d);
+  background: var(--background-seccondery);
 }
 
 .trigger {
@@ -44,21 +44,21 @@ background: linear-gradient(to right, #323750, #224b6d);
   gap: 10px;
   z-index: 10;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  width: auto;
+  width: fit-content;
 }
 
 .popover img {
-  width: 64px;
-  height: 64px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
-  margin-right: 10px;
 }
 
 .userDatail {
   gap: 5px;
   display: flex;
   flex-direction: column;
-  min-width: 150px;
+  display: flex;
+  text-wrap: nowrap;
 }
 
 .name {

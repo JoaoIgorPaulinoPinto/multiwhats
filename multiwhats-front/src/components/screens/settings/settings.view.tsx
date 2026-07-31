@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Check, CheckCircle2, ChevronDown, Copy, KeyRound, RefreshCw, RotateCcw, Save, Search, Settings2, TicketPlus, UserCog, X } from "lucide-react"
+import { Check, CheckCircle2, ChevronDown, Copy, KeyRound, RefreshCw, RotateCcw, Save, Search, Settings2, TicketPlus, UserCog, X, XCircle } from "lucide-react"
 import {
   useSettings,
   GROUP_LABELS,
@@ -14,6 +14,7 @@ import {
   timeZoneLabel,
 } from "./settings.logic"
 import type { SystemParameterResponse } from "../../../services/settings.service"
+import type { RegistrationCodeResponse } from "../../../services/auth.service"
 import { useAuthStore } from "../../../stores/auth-store"
 import { UsersView } from "../users/users.view"
 import styles from "./settings.module.css"
@@ -54,6 +55,18 @@ function formatExpiry(expiresAt: string): string {
   return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
 }
 
+function codeStatus(c: RegistrationCodeResponse): { label: string; valid: boolean } {
+  if (c.isUsed) return { label: "Usado", valid: false }
+  if (new Date(c.expiresAt).getTime() <= Date.now()) return { label: "Expirado", valid: false }
+  return { label: "Válido", valid: true }
+}
+
+function codeInfo(c: RegistrationCodeResponse): string {
+  if (c.isUsed) return "Usado — não pode mais ser utilizado"
+  if (new Date(c.expiresAt).getTime() <= Date.now()) return `Expirou em ${formatExpiry(c.expiresAt)}`
+  return `Válido até ${formatExpiry(c.expiresAt)}`
+}
+
 export function SettingsView() {
   const {
     filteredGroups,
@@ -84,14 +97,14 @@ export function SettingsView() {
   const canGenerateCode = user?.role === "Admin" || user?.role === "Dev"
 
   const [tab, setTab] = useState<Tab>("params")
-  const [copiedCode, setCopiedCode] = useState(false)
+  const [copiedCode, setCopiedCode] = useState<string | null>(null)
   const showParams = tab === "params"
   const activeDirtyCount = Object.keys(dirty).filter((k) => dirty[k]).length
 
   function copyCode(code: string) {
     navigator.clipboard.writeText(code).catch(() => {})
-    setCopiedCode(true)
-    setTimeout(() => setCopiedCode(false), 2000)
+    setCopiedCode(code)
+    setTimeout(() => setCopiedCode(null), 2000)
   }
 
   function toggleListItem(param: SystemParameterResponse, item: string) {
@@ -219,16 +232,23 @@ export function SettingsView() {
                     </button>
                     {generatedCodes.length > 0 && (
                       <div className={styles.codeResultList}>
-                        {generatedCodes.map((c) => (
-                          <div key={c.id} className={styles.codeResult}>
-                            <span className={styles.codeValue}>{c.code}</span>
-                            <span className={styles.codeExpiry}>Válido até {formatExpiry(c.expiresAt)}</span>
-                            <button className={styles.copyBtn} onClick={() => copyCode(c.code)}>
-                              {copiedCode ? <Check size={14} /> : <Copy size={14} />}
-                              {copiedCode ? "Copiado" : "Copiar"}
-                            </button>
-                          </div>
-                        ))}
+                        {generatedCodes.map((c) => {
+                          const status = codeStatus(c)
+                          return (
+                            <div key={c.id} className={styles.codeResult}>
+                              <span className={styles.codeValue}>{c.code}</span>
+                              <span className={`${styles.codeStatus} ${status.valid ? styles.codeStatusValid : styles.codeStatusInvalid}`}>
+                                {status.valid ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                                {status.label}
+                              </span>
+                              <span className={styles.codeExpiry}>{codeInfo(c)}</span>
+                              <button className={styles.copyBtn} onClick={() => copyCode(c.code)}>
+                                {copiedCode === c.code ? <Check size={14} /> : <Copy size={14} />}
+                                {copiedCode === c.code ? "Copiado" : "Copiar"}
+                              </button>
+                            </div>
+                          )
+                        })}
                       </div>
                     )}
                   </div>

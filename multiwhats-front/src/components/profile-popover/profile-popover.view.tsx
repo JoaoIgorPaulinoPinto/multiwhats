@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { LogOut, User } from "lucide-react"
-import { ThemeToggleView } from "../theme-toggle/theme-toggle.view"
-import { useProfilePopover } from "./profile-popover.logic"
-import { useAuthStore } from "../../stores/auth-store"
-import { AvatarView } from "../avatar/avatar.view"
-import styles from "./profile-popover.module.css"
+import { LogOut, User } from 'lucide-react'
+import { useAuthStore } from '../../stores/auth-store'
+import { AvatarView } from '../avatar/avatar.view'
+import { ThemeToggleView } from '../theme-toggle/theme-toggle.view'
+import { useProfilePopover } from './profile-popover.logic'
+import styles from './profile-popover.module.css'
 
 export function ProfilePopoverView() {
   const { open, toggle, close } = useProfilePopover()
@@ -22,10 +22,10 @@ export function ProfilePopoverView() {
         <>
           <div className={styles.overlay} onClick={close} />
           <div className={styles.popover}>
-            <AvatarView name={user?.name ?? "?"} size={64} fontSize={28} />
+            <AvatarView name={user?.name ?? '?'} size={50} fontSize={28} />
             <div className={styles.userDatail}>
-              <strong className={styles.name}>{user?.name ?? "Usuário"}</strong>
-              <span className={styles.role}>{user?.role ?? "Support"}</span>
+              <strong className={styles.name}>{user?.name ?? 'Usuário'}</strong>
+              <span className={styles.role}>{user?.role ?? 'Support'}</span>
             </div>
             <div className={styles.toggleRow}>
               <ThemeToggleView />

@@ -342,7 +342,10 @@ export function useSettings() {
     setGeneratingCode(true)
     try {
       const codes = await authService.generateCodes(1)
-      setGeneratedCodes(codes)
+      setGeneratedCodes((prev) => {
+        const existing = new Set(prev.map((c) => c.id))
+        return [...codes.filter((c) => !existing.has(c.id)), ...prev]
+      })
       toast.success("Código de permissão gerado")
     } catch (e) {
       console.error("[Settings] erro ao gerar código:", e)

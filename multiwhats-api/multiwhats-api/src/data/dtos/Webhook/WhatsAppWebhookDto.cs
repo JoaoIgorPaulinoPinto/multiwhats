@@ -20,4 +20,6 @@ public record WhatsAppWebhookDto
     public bool IsForwarded { get; init; }
     public int UserId { get; init; }
     public bool FromMe { get; init; }
+    public string? Source { get; init; }
+    public bool IsSync { get; init; }
 }
