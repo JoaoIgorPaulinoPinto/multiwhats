@@ -2,6 +2,7 @@ using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.ClientInterfaces;
+using multiwhats_api.src.usecases.usecases.ContactUseCases;
 
 namespace multiwhats_api.src.usecases.usecases.ClientUseCases;
 
@@ -60,5 +61,19 @@ public class GetClientsUseCase : IGetClientsUseCase
             CreatedAt = client.CreatedAt,
             LastUpdate = client.LastUpdate
         };
+    }
+
+    public async Task<List<ContactListResponse>> ExecuteContacts(int clientId)
+    {
+        var contacts = await _clientRepository.GetContactsAsync(clientId);
+
+        await _useCaseLogger.LogAsync(
+            action: "GetClientContacts",
+            entityType: "Client",
+            entityId: clientId,
+            description: $"Listed contacts for client #{clientId} (count: {contacts.Count})"
+        );
+
+        return contacts.Select(CreateContactUseCase.MapToListResponse).ToList();
     }
 }

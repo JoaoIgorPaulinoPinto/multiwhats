@@ -13,6 +13,7 @@ services:
       - JwtSettings__Issuer=MinhaApiEmissor
       - JwtSettings__Audience=MeuAppCliente
       - JwtSettings__ExpiryInMinutes=60
+      - Messageria__BaseUrl=http://messageria:3333
     depends_on:
       - messageria
     networks:

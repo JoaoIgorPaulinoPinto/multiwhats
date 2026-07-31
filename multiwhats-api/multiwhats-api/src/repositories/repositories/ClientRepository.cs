@@ -60,7 +60,7 @@ public class ClientRepository : IClientRepository
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var client = await _context.Clients.FindAsync(id);
+        var client = await _context.Clients.FirstOrDefaultAsync(c => c.Id == id);
         if (client is not null)
         {
             _context.Clients.Remove(client);
@@ -74,6 +74,7 @@ public class ClientRepository : IClientRepository
     {
         return await _context.Contacts
             .AsNoTracking()
+            .Include(c => c.Client)
             .Where(c => c.ClientId == clientId)
             .ToListAsync();
     }

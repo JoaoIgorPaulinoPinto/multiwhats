@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "nraRedPPzFc=",
+  "dgSpecHash": "1/gDYzNEvfA=",
   "success": true,
   "projectFilePath": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\multiwhats-api.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\joaoi\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\joaoi\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\joaoi\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\10.0.10\\microsoft.aspnetcore.authentication.jwtbearer.10.0.10.nupkg.sha512",
     "C:\\Users\\joaoi\\.nuget\\packages\\microsoft.bcl.cryptography\\10.0.2\\microsoft.bcl.cryptography.10.0.2.nupkg.sha512",

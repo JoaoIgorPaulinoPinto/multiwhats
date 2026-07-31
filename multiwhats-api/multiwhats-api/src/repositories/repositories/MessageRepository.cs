@@ -71,7 +71,7 @@ public class MessageRepository : IMessageRepository
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var message = await _context.Messages.FindAsync(id);
+        var message = await _context.Messages.FirstOrDefaultAsync(m => m.Id == id);
         if (message is not null)
         {
             _context.Messages.Remove(message);

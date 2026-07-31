@@ -36,7 +36,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = "Admin, Dev")]
+    [Authorize(Roles = "Admin,Dev")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserRequest request)
     {
         try

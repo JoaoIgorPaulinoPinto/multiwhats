@@ -6,4 +6,5 @@ public interface IGetClientsUseCase
 {
     Task<List<ClientListResponse>> ExecuteAll();
     Task<ClientDetailResponse?> ExecuteById(int id);
+    Task<List<ContactListResponse>> ExecuteContacts(int clientId);
 }

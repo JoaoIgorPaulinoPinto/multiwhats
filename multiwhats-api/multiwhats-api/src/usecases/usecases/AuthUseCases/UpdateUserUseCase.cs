@@ -1,5 +1,6 @@
 using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.data.dtos.Responses;
+using multiwhats_api.src.helpers;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.AuthInterfaces;
@@ -46,7 +47,7 @@ public class UpdateUserUseCase : IUpdateUserUseCase
             if (request.NewPassword.Length < minLength)
                 throw new InvalidOperationException($"A senha deve ter no mínimo {minLength} caracteres.");
 
-            user.ChangePassword(request.NewPassword);
+            user.ChangePassword(PasswordHelper.Hash(request.NewPassword));
         }
 
         if (request.Role.HasValue)

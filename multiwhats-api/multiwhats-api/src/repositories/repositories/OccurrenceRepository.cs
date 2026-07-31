@@ -64,7 +64,7 @@ public class OccurrenceRepository : IOccurrenceRepository
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var occurrence = await _context.Occurrences.FindAsync(id);
+        var occurrence = await _context.Occurrences.FirstOrDefaultAsync(o => o.Id == id);
         if (occurrence is not null)
         {
             _context.Occurrences.Remove(occurrence);

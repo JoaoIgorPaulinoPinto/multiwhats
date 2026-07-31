@@ -23,6 +23,7 @@ public class SendMessageUseCase : ISendMessageUseCase
     private readonly UseCaseLogger _useCaseLogger;
     private readonly IHubContext<WhatsappHub> _hubContext;
     private readonly IUserRepository _userRepository;
+    private readonly IConfiguration _configuration;
 
     public SendMessageUseCase(
         HttpClient httpClient,
@@ -33,7 +34,8 @@ public class SendMessageUseCase : ISendMessageUseCase
         MessageStrategyFactory strategyFactory,
         UseCaseLogger useCaseLogger,
         IHubContext<WhatsappHub> hubContext,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        IConfiguration configuration)
     {
         _httpClient = httpClient;
         _messageRepository = messageRepository;
@@ -44,6 +46,7 @@ public class SendMessageUseCase : ISendMessageUseCase
         _useCaseLogger = useCaseLogger;
         _hubContext = hubContext;
         _userRepository = userRepository;
+        _configuration = configuration;
     }
 
 
@@ -65,7 +68,7 @@ public class SendMessageUseCase : ISendMessageUseCase
                 "application/json"
             );
 
-            var response = await _httpClient.PostAsync("http://localhost:3333/api/enviar", jsonContent);
+            var response = await _httpClient.PostAsync(GetMessageriaUrl(), jsonContent);
             var responseBody = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"[ASP.NET] Resposta do Node.js -> Status: {response.StatusCode} | Corpo: {responseBody}");
 
@@ -173,5 +176,13 @@ public class SendMessageUseCase : ISendMessageUseCase
     private static string Truncate(string? value, int maxLength)
     {
         return value?.Length > maxLength ? value[..maxLength] + "..." : value ?? "";
+    }
+
+    private string GetMessageriaUrl()
+    {
+        var baseUrl = _configuration["Messageria:BaseUrl"];
+        return string.IsNullOrWhiteSpace(baseUrl)
+            ? "http://localhost:3333/api/enviar"
+            : $"{baseUrl.TrimEnd('/')}/api/enviar";
     }
 }

@@ -97,7 +97,7 @@ public class ChatRepository : IChatRepository
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var chat = await _context.Chats.FindAsync(id);
+        var chat = await _context.Chats.FirstOrDefaultAsync(c => c.Id == id);
         if (chat is not null)
         {
             _context.Chats.Remove(chat);
