@@ -211,7 +211,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .content {
@@ -227,18 +229,26 @@
 }
 
 .formStack {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-width: 760px;
+  columns: 2;
+  column-gap: 16px;
+  width: 100%;
 }
 
 .formCard {
+  display: flex;
+  flex-direction: column;
+
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
+  break-inside: avoid;
+  margin-bottom: 16px;
+  transition: 0.2s ease;
+  height: fit-content;
 }
+
+
 
 .groupHeader {
   width: 100%;
@@ -466,12 +476,12 @@ textarea.fieldInput {
   transition: transform 0.2s, background 0.2s;
 }
 
-.switchInput:checked + .switchTrack {
+.switchInput:checked+.switchTrack {
   background: var(--primary);
   border-color: var(--primary);
 }
 
-.switchInput:checked + .switchTrack .switchThumb {
+.switchInput:checked+.switchTrack .switchThumb {
   transform: translateX(20px);
   background: #fff;
 }
@@ -481,7 +491,7 @@ textarea.fieldInput {
   align-items: center;
   gap: 8px;
   margin-top: 16px;
-  max-width: 760px;
+  width: 100%;
   padding: 10px 14px;
   border-radius: 10px;
   background: rgba(234, 179, 8, 0.1);
@@ -504,14 +514,14 @@ textarea.fieldInput {
   font-size: 13px;
   border: 1px dashed var(--border);
   border-radius: 12px;
-  max-width: 760px;
+  width: 100%;
 }
 
 .skeletonList {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  max-width: 760px;
+  width: 100%;
 }
 
 .skeletonGroup {
@@ -564,7 +574,7 @@ textarea.fieldInput {
   flex-direction: column;
   gap: 10px;
   padding: 20px;
-  max-width: 760px;
+  width: 100%;
   margin-bottom: 16px;
   border-color: rgba(255, 255, 255, 0.1);
 }

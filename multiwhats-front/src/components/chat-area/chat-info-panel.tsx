@@ -41,7 +41,7 @@ export function ChatInfoPanel({ chatId, contactName, phoneNumber, jid, onClose }
     load()
   }, [load])
 
-  const name = info?.name ?? contactName
+  const name = info?.contactName ?? info?.name ?? contactName
   const phone = info?.phoneNumber ?? phoneNumber
   const statusLabel = (status: number) => OCCURRENCE_STATUS_LABELS[STATUS_MAP[status] ?? "Open"]
   const priorityLabel = (priority: number) => PRIORITY_LABELS[priority as Priority] ?? String(priority)

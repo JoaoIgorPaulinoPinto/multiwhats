@@ -147,7 +147,8 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
                     {
                         Jid = payload.From,
                         Text = unsupportedMsg,
-                        Type = MessageType.Text
+                        Type = MessageType.Text,
+                        SenderName = await GetAutoReplySenderNameAsync()
                     };
                     await _sendMessageUseCase.Execute(reply, userId.Value);
                 }
@@ -181,7 +182,8 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
                     {
                         Jid = payload.From,
                         Text = outsideMsg,
-                        Type = MessageType.Text
+                        Type = MessageType.Text,
+                        SenderName = await GetAutoReplySenderNameAsync()
                     };
                     await _sendMessageUseCase.Execute(reply, userId.Value);
                 }
@@ -259,6 +261,12 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
     private static bool IsMediaType(MessageType type)
     {
         return type is MessageType.Image or MessageType.Audio or MessageType.Video or MessageType.Document or MessageType.Sticker;
+    }
+
+    private async Task<string?> GetAutoReplySenderNameAsync()
+    {
+        var name = await _config.GetStringAsync("Replies:SenderName", "");
+        return string.IsNullOrWhiteSpace(name) ? null : name;
     }
 
     private async Task<bool> IsOutsideBusinessHoursAsync(long unixTimestamp)

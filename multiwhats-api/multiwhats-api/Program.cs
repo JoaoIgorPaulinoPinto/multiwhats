@@ -43,12 +43,17 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
 builder.Services.AddHttpContextAccessor();
 
-// Allows frontend (localhost:3000, :5173) to access the API
+// Allows any localhost/127.0.0.1 origin (dev frontend can run on any port)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("SignalRPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+        policy.SetIsOriginAllowed(origin =>
+        {
+            if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                return uri.Host is "localhost" or "127.0.0.1" or "::1";
+            return false;
+        })
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();

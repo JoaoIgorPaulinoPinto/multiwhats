@@ -51,6 +51,10 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
   const [isDragging, setIsDragging] = useState(false)
   const dragCounter = useRef(0)
 
+  const items = messages
+    .map((msg, idx) => ({ msg, prev: idx > 0 ? messages[idx - 1] : undefined }))
+    .reverse()
+
   const handleImageClick = useCallback((src: string, alt: string) => {
     setLightboxSrc(src)
     setLightboxAlt(alt)
@@ -140,6 +144,19 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
       </header>
 
       <section className={styles.messages}>
+        {sendingCount > 0 && Array.from({ length: sendingCount }).map((_, i) => (
+          <div key={`sending-${i}`} className={styles.sent}>
+            <div className={styles.messageRow}>
+              <div className={`${styles.bubble} ${styles.sendingBubble}`}>
+                <span className={styles.sendingDots}>
+                  <span className={styles.dot} />
+                  <span className={styles.dot} />
+                  <span className={styles.dot} />
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
         {messages.length === 0 ? (
           <div className={styles.empty}>
             {chatId ? (
@@ -155,8 +172,7 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
             ) : "Selecione um contato para ver as mensagens"}
           </div>
         ) : (
-          messages.map((msg, idx) => {
-            const prev = idx > 0 ? messages[idx - 1] : undefined
+          items.map(({ msg, prev }) => {
             const showDate = shouldShowDateSeparator(msg, prev)
             return (
               <div key={msg.id}>
@@ -196,19 +212,6 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
             )
           })
         )}
-        {sendingCount > 0 && Array.from({ length: sendingCount }).map((_, i) => (
-          <div key={`sending-${i}`} className={styles.sent}>
-            <div className={styles.messageRow}>
-              <div className={`${styles.bubble} ${styles.sendingBubble}`}>
-                <span className={styles.sendingDots}>
-                  <span className={styles.dot} />
-                  <span className={styles.dot} />
-                  <span className={styles.dot} />
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
       </section>
 
       {mediaPreview && (

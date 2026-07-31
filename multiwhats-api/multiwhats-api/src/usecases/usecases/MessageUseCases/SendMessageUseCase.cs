@@ -55,7 +55,7 @@ public class SendMessageUseCase : ISendMessageUseCase
             var strategy = await _strategyFactory.Get(request.Type);
 
             var user = await _userRepository.GetByIdAsync(userId);
-            var userName = user?.Name;
+            var userName = string.IsNullOrWhiteSpace(request.SenderName) ? user?.Name : request.SenderName;
 
             var payloadNode = strategy.BuildNodePayload(request.Jid, request, userName);
 

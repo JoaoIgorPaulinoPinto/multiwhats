@@ -26,10 +26,10 @@ public class GetChatFullInfoUseCase : IGetChatFullInfoUseCase
         var chat = await _context.Chats
             .AsNoTracking()
             .Include(c => c.Contact)
+                .ThenInclude(c => c.Client)
             .Include(c => c.Client)
             .Include(c => c.AssignedTo)
             .Include(c => c.CreatedBy)
-            .Include(c => c.Messages.OrderByDescending(m => m.Timestamp).Take(1))
             .Include(c => c.Occurrences)
                 .ThenInclude(o => o.AssignedTo)
             .FirstOrDefaultAsync(c => c.Id == id);
@@ -51,7 +51,12 @@ public class GetChatFullInfoUseCase : IGetChatFullInfoUseCase
             .ToDictionaryAsync(g => g.Direction, g => g.Count);
 
         var mediaSentCount = await _context.Messages
-            .CountAsync(m => m.ChatId == id && m.Direction == MessageDirection.Outgoing && IsMediaType(m.Type));
+            .CountAsync(m => m.ChatId == id && m.Direction == MessageDirection.Outgoing
+                && (m.Type == MessageType.Image
+                    || m.Type == MessageType.Audio
+                    || m.Type == MessageType.Video
+                    || m.Type == MessageType.Document
+                    || m.Type == MessageType.Sticker));
 
         var mediaCount = typeCounts.GetValueOrDefault(MessageType.Image)
             + typeCounts.GetValueOrDefault(MessageType.Video)
@@ -91,9 +96,9 @@ public class GetChatFullInfoUseCase : IGetChatFullInfoUseCase
             ContactProfilePicUrl = chat.Contact?.ProfilePicUrl,
             ContactIsBlocked = chat.Contact?.IsBlocked ?? false,
             ContactIsGroup = chat.Contact?.IsGroup ?? false,
-            ClientId = chat.ClientId,
-            ClientName = chat.Client?.Name,
-            ClientMainPhoneNumber = chat.Client?.MainPhoneNumber,
+            ClientId = chat.ClientId ?? chat.Contact?.ClientId,
+            ClientName = chat.Client?.Name ?? chat.Contact?.Client?.Name,
+            ClientMainPhoneNumber = chat.Client?.MainPhoneNumber ?? chat.Contact?.Client?.MainPhoneNumber,
             AssignedToUserId = chat.AssignedToUserId,
             AssignedToUserName = chat.AssignedTo?.Name,
             CreatedByUserId = chat.CreatedByUserId,
@@ -123,7 +128,4 @@ public class GetChatFullInfoUseCase : IGetChatFullInfoUseCase
             LastUpdate = chat.LastUpdate
         };
     }
-
-    private static bool IsMediaType(MessageType type) =>
-        type is MessageType.Image or MessageType.Audio or MessageType.Video or MessageType.Document or MessageType.Sticker;
 }

@@ -12,7 +12,7 @@ namespace multiwhats_api.src.controllers;
 [Route("api/admin/config")]
 //[Authorize(Roles = "Admin, Dev")]
 public class SystemConfigController : ControllerBase
-{
+{   
     private readonly ISystemParameterRepository _systemParameterRepository;
     private readonly SystemConfigService _systemConfigService;
 

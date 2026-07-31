@@ -379,7 +379,10 @@ export function SettingsView() {
                             }
 
                             return (
-                              <div key={key} className={`${styles.field} ${error ? styles.fieldInvalid : ""}`}>
+                              <div
+                                key={key}
+                                className={`${styles.field} ${error ? styles.fieldInvalid : ""}`}
+                              >
                                 <div className={styles.fieldLabelRow}>
                                   <label className={styles.fieldLabel} title={key}>
                                     {label}

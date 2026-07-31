@@ -22,6 +22,7 @@ public class SystemConfigService
         ("Occurrence:StatusFlow", """["Open","InProgress","Resolved","Closed"]""", "JsonList", "Occurrence", "Allowed occurrence status flow sequence"),
         ("Media:AllowedTypes", """["Image","Audio","Video","Document","Sticker"]""", "JsonList", "Media", "Allowed media types for messages"),
         ("Media:UnsupportedMessage", "Desculpe, não consigo processar este tipo de mídia. Por favor, envie apenas texto, imagens, vídeos ou documentos.", "String", "Media", "Auto-reply sent when an unsupported media type is received"),
+        ("Replies:SenderName", "", "String", "Replies", "Name shown as sender on automatic replies"),
         ("Business:Enabled", "false", "Bool", "Business", "Enable business hours and working days checking"),
         ("Business:OpenTime", "08:00", "String", "Business", "Opening time (format HH:mm)"),
         ("Business:CloseTime", "18:00", "String", "Business", "Closing time (format HH:mm)"),

@@ -10,6 +10,8 @@ public record SendMessageRequest
 
     public string? Text { get; init; }
 
+    public string? SenderName { get; init; }
+
     public MessageType Type { get; init; } = MessageType.Text;
 
     public string? MediaBase64 { get; init; }

@@ -1,18 +1,19 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Clock, KeyRound, LayoutDashboard, Paperclip, Settings2 } from "lucide-react"
+import { Bot, Clock, KeyRound, LayoutDashboard, Paperclip, Settings2 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { settingsService, type SystemParameterResponse } from "../../../services/settings.service"
 import { authService, type RegistrationCodeResponse } from "../../../services/auth.service"
 import { useToast } from "../../../components/toast/toast.provider"
 
-export const groupOrder = ["Auth", "Business", "Media", "Occurrence", "Geral"]
+export const groupOrder = ["Auth", "Business", "Media", "Replies", "Occurrence", "Geral"]
 
 export const GROUP_LABELS: Record<string, string> = {
   Auth: "Autenticação",
   Business: "Horário de funcionamento",
   Media: "Mídia",
+  Replies: "Respostas automáticas",
   Occurrence: "Ocorrências",
   Geral: "Geral",
 }
@@ -21,6 +22,7 @@ export const GROUP_ICONS: Record<string, LucideIcon> = {
   Auth: KeyRound,
   Business: Clock,
   Media: Paperclip,
+  Replies: Bot,
   Occurrence: LayoutDashboard,
   Geral: Settings2,
 }
@@ -44,6 +46,7 @@ export const PARAM_LABELS: Record<string, string> = {
   "Business:Timezone": "Fuso horário",
   "Media:AllowedTypes": "Tipos de mídia aceitos",
   "Media:UnsupportedMessage": "Resposta para mídia não suportada",
+  "Replies:SenderName": "Nome fictício de quem responde às mensagens automáticas",
   "Occurrence:StatusFlow": "Ordem dos status das ocorrências",
 }
 
@@ -59,6 +62,7 @@ export const PARAM_HINTS: Record<string, string> = {
   "Business:Timezone": "Fuso horário usado para calcular o horário de funcionamento.",
   "Media:AllowedTypes": "Selecione os tipos de mídia que o sistema aceita.",
   "Media:UnsupportedMessage": "Resposta automática enviada quando a mídia recebida não é aceita.",
+  "Replies:SenderName": "Nome fictício exibido como remetente em todas as respostas automáticas (ex.: mídia não suportada, fora do horário). Deixe vazio para usar o nome do usuário logado.",
   "Occurrence:StatusFlow": "Selecione os status na ordem em que devem ser usados.",
 }
 
