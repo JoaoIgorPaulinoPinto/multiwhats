@@ -52,7 +52,7 @@ public class SendMessageUseCase : ISendMessageUseCase
         try
         {
             
-            var strategy = _strategyFactory.Get(request.Type);
+            var strategy = await _strategyFactory.Get(request.Type);
 
             var user = await _userRepository.GetByIdAsync(userId);
             var userName = user?.Name;

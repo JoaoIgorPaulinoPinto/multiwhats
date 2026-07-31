@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { kanbanService } from "../services/kanban.service"
 
-export function useOccurrenceModal(chatId: number | null) {
+export function useOccurrenceModal(chatId: number | null, onCreated?: () => void) {
   const [showModal, setShowModal] = useState(false)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -39,6 +39,7 @@ export function useOccurrenceModal(chatId: number | null) {
         chatId,
       })
       closeModal()
+      onCreated?.()
     } catch (e) {
       const message = e instanceof Error ? e.message : "Erro ao criar ocorrência"
       setError(message)

@@ -7,6 +7,7 @@ import { useChatArea } from "./chat-area.logic"
 import { SaveContactModal, OccurrenceModal } from "./chat-area-modals"
 import { MessageMedia } from "../message-media/message-media.view"
 import { Lightbox } from "../lightbox/lightbox.view"
+import { ChatInfoPanel } from "./chat-info-panel"
 import { formatTime, formatDateSeparator, shouldShowDateSeparator } from "../../utils/date-format"
 import { formatMessageText } from "../../utils/message-formatter"
 import { isContactType } from "../../types"
@@ -22,9 +23,10 @@ interface Props {
   lastMessageAt?: string | null
   chatContactId?: number | null
   onStartChat?: (phone: string, name: string) => void
+  onOccurrenceCreated?: () => void
 }
 
-export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContactId, lastMessage, onStartChat }: Props) {
+export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContactId, lastMessage, lastMessageAt, onStartChat, onOccurrenceCreated }: Props) {
   const {
     inputValue,
     setInputValue,
@@ -41,8 +43,9 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
     clearMedia,
     saveContact,
     occurrence,
-  } = useChatArea(chatId, jid, lastMessage)
+  } = useChatArea(chatId, jid, lastMessage, lastMessageAt, onOccurrenceCreated)
 
+  const [showInfoPanel, setShowInfoPanel] = useState(false)
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
   const [lightboxAlt, setLightboxAlt] = useState<string>("")
   const [isDragging, setIsDragging] = useState(false)
@@ -112,7 +115,7 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
         ) : (
           <AvatarView name="?" size={36} />
         )}
-        <div className={styles.data}>
+        <div className={styles.data} onClick={() => chatId && setShowInfoPanel(true)} style={{ cursor: chatId ? "pointer" : undefined }}>
           <strong>{chatId ? contactName ?? `Contato #${chatId}` : "Nenhum contato"}</strong>
           <small>{chatId ? "Online" : "Selecione um contato"}</small>
         </div>
@@ -311,6 +314,16 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
           error={occurrence.error}
           onClose={occurrence.closeModal}
           onSave={occurrence.createOccurrence}
+        />
+      )}
+
+      {showInfoPanel && chatId && (
+        <ChatInfoPanel
+          chatId={chatId}
+          contactName={contactName ?? `Contato #${chatId}`}
+          phoneNumber={phoneNumber ?? ""}
+          jid={jid}
+          onClose={() => setShowInfoPanel(false)}
         />
       )}
     </main>

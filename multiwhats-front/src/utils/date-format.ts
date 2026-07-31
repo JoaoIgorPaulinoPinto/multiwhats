@@ -25,3 +25,24 @@ export function shouldShowDateSeparator(current: MessageResponse, previous: Mess
   const prevDate = new Date(previous.sentAt).toDateString()
   return currDate !== prevDate
 }
+
+export function formatRelativeTime(seconds: number): string {
+  if (!seconds || seconds < 60) return "agora mesmo"
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes} min atrás`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours} h atrás`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days} ${days === 1 ? "dia" : "dias"} atrás`
+  const months = Math.floor(days / 30)
+  if (months < 12) return `${months} ${months === 1 ? "mês" : "meses"} atrás`
+  const years = Math.floor(months / 12)
+  return `${years} ${years === 1 ? "ano" : "anos"} atrás`
+}
+
+export function formatRelativeToNow(dateStr: string): string {
+  if (!dateStr) return ""
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return ""
+  return formatRelativeTime(Math.max(0, (Date.now() - date.getTime()) / 1000))
+}

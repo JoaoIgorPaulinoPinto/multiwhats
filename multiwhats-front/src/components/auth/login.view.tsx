@@ -5,7 +5,7 @@ import { useLogin } from "./login.logic"
 import styles from "./login.module.css"
 
 export function LoginView() {
-  const { mode, name, password, error, loading, setName, setPassword, handleSubmit, toggleMode } = useLogin()
+  const { mode, name, password, registrationCode, error, loading, setName, setPassword, setRegistrationCode, handleSubmit, toggleMode } = useLogin()
 
   return (
     <div className={styles.page}>
@@ -14,6 +14,9 @@ export function LoginView() {
           {mode === "login" ? <LogIn size={32} /> : <UserPlus size={32} />}
         </div>
         <h2>{mode === "login" ? "Entrar" : "Criar conta"}</h2>
+        <p className={styles.subtitle}>
+          {mode === "register" && "Peça um código de permissão a um administrador para criar sua conta."}
+        </p>
 
         {error && <span className={styles.error}>{error}</span>}
 
@@ -26,6 +29,18 @@ export function LoginView() {
           <label>Senha</label>
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" disabled={loading} />
         </div>
+
+        {mode === "register" && (
+          <div className={styles.field}>
+            <label>Código de permissão</label>
+            <input
+              value={registrationCode}
+              onChange={(e) => setRegistrationCode(e.target.value)}
+              placeholder="Código fornecido pelo administrador"
+              disabled={loading}
+            />
+          </div>
+        )}
 
         <button className={styles.submit} type="submit" disabled={loading || !name || !password}>
           {loading ? (

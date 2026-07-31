@@ -18,7 +18,6 @@ public class User : BaseEntity
     public string Name { get; private set; } = null!;
 
     [Required]
-    [MinLength(6)]
     [Column("password")]
     public string Password { get; private set; } = null!;
 
@@ -45,6 +44,11 @@ public class User : BaseEntity
     public void Activate()
     {
         IsActive = true;
+    }
+
+    public void ChangeName(string newName)
+    {
+        Name = newName ?? throw new ArgumentNullException(nameof(newName));
     }
 
     public void ChangePassword(string newPassword)

@@ -16,5 +16,7 @@ public record CreateOccurrenceRequest
 
     [Required]
     public int ChatId { get; init; }
+
+    public int? AssignedToUserId { get; init; }
 }
 

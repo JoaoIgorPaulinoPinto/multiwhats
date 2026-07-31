@@ -45,7 +45,7 @@ public class LoginUseCase : ILoginUseCase
             {
                 Id = user.Id,
                 Name = user.Name,
-                Role = user.Role,
+                Role = user.Role.ToString(),
                 IsActive = user.IsActive,
                 CreatedAt = user.CreatedAt
             }

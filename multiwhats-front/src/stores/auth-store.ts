@@ -9,7 +9,7 @@ interface AuthState {
   loading: boolean
   error: string | null
   login: (name: string, password: string) => Promise<void>
-  register: (name: string, password: string) => Promise<void>
+  register: (name: string, password: string, registrationCode?: string) => Promise<void>
   logout: () => Promise<void>
   hydrate: () => void
 }
@@ -43,10 +43,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  register: async (name: string, password: string) => {
+  register: async (name: string, password: string, registrationCode?: string) => {
     set({ loading: true, error: null })
     try {
-      await authService.register(name, password)
+      await authService.register(name, password, registrationCode)
       set({ loading: false })
     } catch (e) {
       const message = e instanceof Error ? e.message : "Erro ao registrar"

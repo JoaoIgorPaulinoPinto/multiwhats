@@ -2,8 +2,9 @@ import { api } from "./api"
 import type { OccurrenceStatus, Priority } from "../types"
 import type { OccurrenceResponse } from "../types/occurrence"
 import type { ClientTaskStatus } from "../types"
+import type { UserResponse } from "./auth.service"
 
-export type { OccurrenceStatus, Priority, OccurrenceResponse, ClientTaskStatus }
+export type { OccurrenceStatus, Priority, OccurrenceResponse, ClientTaskStatus, UserResponse }
 
 export interface TaskResponse {
   id: number
@@ -20,6 +21,18 @@ export interface TaskResponse {
   createdByName: string | null
   createdAt: string
   lastUpdate: string
+}
+
+export interface AdvanceStatusResponse {
+  message: string
+  occurrence: OccurrenceResponse
+}
+
+export interface OccurrenceMetricsResponse {
+  averageResolutionHours: number
+  occurrencesPerDay: { date: string; count: number }[]
+  perUser: { userId: number; userName: string | null; opened: number; closed: number }[]
+  totalClosed: number
 }
 
 export const kanbanService = {
@@ -55,7 +68,7 @@ export const kanbanService = {
     return api.get<OccurrenceResponse>(`/api/occurrences/${id}`)
   },
 
-  createOccurrence(data: { title: string; description?: string; priority: number; chatId: number }) {
+  createOccurrence(data: { title: string; description?: string; priority: number; chatId: number; assignedToUserId?: number }) {
     return api.post<OccurrenceResponse>("/api/occurrences", data)
   },
 
@@ -65,5 +78,17 @@ export const kanbanService = {
 
   deleteOccurrence(id: number) {
     return api.delete(`/api/occurrences/${id}`)
+  },
+
+  advanceStatus(id: number, direction: 0 | 1) {
+    return api.patch<AdvanceStatusResponse>(`/api/occurrences/${id}/status`, { direction })
+  },
+
+  getOccurrenceMetrics() {
+    return api.get<OccurrenceMetricsResponse>("/api/occurrences/metrics")
+  },
+
+  listUsers() {
+    return api.get<UserResponse[]>("/api/users")
   },
 }

@@ -28,11 +28,18 @@ export const OCCURRENCE_STATUS_COLORS: Record<OccurrenceStatus, string> = {
   Closed: "#6b7280",
 }
 
-export const OCCURRENCE_STATUS_OPTIONS: { value: OccurrenceStatus; label: string; next?: OccurrenceStatus; nextLabel?: string }[] = [
-  { value: "Open", label: "A fazer", next: "InProgress", nextLabel: "Iniciar" },
-  { value: "InProgress", label: "Em andamento", next: "Resolved", nextLabel: "Resolver" },
-  { value: "Resolved", label: "Resolvido", next: "Closed", nextLabel: "Fechar" },
-  { value: "Closed", label: "Fechado" },
+export const OCCURRENCE_STATUS_OPTIONS: {
+  value: OccurrenceStatus
+  label: string
+  next?: OccurrenceStatus
+  nextLabel?: string
+  prev?: OccurrenceStatus
+  prevLabel?: string
+}[] = [
+  { value: "Open", label: "Aberto", next: "InProgress", nextLabel: "Iniciar" },
+  { value: "InProgress", label: "Em andamento", next: "Resolved", nextLabel: "Resolver", prev: "Open", prevLabel: "Voltar p/ Aberto" },
+  { value: "Resolved", label: "Resolvido", next: "Closed", nextLabel: "Fechar", prev: "InProgress", prevLabel: "Voltar p/ Em andamento" },
+  { value: "Closed", label: "Fechado", prev: "Resolved", prevLabel: "Voltar p/ Resolvido" },
 ]
 
 export const OCCURRENCE_STATUS_INT: Record<OccurrenceStatus, number> = {

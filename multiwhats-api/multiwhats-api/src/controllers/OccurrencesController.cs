@@ -15,6 +15,8 @@ public class OccurrencesController : ControllerBase
     private readonly IGetOccurrencesUseCase _getOccurrencesUseCase;
     private readonly IUpdateOccurrenceUseCase _updateOccurrenceUseCase;
     private readonly IDeleteOccurrenceUseCase _deleteOccurrenceUseCase;
+    private readonly IAdvanceOccurrenceStatusUseCase _advanceOccurrenceStatusUseCase;
+    private readonly IGetOccurrenceMetricsUseCase _getOccurrenceMetricsUseCase;
 
     private int UserId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
@@ -22,12 +24,16 @@ public class OccurrencesController : ControllerBase
         ICreateOccurrenceUseCase createOccurrenceUseCase,
         IGetOccurrencesUseCase getOccurrencesUseCase,
         IUpdateOccurrenceUseCase updateOccurrenceUseCase,
-        IDeleteOccurrenceUseCase deleteOccurrenceUseCase)
+        IDeleteOccurrenceUseCase deleteOccurrenceUseCase,
+        IAdvanceOccurrenceStatusUseCase advanceOccurrenceStatusUseCase,
+        IGetOccurrenceMetricsUseCase getOccurrenceMetricsUseCase)
     {
         _createOccurrenceUseCase = createOccurrenceUseCase;
         _getOccurrencesUseCase = getOccurrencesUseCase;
         _updateOccurrenceUseCase = updateOccurrenceUseCase;
         _deleteOccurrenceUseCase = deleteOccurrenceUseCase;
+        _advanceOccurrenceStatusUseCase = advanceOccurrenceStatusUseCase;
+        _getOccurrenceMetricsUseCase = getOccurrenceMetricsUseCase;
     }
 
     [HttpPost]
@@ -86,5 +92,29 @@ public class OccurrencesController : ControllerBase
         {
             return NotFound(new { message = ex.Message });
         }
+    }
+
+    [HttpPatch("{id}/status")]
+    public async Task<IActionResult> AdvanceStatus(int id, [FromBody] AdvanceOccurrenceStatusRequest request)
+    {
+        try
+        {
+            var occurrence = await _advanceOccurrenceStatusUseCase.Execute(id, request, UserId);
+            var msg = request.Direction == AdvanceDirection.Advance
+                ? "Ocorrência avançada para próxima etapa."
+                : "Ocorrência retornada para etapa anterior.";
+            return Ok(new { message = msg, occurrence });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("metrics")]
+    public async Task<IActionResult> GetMetrics()
+    {
+        var metrics = await _getOccurrenceMetricsUseCase.Execute();
+        return Ok(metrics);
     }
 }

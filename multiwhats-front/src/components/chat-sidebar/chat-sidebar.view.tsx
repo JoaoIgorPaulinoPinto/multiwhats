@@ -3,14 +3,19 @@
 import { AlertCircle, MessageSquarePlus, RefreshCw, Search } from "lucide-react"
 import { useState } from "react"
 import { AvatarView } from "../avatar/avatar.view"
-import { useChatSidebar } from "./chat-sidebar.logic"
 import { NewChatModal } from "./new-chat-modal"
 import styles from "./chat-sidebar.module.css"
 import { OCCURRENCE_STATUS_LABELS, OCCURRENCE_STATUS_COLORS } from "../../constants"
+import type { ChatListResponse } from "../../services/chats.service"
 
 interface Props {
   selectedId: number | null
   onSelect: (id: number, name: string, phoneNumber: string, jid: string, contactId: number | null, lastMessage: string, lastMessageAt: string | null) => void
+  search: string
+  setSearch: (v: string) => void
+  chats: ChatListResponse[]
+  loading: boolean
+  load: () => void
 }
 
 function SkeletonChatItem() {
@@ -25,8 +30,7 @@ function SkeletonChatItem() {
   )
 }
 
-export function ChatSidebarView({ selectedId, onSelect }: Props) {
-  const { search, setSearch, chats, loading, load } = useChatSidebar()
+export function ChatSidebarView({ selectedId, onSelect, search, setSearch, chats, loading, load }: Props) {
   const [showNewChat, setShowNewChat] = useState(false)
 
   function handleNewChatStart(phone: string, name: string) {

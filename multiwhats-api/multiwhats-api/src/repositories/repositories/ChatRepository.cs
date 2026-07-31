@@ -24,6 +24,7 @@ public class ChatRepository : IChatRepository
         return await _context.Chats
             .AsNoTracking()
             .Include(c => c.Contact)
+                .ThenInclude(c => c.Client)
             .Include(c => c.Client)
             .Include(c => c.AssignedTo)
             .Include(c => c.Messages
@@ -44,6 +45,7 @@ public class ChatRepository : IChatRepository
         return await _context.Chats
             .AsNoTracking()
             .Include(c => c.Contact)
+                .ThenInclude(c => c.Client)
             .Include(c => c.Client)
             .Include(c => c.AssignedTo)
             .Include(c => c.Messages.OrderByDescending(m => m.Timestamp).Take(1))
@@ -56,6 +58,7 @@ public class ChatRepository : IChatRepository
         return await _context.Chats
             .AsNoTracking()
             .Include(c => c.Contact)
+                .ThenInclude(c => c.Client)
             .Include(c => c.Client)
             .Include(c => c.AssignedTo)
             .FirstOrDefaultAsync(c => c.Jid == jid);

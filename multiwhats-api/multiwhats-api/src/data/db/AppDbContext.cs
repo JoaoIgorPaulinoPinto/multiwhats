@@ -20,6 +20,8 @@ public class AppDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<Device> Devices { get; set; }
+    public DbSet<RegistrationCode> RegistrationCodes { get; set; }
+    public DbSet<SystemParameter> SystemParameters { get; set; }
 
     // Set by the controller before SaveChanges to track who created/modified/deleted.
     public int? CurrentUserId { get; set; }
@@ -142,6 +144,22 @@ public class AppDbContext : DbContext
             entity.ToTable("audit_logs");
             entity.HasIndex(e => e.Timestamp);
             entity.HasIndex(e => e.EntityType);
+        });
+
+        modelBuilder.Entity<RegistrationCode>(entity =>
+        {
+            entity.ToTable("registration_codes");
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasOne(e => e.CreatedBy)
+                  .WithMany()
+                  .HasForeignKey(e => e.CreatedByUserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SystemParameter>(entity =>
+        {
+            entity.ToTable("system_parameters");
+            entity.HasIndex(e => e.Key).IsUnique();
         });
     }
 

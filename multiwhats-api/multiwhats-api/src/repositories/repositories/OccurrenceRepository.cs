@@ -25,6 +25,7 @@ public class OccurrenceRepository : IOccurrenceRepository
             .AsNoTracking()
             .Include(o => o.Chat)
             .Include(o => o.AssignedTo)
+            .Include(o => o.CreatedBy)
             .OrderByDescending(o => o.CreatedAt)
             .ToListAsync();
     }

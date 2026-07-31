@@ -65,12 +65,18 @@ public class GetOccurrencesUseCase : IGetOccurrencesUseCase
     {
         Id = o.Id,
         Title = o.Title,
+        Description = o.Description,
         Status = o.Status,
         Priority = o.Priority,
+        ChatId = o.ChatId,
         ChatName = o.Chat?.Name ?? o.Chat?.PhoneNumber,
+        AssignedToUserId = o.AssignedToUserId,
         AssignedToName = o.AssignedTo?.Name,
-        MessageCount = o.Messages.Count,
-        CreatedAt = o.CreatedAt
+        CreatedByUserId = o.CreatedByUserId,
+        CreatedByName = o.CreatedBy?.Name,
+        MessageCount = o.Messages?.Count ?? 0,
+        CreatedAt = o.CreatedAt,
+        LastUpdate = o.LastUpdate
     };
 
     private static OccurrenceDetailResponse MapToDetailResponse(Occurrence o) => new()
@@ -86,7 +92,7 @@ public class GetOccurrencesUseCase : IGetOccurrencesUseCase
         AssignedToName = o.AssignedTo?.Name,
         CreatedByUserId = o.CreatedByUserId,
         CreatedByName = o.CreatedBy?.Name,
-        MessageCount = o.Messages.Count,
+        MessageCount = o.Messages?.Count ?? 0,
         CreatedAt = o.CreatedAt,
         LastUpdate = o.LastUpdate
     };

@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { kanbanService } from "../../../services/kanban.service"
+import { useState, useEffect } from "react"
+import { kanbanService, type UserResponse } from "../../../services/kanban.service"
+import { chatsService, type ChatListResponse } from "../../../services/chats.service"
 import { PRIORITY_LABELS } from "../../../constants"
 import { Modal, ModalField } from "../../modal/modal.view"
 import styles from "./kanban.module.css"
@@ -11,16 +12,29 @@ interface CreateModalProps {
   onCreated: () => void
 }
 
+function chatLabel(chat: ChatListResponse): string {
+  const name = chat.contactName ?? chat.name ?? chat.phoneNumber ?? `Chat #${chat.id}`
+  return chat.clientName ? `${name} — ${chat.clientName}` : name
+}
+
 export function CreateOccurrenceModal({ onClose, onCreated }: CreateModalProps) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [priority, setPriority] = useState<number>(1)
-  const [chatId, setChatId] = useState<string>("")
+  const [chatId, setChatId] = useState<number | "">("")
+  const [chats, setChats] = useState<ChatListResponse[]>([])
+  const [assignedToUserId, setAssignedToUserId] = useState<number | "">("")
+  const [users, setUsers] = useState<UserResponse[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    kanbanService.listUsers().then(setUsers).catch(() => {})
+    chatsService.listAllChats().then((res) => setChats(res.items)).catch(() => {})
+  }, [])
+
   async function create() {
-    if (!title.trim() || !chatId) return
+    if (!title.trim() || chatId === "") return
     setSaving(true)
     setError(null)
     try {
@@ -29,6 +43,7 @@ export function CreateOccurrenceModal({ onClose, onCreated }: CreateModalProps) 
         description: description.trim() || undefined,
         priority,
         chatId: Number(chatId),
+        assignedToUserId: assignedToUserId === "" ? undefined : Number(assignedToUserId),
       })
       onCreated()
       onClose()
@@ -55,8 +70,13 @@ export function CreateOccurrenceModal({ onClose, onCreated }: CreateModalProps) 
         />
       </ModalField>
 
-      <ModalField label="Chat ID *">
-        <input value={chatId} onChange={(e) => setChatId(e.target.value)} placeholder="ID do chat" type="number" />
+      <ModalField label="Chat *">
+        <select className={styles.select} value={chatId} onChange={(e) => setChatId(e.target.value === "" ? "" : Number(e.target.value))}>
+          <option value="">Selecione um chat</option>
+          {chats.map((c) => (
+            <option key={c.id} value={c.id}>{chatLabel(c)}</option>
+          ))}
+        </select>
       </ModalField>
 
       <ModalField label="Prioridade">
@@ -67,9 +87,18 @@ export function CreateOccurrenceModal({ onClose, onCreated }: CreateModalProps) 
         </select>
       </ModalField>
 
+      <ModalField label="Responsável">
+        <select className={styles.select} value={assignedToUserId} onChange={(e) => setAssignedToUserId(e.target.value === "" ? "" : Number(e.target.value))}>
+          <option value="">Sem responsável</option>
+          {users.map((u) => (
+            <option key={u.id} value={u.id}>{u.name}</option>
+          ))}
+        </select>
+      </ModalField>
+
       <div className={styles.modalActions}>
         <button className={styles.cancelBtn} onClick={onClose}>Cancelar</button>
-        <button className={styles.saveBtn} onClick={create} disabled={saving || !title.trim() || !chatId}>
+        <button className={styles.saveBtn} onClick={create} disabled={saving || !title.trim() || chatId === ""}>
           {saving ? "Criando..." : "Criar Ocorrência"}
         </button>
       </div>

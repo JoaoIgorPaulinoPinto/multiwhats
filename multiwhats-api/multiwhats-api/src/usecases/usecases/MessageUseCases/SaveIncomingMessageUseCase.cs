@@ -24,6 +24,7 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
     private readonly IHubContext<WhatsappHub> _hubContext;
     private readonly HttpClient _httpClient;
     private readonly ISendMessageUseCase _sendMessageUseCase;
+    private readonly SystemConfigService _config;
 
     public SaveIncomingMessageUseCase(
         IMessageRepository repository,
@@ -34,7 +35,8 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         UseCaseLogger useCaseLogger,
         IHubContext<WhatsappHub> hubContext,
         HttpClient httpClient,
-        ISendMessageUseCase sendMessageUseCase)
+        ISendMessageUseCase sendMessageUseCase,
+        SystemConfigService config)
     {
         _messageRepository = repository;
         _chatRepository = chatRepository;
@@ -45,6 +47,7 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         _hubContext = hubContext;
         _httpClient = httpClient;
         _sendMessageUseCase = sendMessageUseCase;
+        _config = config;
     }
 
 
@@ -125,26 +128,32 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
 
         var timestamp = payload.Timestamp;
 
-        // Block incoming audio messages
-        if (messageType == MessageType.Audio && !isSelfSent)
+        // Block unsupported incoming media (audio always blocked; other media blocked when not in Media:AllowedTypes)
+        var allowedMedia = await _config.GetListAsync("Media:AllowedTypes", new List<string> { "Image", "Audio", "Video", "Document", "Sticker" });
+        if (IsMediaType(messageType) && !isSelfSent &&
+            (messageType == MessageType.Audio || !allowedMedia.Contains(messageType.ToString())))
         {
-            Console.WriteLine($"[SaveIncomingMessage] Áudio bloqueado de {payload.From} (msgId={payload.MessageId})");
+            Console.WriteLine($"[SaveIncomingMessage] Mídia não suportada bloqueada de {payload.From} (msgId={payload.MessageId}, type={messageType})");
 
             if (userId != null)
             {
                 try
                 {
-                    var audioBlockedMsg = new SendMessageRequest
+                    var unsupportedMsg = await _config.GetStringAsync(
+                        "Media:UnsupportedMessage",
+                        "Desculpe, não consigo processar este tipo de mídia. Por favor, envie apenas texto, imagens, vídeos ou documentos.");
+
+                    var reply = new SendMessageRequest
                     {
                         Jid = payload.From,
-                        Text = "Desculpe, não podemos receber áudio. Por gentileza, digite.",
+                        Text = unsupportedMsg,
                         Type = MessageType.Text
                     };
-                    await _sendMessageUseCase.Execute(audioBlockedMsg, userId.Value);
+                    await _sendMessageUseCase.Execute(reply, userId.Value);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[SaveIncomingMessage] Erro ao enviar resposta de bloqueio de áudio: {ex.Message}");
+                    Console.WriteLine($"[SaveIncomingMessage] Erro ao enviar resposta de mídia não suportada: {ex.Message}");
                 }
             }
 
@@ -152,12 +161,44 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
                 action: "SaveIncomingMessage",
                 entityType: "Message",
                 entityId: null,
-                description: $"Audio blocked from {payload.From} (msgId={payload.MessageId})",
+                description: $"Unsupported media blocked from {payload.From} (msgId={payload.MessageId}, type={messageType})",
                 explicitUserId: userId,
                 explicitUserName: user?.Name
             );
 
             return true;
+        }
+
+        // Auto-reply outside business hours/days (message is still saved so agents see it later)
+        if (!isSelfSent && await IsOutsideBusinessHoursAsync(timestamp))
+        {
+            var outsideMsg = await BuildOutsideHoursMessageAsync();
+            if (userId != null)
+            {
+                try
+                {
+                    var reply = new SendMessageRequest
+                    {
+                        Jid = payload.From,
+                        Text = outsideMsg,
+                        Type = MessageType.Text
+                    };
+                    await _sendMessageUseCase.Execute(reply, userId.Value);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[SaveIncomingMessage] Erro ao enviar resposta fora do horário: {ex.Message}");
+                }
+            }
+
+            await _useCaseLogger.LogAsync(
+                action: "SaveIncomingMessage",
+                entityType: "Message",
+                entityId: null,
+                description: $"Outside business hours auto-reply sent to {payload.From} (msgId={payload.MessageId})",
+                explicitUserId: userId,
+                explicitUserName: user?.Name
+            );
         }
 
         var message = new Message(
@@ -213,5 +254,81 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
     private static string Truncate(string? value, int maxLength)
     {
         return value?.Length > maxLength ? value[..maxLength] + "..." : value ?? "";
+    }
+
+    private static bool IsMediaType(MessageType type)
+    {
+        return type is MessageType.Image or MessageType.Audio or MessageType.Video or MessageType.Document or MessageType.Sticker;
+    }
+
+    private async Task<bool> IsOutsideBusinessHoursAsync(long unixTimestamp)
+    {
+        if (!await _config.GetBoolAsync("Business:Enabled", false))
+            return false;
+
+        var timezoneId = await _config.GetStringAsync("Business:Timezone", "America/Sao_Paulo");
+        TimeZoneInfo tz;
+        if (string.IsNullOrWhiteSpace(timezoneId))
+        {
+            tz = TimeZoneInfo.Utc;
+        }
+        else
+        {
+            try
+            {
+                tz = TimeZoneInfo.FindSystemTimeZoneById(timezoneId);
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                tz = TimeZoneInfo.Utc;
+            }
+        }
+
+        var localTime = TimeZoneInfo.ConvertTimeFromUtc(
+            DateTimeOffset.FromUnixTimeSeconds(unixTimestamp).UtcDateTime, tz);
+
+        var workingDays = await _config.GetListAsync("Business:WorkingDays", new List<string> { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" });
+        if (!workingDays.Contains(localTime.DayOfWeek.ToString(), StringComparer.OrdinalIgnoreCase))
+            return true;
+
+        var open = await _config.GetStringAsync("Business:OpenTime", "08:00");
+        var close = await _config.GetStringAsync("Business:CloseTime", "18:00");
+        if (!TimeSpan.TryParse(open, out var openTs) || !TimeSpan.TryParse(close, out var closeTs))
+            return false;
+
+        var now = localTime.TimeOfDay;
+        if (openTs <= closeTs)
+            return now < openTs || now > closeTs;
+
+        // Overnight shift (e.g. 22:00 - 06:00)
+        return now < openTs && now > closeTs;
+    }
+
+    private async Task<string> BuildOutsideHoursMessageAsync()
+    {
+        var message = (await _config.GetStringAsync(
+            "Business:OutsideHoursMessage",
+            "Olá! Nosso atendimento funciona de {days} das {open} às {close}. Recebemos sua mensagem e retornaremos no próximo horário de funcionamento.")) ?? "";
+
+        var open = (await _config.GetStringAsync("Business:OpenTime", "08:00")) ?? "";
+        var close = (await _config.GetStringAsync("Business:CloseTime", "18:00")) ?? "";
+        var workingDays = await _config.GetListAsync("Business:WorkingDays", new List<string> { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" });
+
+        var ptDays = string.Join(", ", workingDays.Select(d => d.ToLowerInvariant() switch
+        {
+            "monday" => "segunda-feira",
+            "tuesday" => "terça-feira",
+            "wednesday" => "quarta-feira",
+            "thursday" => "quinta-feira",
+            "friday" => "sexta-feira",
+            "saturday" => "sábado",
+            "sunday" => "domingo",
+            _ => d
+        }));
+
+        return message
+            .Replace("{open}", open)
+            .Replace("{close}", close)
+            .Replace("{days}", ptDays);
     }
 }

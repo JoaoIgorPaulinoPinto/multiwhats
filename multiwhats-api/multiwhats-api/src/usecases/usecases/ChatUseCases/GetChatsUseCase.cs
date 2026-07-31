@@ -58,8 +58,8 @@ public class GetChatsUseCase : IGetChatsUseCase
                 PhoneNumber = chat.PhoneNumber,
                 ContactId = chat.ContactId,
                 ContactName = chat.Contact?.Name,
-                ClientId = chat.ClientId,
-                ClientName = chat.Client?.Name,
+                ClientId = chat.ClientId ?? chat.Contact?.ClientId,
+                ClientName = chat.Client?.Name ?? chat.Contact?.Client?.Name,
                 LastMessageAt = chat.LastMessageAt,
                 LastMessage = chat.LastMessage != null
                     ? new LastMessageResponse { Type = chat.LastMessage.Type, Body = chat.LastMessage.Body }
@@ -129,8 +129,8 @@ public class GetChatsUseCase : IGetChatsUseCase
             Name = chat.Name ?? chat.Contact?.Name ?? chat.PhoneNumber,
             ContactId = chat.ContactId,
             ContactName = chat.Contact?.Name,
-            ClientId = chat.ClientId,
-            ClientName = chat.Client?.Name,
+            ClientId = chat.ClientId ?? chat.Contact?.ClientId,
+            ClientName = chat.Client?.Name ?? chat.Contact?.Client?.Name,
             LastMessageAt = chat.LastMessageAt,
             LastMessage = chat.LastMessage != null
                 ? new LastMessageResponse { Type = chat.LastMessage.Type, Body = chat.LastMessage.Body }

@@ -1,5 +1,5 @@
 'use client'
-import { Building2, LayoutDashboard, MessageSquare, Users } from "lucide-react"
+import { Building2, LayoutDashboard, MessageSquare, Settings, Users } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { ProfilePopoverView } from "../profile-popover/profile-popover.view"
 import styles from "./nav-bar.module.css"
@@ -9,6 +9,7 @@ const items: { path: string; icon: React.ReactNode; label: string }[] = [
   { path: "/contacts", icon: <Users size={22} />, label: "Contatos" },
   { path: "/kanban", icon: <LayoutDashboard size={22} />, label: "Kanban" },
   { path: "/companies", icon: <Building2 size={22} />, label: "Empresas" },
+  { path: "/settings", icon: <Settings size={22} />, label: "Configurações" },
 ]
 
 export function NavBarView() {

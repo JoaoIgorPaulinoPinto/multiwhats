@@ -10,6 +10,7 @@ export function useLogin() {
   const [mode, setMode] = useState<"login" | "register">("login")
   const [name, setName] = useState("")
   const [password, setPassword] = useState("")
+  const [registrationCode, setRegistrationCode] = useState("")
   const [error, setError] = useState("")
 
   async function handleSubmit() {
@@ -18,7 +19,7 @@ export function useLogin() {
       if (mode === "login") {
         await login(name, password)
       } else {
-        await register(name, password)
+        await register(name, password, registrationCode.trim() || undefined)
         await login(name, password)
       }
     } catch (e: unknown) {
@@ -29,7 +30,8 @@ export function useLogin() {
   function toggleMode() {
     setMode(mode === "login" ? "register" : "login")
     setError("")
+    setRegistrationCode("")
   }
 
-  return { mode, name, password, error, loading, setName, setPassword, handleSubmit, toggleMode }
+  return { mode, name, password, registrationCode, error, loading, setName, setPassword, setRegistrationCode, handleSubmit, toggleMode }
 }

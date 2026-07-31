@@ -24,7 +24,11 @@ public class UpdateOccurrenceUseCase : IUpdateOccurrenceUseCase
             throw new KeyNotFoundException("Ocorrência não encontrada");
 
         occurrence.Update(request.Title, request.Description, request.Status, request.Priority, request.AssignedToUserId);
-        var updated = await _occurrenceRepository.UpdateAsync(occurrence);
+        await _occurrenceRepository.UpdateAsync(occurrence);
+
+        var updated = await _occurrenceRepository.GetByIdAsync(id);
+        if (updated == null)
+            throw new KeyNotFoundException("Ocorrência não encontrada após atualização");
 
         await _useCaseLogger.LogAsync(
             action: "UpdateOccurrence",
@@ -41,8 +45,12 @@ public class UpdateOccurrenceUseCase : IUpdateOccurrenceUseCase
             Status = updated.Status,
             Priority = updated.Priority,
             ChatId = updated.ChatId,
+            ChatName = updated.Chat?.Name ?? updated.Chat?.PhoneNumber,
             AssignedToUserId = updated.AssignedToUserId,
+            AssignedToName = updated.AssignedTo?.Name,
             CreatedByUserId = updated.CreatedByUserId,
+            CreatedByName = updated.CreatedBy?.Name,
+            MessageCount = updated.Messages?.Count ?? 0,
             CreatedAt = updated.CreatedAt,
             LastUpdate = updated.LastUpdate
         };

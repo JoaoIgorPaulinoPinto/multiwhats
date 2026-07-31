@@ -27,7 +27,8 @@ public class CreateOccurrenceUseCase : ICreateOccurrenceUseCase
             request.ChatId,
             userId,
             request.Description,
-            request.Priority
+            request.Priority,
+            request.AssignedToUserId
         );
 
         var created = await _occurrenceRepository.AddAsync(occurrence);
@@ -48,6 +49,7 @@ public class CreateOccurrenceUseCase : ICreateOccurrenceUseCase
             Status = created.Status,
             Priority = created.Priority,
             ChatId = created.ChatId,
+            ChatName = created.Chat?.Name ?? created.Chat?.PhoneNumber,
             AssignedToUserId = created.AssignedToUserId,
             CreatedByUserId = created.CreatedByUserId,
             CreatedAt = created.CreatedAt,

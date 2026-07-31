@@ -19,19 +19,22 @@ public class ChatsController : ControllerBase
     private readonly IGetMessagesUseCase _getMessagesUseCase;
     private readonly IGetOccurrencesUseCase _getOccurrencesUseCase;
     private readonly IMergeChatsUseCase _mergeChatsUseCase;
+    private readonly IGetChatFullInfoUseCase _getChatFullInfoUseCase;
 
     public ChatsController(
         IGetChatsUseCase getChatsUseCase,
         ICreateChatUseCase createChatUseCase,
         IMergeChatsUseCase mergeChatsUseCase,
         IGetMessagesUseCase getMessagesUseCase,
-        IGetOccurrencesUseCase getOccurrencesUseCase)
+        IGetOccurrencesUseCase getOccurrencesUseCase,
+        IGetChatFullInfoUseCase getChatFullInfoUseCase)
     {
         _mergeChatsUseCase = mergeChatsUseCase;
         _getChatsUseCase = getChatsUseCase;
         _createChatUseCase = createChatUseCase;
         _getMessagesUseCase = getMessagesUseCase;
         _getOccurrencesUseCase = getOccurrencesUseCase;
+        _getChatFullInfoUseCase = getChatFullInfoUseCase;
     }
 
     // GET /api/chats - Listar conversas (paginado)
@@ -67,6 +70,16 @@ public class ChatsController : ControllerBase
         var occurrences = await _getOccurrencesUseCase.ExecuteByChat(id);
         return Ok(occurrences);
     }
+    // GET /api/chats/{id}/full-info - Informações completas da conversa
+    [HttpGet("{id}/full-info")]
+    public async Task<IActionResult> GetFullInfo(int id)
+    {
+        var chat = await _getChatFullInfoUseCase.Execute(id);
+        if (chat == null)
+            return NotFound(new { message = "Chat não encontrado." });
+        return Ok(chat);
+    }
+
     // PATCH /api/chats/merge?mergeJid=xxx&toJid=yyy - Merge duas conversas
     [HttpPatch("merge")]
     public async Task<IActionResult> MergeChats([FromQuery] string mergeJid, [FromQuery] string toJid)

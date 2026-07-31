@@ -1,107 +1,60 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { kanbanService, type TaskResponse, type OccurrenceResponse, type OccurrenceStatus } from "../../../services/kanban.service"
-import { PRIORITY_LABELS } from "../../../constants"
+import { kanbanService, type OccurrenceResponse } from "../../../services/kanban.service"
+import type { OccurrenceStatus, OccurrenceStatusNumeric } from "../../../types"
+
+const STATUS_MAP: Record<number, OccurrenceStatus> = {
+  0: "Open",
+  1: "InProgress",
+  2: "Resolved",
+  3: "Closed",
+}
 
 export interface KanbanCard {
   id: number
   title: string
-  subtitle: string
-  type: "task" | "occurrence"
-  status: string
-  priority: number
   description: string | null
+  status: OccurrenceStatus
+  priority: number
+  chatName: string | null
   assignedToName: string | null
+  createdByName: string | null
   createdAt: string
+  lastUpdate: string
 }
 
 export interface KanbanColumn {
-  id: string
+  id: OccurrenceStatus
   title: string
   cards: KanbanCard[]
 }
 
-const TASK_COLUMNS: Record<string, string> = {
-  Open: "todo",
-  InProgress: "progress",
-  Completed: "done",
-  Cancelled: "done",
-}
+const COLUMNS_ORDER: OccurrenceStatus[] = ["Open", "InProgress", "Resolved", "Closed"]
 
-const OCC_COLUMNS: Record<string, string> = {
-  Open: "todo",
-  InProgress: "progress",
-  Resolved: "done",
-  Closed: "done",
-}
-
-const COLUMN_LABELS: Record<string, string> = {
-  todo: "A fazer",
-  progress: "Em andamento",
-  done: "Concluído",
-}
-
-const STATUS_TO_INT: Record<string, number> = {
-  Open: 0,
-  InProgress: 1,
-  Resolved: 2,
-  Closed: 3,
-}
-
-function buildColumns(tasks: TaskResponse[], occurrences: OccurrenceResponse[]): KanbanColumn[] {
-  return ["todo", "progress", "done"].map((id) => {
-    const taskCards: KanbanCard[] = tasks
-      .filter((t) => TASK_COLUMNS[t.status] === id)
-      .map((t) => ({
-        id: t.id,
-        title: t.title,
-        subtitle: t.clientName ?? `Prioridade: ${PRIORITY_LABELS[t.priority] ?? t.priority}`,
-        type: "task" as const,
-        status: t.status,
-        priority: t.priority,
-        description: t.description,
-        assignedToName: t.assignedToName,
-        createdAt: t.createdAt,
-      }))
-
-    const occCards: KanbanCard[] = occurrences
-      .filter((o) => OCC_COLUMNS[o.status] === id)
-      .map((o) => ({
-        id: o.id,
-        title: o.title,
-        subtitle: o.chatName ?? `Prioridade: ${PRIORITY_LABELS[o.priority] ?? o.priority}`,
-        type: "occurrence" as const,
-        status: o.status,
-        priority: o.priority,
-        description: o.description,
-        assignedToName: o.assignedToName,
-        createdAt: o.createdAt,
-      }))
-
-    return {
-      id,
-      title: COLUMN_LABELS[id],
-      cards: [...taskCards, ...occCards],
-    }
-  })
+const COLUMN_LABELS: Record<OccurrenceStatus, string> = {
+  Open: "Aberto",
+  InProgress: "Em andamento",
+  Resolved: "Resolvido",
+  Closed: "Fechado",
 }
 
 export function useKanban() {
-  const [tasks, setTasks] = useState<TaskResponse[]>([])
   const [occurrences, setOccurrences] = useState<OccurrenceResponse[]>([])
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(() => {
-    Promise.all([
-      kanbanService.listTasks(),
-      kanbanService.listOccurrences(),
-    ])
-      .then(([t, o]) => {
-        setTasks(t)
-        setOccurrences(o)
-      })
-      .catch((e) => console.error(`[Kanban] erro ao carregar:`, e))
+    kanbanService
+      .listOccurrences()
+      .then((data) =>
+        setOccurrences(
+          data.map((o) => ({
+            ...o,
+            status: STATUS_MAP[o.status as unknown as number] ?? o.status,
+          }))
+        )
+      )
+      .catch((e) => console.error("[Kanban] erro ao carregar:", e))
       .finally(() => setLoading(false))
   }, [])
 
@@ -109,14 +62,20 @@ export function useKanban() {
     load()
   }, [load])
 
-  async function changeOccurrenceStatus(id: number, newStatus: OccurrenceStatus) {
+  async function advanceStatus(id: number, direction: "Advance" | "Return") {
     try {
-      await kanbanService.updateOccurrence(id, { status: STATUS_TO_INT[newStatus] })
+      const dirNum = direction === "Advance" ? 0 : 1
+      const res = await kanbanService.advanceStatus(id, dirNum)
       setOccurrences((prev) =>
-        prev.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
+        prev.map((o) =>
+          o.id === id
+            ? { ...o, ...res.occurrence, status: STATUS_MAP[res.occurrence.status as unknown as number] ?? res.occurrence.status }
+            : o
+        )
       )
     } catch (e) {
-      console.error(`[Kanban] erro ao atualizar ocorrência:`, e)
+      console.error("[Kanban] erro ao avançar/retornar ocorrência:", e)
+      throw e
     }
   }
 
@@ -125,11 +84,29 @@ export function useKanban() {
       await kanbanService.deleteOccurrence(id)
       setOccurrences((prev) => prev.filter((o) => o.id !== id))
     } catch (e) {
-      console.error(`[Kanban] erro ao deletar ocorrência:`, e)
+      console.error("[Kanban] erro ao deletar ocorrência:", e)
+      throw e
     }
   }
 
-  const columns = buildColumns(tasks, occurrences)
+  const columns: KanbanColumn[] = COLUMNS_ORDER.map((status) => ({
+    id: status,
+    title: COLUMN_LABELS[status],
+    cards: occurrences
+      .filter((o) => o.status === status)
+      .map((o) => ({
+        id: o.id,
+        title: o.title,
+        description: o.description,
+        status: o.status,
+        priority: o.priority,
+        chatName: o.chatName,
+        assignedToName: o.assignedToName,
+        createdByName: o.createdByName,
+        createdAt: o.createdAt,
+        lastUpdate: o.lastUpdate,
+      })),
+  }))
 
-  return { columns, loading, load, changeOccurrenceStatus, deleteOccurrence, occurrences }
+  return { columns, loading, load, advanceStatus, deleteOccurrence, occurrences }
 }

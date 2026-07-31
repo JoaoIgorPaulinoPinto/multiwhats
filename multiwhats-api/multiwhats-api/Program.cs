@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using multiwhats_api.src.data;
 using multiwhats_api.src.data.db;
+using multiwhats_api.src.data.strategies;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.repositories.repositories;
 using multiwhats_api.src.services;
@@ -20,7 +22,6 @@ using multiwhats_api.src.usecases.usecases.ClientUseCases;
 using multiwhats_api.src.usecases.usecases.ContactUseCases;
 using multiwhats_api.src.usecases.usecases.DeviceUseCases;
 using multiwhats_api.src.usecases.usecases.MessageUseCases;
-using multiwhats_api.src.data.strategies;
 using multiwhats_api.src.usecases.usecases.OccurrenceUseCases;
 using multiwhats_api.src.usecases.usecases.TaskUseCases;
 using System.IdentityModel.Tokens.Jwt;
@@ -54,6 +55,11 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Config bindings
+builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(AuthOptions.SectionName));
+builder.Services.Configure<OccurrenceOptions>(builder.Configuration.GetSection(OccurrenceOptions.SectionName));
+builder.Services.Configure<MediaOptions>(builder.Configuration.GetSection(MediaOptions.SectionName));
+
 // PostgreSQL via EF Core
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -68,16 +74,21 @@ builder.Services.AddScoped<IClientTaskRepository, ClientTaskRepository>();
 builder.Services.AddScoped<IGroupRepository, GroupRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
+builder.Services.AddScoped<IRegistrationCodeRepository, RegistrationCodeRepository>();
+builder.Services.AddScoped<ISystemParameterRepository, SystemParameterRepository>();
 
 // Auth
 builder.Services.AddScoped<IRegisterUserUseCase, RegisterUserUseCase>();
 builder.Services.AddScoped<ILoginUseCase, LoginUseCase>();
 builder.Services.AddScoped<ILogoutUseCase, LogoutUseCase>();
+builder.Services.AddScoped<IGenerateRegistrationCodeUseCase, GenerateRegistrationCodeUseCase>();
+builder.Services.AddScoped<IUpdateUserUseCase, UpdateUserUseCase>();
 
 // Chat
 builder.Services.AddScoped<ICreateChatUseCase, CreateChatUseCase>();
 builder.Services.AddScoped<IGetChatsUseCase, GetChatsUseCase>();
 builder.Services.AddScoped<IMergeChatsUseCase, MergeChatsUseCase>();
+builder.Services.AddScoped<IGetChatFullInfoUseCase, GetChatFullInfoUseCase>();
 
 // Contacts
 builder.Services.AddScoped<ICreateContactUseCase, CreateContactUseCase>();
@@ -111,6 +122,8 @@ builder.Services.AddScoped<ICreateOccurrenceUseCase, CreateOccurrenceUseCase>();
 builder.Services.AddScoped<IGetOccurrencesUseCase, GetOccurrencesUseCase>();
 builder.Services.AddScoped<IUpdateOccurrenceUseCase, UpdateOccurrenceUseCase>();
 builder.Services.AddScoped<IDeleteOccurrenceUseCase, DeleteOccurrenceUseCase>();
+builder.Services.AddScoped<IAdvanceOccurrenceStatusUseCase, AdvanceOccurrenceStatusUseCase>();
+builder.Services.AddScoped<IGetOccurrenceMetricsUseCase, GetOccurrenceMetricsUseCase>();
 
 // Task
 builder.Services.AddScoped<ICreateTaskUseCase, CreateTaskUseCase>();
@@ -125,6 +138,7 @@ builder.Services.AddScoped<ISaveDeviceUseCase, SaveDeviceUseCase>();
 // Auxiliary services
 builder.Services.AddSingleton<TokenBlacklistService>();
 builder.Services.AddSingleton<UseCaseLogger>();
+builder.Services.AddSingleton<SystemConfigService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuditService>();
 
@@ -162,15 +176,43 @@ builder.Services.AddAuthentication(options =>
 
     options.Events = new JwtBearerEvents
     {
-        OnTokenValidated = context =>
+        OnTokenValidated = async context =>
         {
             var blacklist = context.HttpContext.RequestServices.GetRequiredService<TokenBlacklistService>();
             var jti = context.Principal?.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
             if (jti != null && blacklist.IsRevoked(jti))
             {
                 context.Fail("Token foi revogado.");
+                return;
             }
-            return Task.CompletedTask;
+
+            // Refresh role/name from DB so role changes take effect immediately (no need to re-login)
+            var userIdClaim = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
+            {
+                context.Fail("Token inválido.");
+                return;
+            }
+
+            var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+            var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null || !user.IsActive)
+            {
+                context.Fail("Usuário não encontrado ou inativo.");
+                return;
+            }
+
+            var identity = context.Principal?.Identity as ClaimsIdentity;
+            if (identity != null)
+            {
+                var oldRole = identity.FindFirst(ClaimTypes.Role);
+                if (oldRole != null) identity.RemoveClaim(oldRole);
+                identity.AddClaim(new Claim(ClaimTypes.Role, user.Role.ToString()));
+
+                var oldName = identity.FindFirst(ClaimTypes.Name);
+                if (oldName != null) identity.RemoveClaim(oldName);
+                identity.AddClaim(new Claim(ClaimTypes.Name, user.Name));
+            }
         }
     };
 });
@@ -225,6 +267,14 @@ if (!app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Seed default system parameters on startup
+using (var scope = app.Services.CreateScope())
+{
+    var configService = scope.ServiceProvider.GetRequiredService<SystemConfigService>();
+    await configService.SeedDefaultParametersAsync();
+    await configService.LoadAsync();
+}
 
 app.MapControllers();
 app.MapHub<WhatsappHub>("/whatsappHub");

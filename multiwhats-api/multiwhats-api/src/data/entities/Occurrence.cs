@@ -76,4 +76,27 @@ public class Occurrence : BaseEntity
     {
         ChatId = chatId;
     }
+
+    public void AdvanceStatus(bool forward, List<OccurrenceStatus> statusFlow)
+    {
+        if (statusFlow.Count == 0) return;
+
+        var index = statusFlow.IndexOf(Status);
+        if (index < 0)
+        {
+            Status = statusFlow[0];
+            return;
+        }
+
+        if (forward)
+        {
+            if (index < statusFlow.Count - 1)
+                Status = statusFlow[index + 1];
+        }
+        else
+        {
+            if (index > 0)
+                Status = statusFlow[index - 1];
+        }
+    }
 }

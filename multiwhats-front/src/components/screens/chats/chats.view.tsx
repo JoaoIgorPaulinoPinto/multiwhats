@@ -3,9 +3,11 @@
 import { useState } from "react"
 import { ChatAreaView } from "../../chat-area/chat-area.view"
 import { ChatSidebarView } from "../../chat-sidebar/chat-sidebar.view"
+import { useChatSidebar } from "../../chat-sidebar/chat-sidebar.logic"
 import styles from "./chats.module.css"
 
 export function ChatsView() {
+  const { search, setSearch, chats, loading, load } = useChatSidebar()
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [selectedName, setSelectedName] = useState<string>("")
   const [selectedPhone, setSelectedPhone] = useState<string>("")
@@ -37,7 +39,15 @@ export function ChatsView() {
 
   return (
     <div className={styles.container}>
-      <ChatSidebarView selectedId={selectedId} onSelect={handleSelect} />
+      <ChatSidebarView
+        selectedId={selectedId}
+        onSelect={handleSelect}
+        search={search}
+        setSearch={setSearch}
+        chats={chats}
+        loading={loading}
+        load={load}
+      />
       <ChatAreaView
         chatId={selectedId}
         contactName={selectedName}
@@ -47,6 +57,7 @@ export function ChatsView() {
         lastMessage={selectedLastMessage}
         lastMessageAt={selectedLastMessageAt}
         onStartChat={handleStartChat}
+        onOccurrenceCreated={load}
       />
     </div>
   )
