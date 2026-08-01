@@ -26,15 +26,14 @@ O MultiWhats é um sistema composto por 3 partes que trabalham juntas:
 
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   Frontend   │────▶│   Backend    │────▶│  Messageria  │
+│   Frontend   │───▶│   Backend     │───▶│  Messageria  │
 │  Next.js     │     │  ASP.NET Core│     │  Node.js     │
 │  :3000       │     │  :5261       │     │  :3333       │
 └──────────────┘     └──────┬───────┘     └──────┬───────┘
                             │                     │
                             ▼                     ▼
                       ┌──────────┐        WhatsApp Web.js
-                      │  MySQL   │        (Puppeteer/Chromium)
-                      │ (Railway)│
+                      │ database │        (Puppeteer/Chromium)
                       └──────────┘
 ```
 
