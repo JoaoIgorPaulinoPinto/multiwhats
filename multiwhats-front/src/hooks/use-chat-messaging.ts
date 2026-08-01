@@ -1,16 +1,21 @@
-"use client"
+'use client'
 
-import { useEffect, useState, useRef, useCallback } from "react"
-import { chatsService } from "../services/chats.service"
-import { ws } from "../services/websocket"
-import { detectMediaType, fileToBase64 } from "../utils/media"
-import { toNumericType } from "../types"
-import type { MessageResponse, MessageType } from "../types/chat"
-
+import { useCallback, useEffect, useRef, useState } from 'react'
+import notificationSoundFile from '../../sound/notification.mp3'
+import { chatsService } from '../services/chats.service'
+import { ws } from '../services/websocket'
+import { toNumericType } from '../types'
+import type { MessageResponse, MessageType } from '../types/chat'
+import { detectMediaType, fileToBase64 } from '../utils/media'
 const cache = new Map<number, MessageResponse[]>()
 
-export function useChatMessaging(chatId: number | null, jid: string, lastMessage?: string, lastMessageAt?: string | null) {
-  const [inputValue, setInputValue] = useState("")
+export function useChatMessaging(
+  chatId: number | null,
+  jid: string,
+  lastMessage?: string,
+  lastMessageAt?: string | null,
+) {
+  const [inputValue, setInputValue] = useState('')
   const [messages, setMessages] = useState<MessageResponse[]>([])
   const [loading, setLoading] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
@@ -22,21 +27,44 @@ export function useChatMessaging(chatId: number | null, jid: string, lastMessage
   const [mediaType, setMediaType] = useState<MessageType | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleNewMessage = useCallback((msg: MessageResponse) => {
-    if (msg.chatId === chatId) {
-      setMessages((prev) => [...prev, msg])
+  const notificationSound = useRef(
+    typeof Audio !== 'undefined' ? new Audio(notificationSoundFile) : null,
+  )
+  function playNotification() {
+    if (!notificationSound.current) return
+
+    notificationSound.current.currentTime = 0
+    notificationSound.current.play().catch(() => {})
+  }
+  const handleNewMessage = useCallback(
+    (msg: MessageResponse) => {
+      if (msg.chatId !== chatId) return
+      if (msg.direction === 0) playNotification()
+      setMessages((prev) => {
+        const duplicate = prev.some(
+          (m) =>
+            m.id === msg.id ||
+            (!!m.messageId && !!msg.messageId && m.messageId === msg.messageId),
+        )
+        if (duplicate) return prev
+        return [...prev, msg]
+      })
       if (chatId !== null) cache.delete(chatId)
-    }
-  }, [chatId])
+    },
+    [chatId],
+  )
 
   useEffect(() => {
-    const unsubReceived = ws.on("message:received", handleNewMessage)
-    const unsubSent = ws.on("message:sent", handleNewMessage)
-    return () => { unsubReceived(); unsubSent() }
+    const unsubReceived = ws.on('message:received', handleNewMessage)
+    const unsubSent = ws.on('message:sent', handleNewMessage)
+    return () => {
+      unsubReceived()
+      unsubSent()
+    }
   }, [handleNewMessage])
 
   useEffect(() => {
-    setInputValue("")
+    setInputValue('')
     setSendError(null)
     setSelectedFile(null)
     setMediaPreview(null)
@@ -45,32 +73,34 @@ export function useChatMessaging(chatId: number | null, jid: string, lastMessage
     if (!chatId || chatId === -1) {
       setMessages([])
       if (chatId === -1 && lastMessage) {
-        setMessages([{
-          id: -1,
-          messageId: null,
-          fromJid: "",
-          toJid: null,
-          phoneNumber: "",
-          body: lastMessage,
-          direction: 0 as const,
-          type: "Text" as const,
-          timestamp: 0,
-          sentAt: lastMessageAt ?? "",
-          notifyName: null,
-          hasMedia: false,
-          mediaUrl: null,
-          mediaMimeType: null,
-          mediaFilename: null,
-          mediaSize: null,
-          mediaCaption: null,
-          deliveryStatus: "Delivered" as const,
-          isForwarded: false,
-          chatId: -1,
-          userId: null,
-          occurrenceId: null,
-          replyToId: null,
-          createdAt: lastMessageAt ?? "",
-        }])
+        setMessages([
+          {
+            id: -1,
+            messageId: null,
+            fromJid: '',
+            toJid: null,
+            phoneNumber: '',
+            body: lastMessage,
+            direction: 0 as const,
+            type: 'Text' as const,
+            timestamp: 0,
+            sentAt: lastMessageAt ?? '',
+            notifyName: null,
+            hasMedia: false,
+            mediaUrl: null,
+            mediaMimeType: null,
+            mediaFilename: null,
+            mediaSize: null,
+            mediaCaption: null,
+            deliveryStatus: 'Delivered' as const,
+            isForwarded: false,
+            chatId: -1,
+            userId: null,
+            occurrenceId: null,
+            replyToId: null,
+            createdAt: lastMessageAt ?? '',
+          },
+        ])
       }
       return
     }
@@ -82,32 +112,34 @@ export function useChatMessaging(chatId: number | null, jid: string, lastMessage
     }
 
     if (!cached && lastMessage) {
-      setMessages([{
-        id: -1,
-        messageId: null,
-        fromJid: "",
-        toJid: null,
-        phoneNumber: "",
-        body: lastMessage,
-        direction: 0 as const,
-        type: "Text" as const,
-        timestamp: 0,
-        sentAt: lastMessageAt ?? "",
-        notifyName: null,
-        hasMedia: false,
-        mediaUrl: null,
-        mediaMimeType: null,
-        mediaFilename: null,
-        mediaSize: null,
-        mediaCaption: null,
-        deliveryStatus: "Delivered" as const,
-        isForwarded: false,
-        chatId,
-        userId: null,
-        occurrenceId: null,
-        replyToId: null,
-        createdAt: lastMessageAt ?? "",
-      }])
+      setMessages([
+        {
+          id: -1,
+          messageId: null,
+          fromJid: '',
+          toJid: null,
+          phoneNumber: '',
+          body: lastMessage,
+          direction: 0 as const,
+          type: 'Text' as const,
+          timestamp: 0,
+          sentAt: lastMessageAt ?? '',
+          notifyName: null,
+          hasMedia: false,
+          mediaUrl: null,
+          mediaMimeType: null,
+          mediaFilename: null,
+          mediaSize: null,
+          mediaCaption: null,
+          deliveryStatus: 'Delivered' as const,
+          isForwarded: false,
+          chatId,
+          userId: null,
+          occurrenceId: null,
+          replyToId: null,
+          createdAt: lastMessageAt ?? '',
+        },
+      ])
     }
 
     const requestChatId = chatId
@@ -117,12 +149,28 @@ export function useChatMessaging(chatId: number | null, jid: string, lastMessage
       .getMessages(chatId)
       .then((res: { items: MessageResponse[] }) => {
         if (requestChatId !== lastFetched.current) return
-        console.log("[ChatMessages] payload:", res.items)
-        const newItems = res.items
+        console.log('[ChatMessages] payload:', res.items)
+        const seenIds = new Set<number>()
+        const seenMsgIds = new Set<string>()
+        const newItems = res.items.filter((m: MessageResponse) => {
+          if (seenIds.has(m.id)) return false
+          seenIds.add(m.id)
+          if (m.messageId) {
+            if (seenMsgIds.has(m.messageId)) return false
+            seenMsgIds.add(m.messageId)
+          }
+          return true
+        })
         const oldItems = cache.get(chatId) ?? []
         const isSame =
           newItems.length === oldItems.length &&
-          newItems.every((m: MessageResponse, i: number) => m.id === oldItems[i].id && m.body === oldItems[i].body && m.mediaUrl === oldItems[i].mediaUrl && m.hasMedia === oldItems[i].hasMedia)
+          newItems.every(
+            (m: MessageResponse, i: number) =>
+              m.id === oldItems[i].id &&
+              m.body === oldItems[i].body &&
+              m.mediaUrl === oldItems[i].mediaUrl &&
+              m.hasMedia === oldItems[i].hasMedia,
+          )
         cache.set(chatId, newItems)
         if (!isSame) setMessages(newItems.slice())
       })
@@ -151,7 +199,7 @@ export function useChatMessaging(chatId: number | null, jid: string, lastMessage
     setSelectedFile(null)
     setMediaPreview(null)
     setMediaType(null)
-    if (fileInputRef.current) fileInputRef.current.value = ""
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   function handleFileDrop(file: File) {
@@ -174,23 +222,28 @@ export function useChatMessaging(chatId: number | null, jid: string, lastMessage
     setSendingCount((c) => c + 1)
     const _inputValue = inputValue
     const _midia = selectedFile
-    setInputValue("")
+    setInputValue('')
     clearMedia()
     try {
       if (hasMedia && selectedFile) {
         const base64 = await fileToBase64(selectedFile)
-        await chatsService.sendMediaMessage(jid, toNumericType(mediaType!), base64, {
-          text: _inputValue.trim() || undefined,
-          mediaMimeType: _midia!.type,
-          mediaFilename: _midia!.name,
-          mediaCaption: _inputValue.trim() || undefined,
-        })
+        await chatsService.sendMediaMessage(
+          jid,
+          toNumericType(mediaType!),
+          base64,
+          {
+            text: _inputValue.trim() || undefined,
+            mediaMimeType: _midia!.type,
+            mediaFilename: _midia!.name,
+            mediaCaption: _inputValue.trim() || undefined,
+          },
+        )
       } else {
         await chatsService.sendMessage(jid, _inputValue.trim())
       }
       cache.delete(chatId)
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Erro ao enviar mensagem"
+      const message = e instanceof Error ? e.message : 'Erro ao enviar mensagem'
       setSendError(message)
       console.error(`[ChatArea] falha ao enviar mensagem:`, e)
     } finally {

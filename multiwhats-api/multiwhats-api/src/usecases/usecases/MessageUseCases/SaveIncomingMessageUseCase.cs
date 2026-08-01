@@ -71,6 +71,13 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         var deviceJid = device?.Jid;
 
         var isSelfSent = payload.FromMe;
+        var source = payload.Source?.ToLowerInvariant() switch
+        {
+            "system" => MessageSource.System,
+            "phone" => MessageSource.Phone,
+            "contact" => MessageSource.Contact,
+            _ => isSelfSent ? MessageSource.Phone : MessageSource.Contact
+        };
 
         var actualFromJid = isSelfSent ? (deviceJid ?? payload.From) : payload.From;
         var direction = isSelfSent ? MessageDirection.Outgoing : MessageDirection.Incoming;
@@ -78,8 +85,10 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
 
         var chat = await _chatRepository.GetByJidAsync(payload.From);
 
-        if (chat == null && !isSelfSent)
+        if (chat == null)
         {
+            // Cria o chat tanto para mensagens recebidas quanto para auto-enviadas
+            // (ex.: mensagem enviada pelo celular para um contato sem chat no banco).
             var contact = await _contactRepository.GetByJidAsync(payload.From);
 
             chat = new Chat(
@@ -128,9 +137,10 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
 
         var timestamp = payload.Timestamp;
 
-        // Block unsupported incoming media (audio always blocked; other media blocked when not in Media:AllowedTypes)
+        // Block unsupported incoming media (audio always blocked; other media blocked when not in Media:AllowedTypes).
+        // Pulada durante sincronização inicial (mensagens antigas não devem gerar respostas automáticas).
         var allowedMedia = await _config.GetListAsync("Media:AllowedTypes", new List<string> { "Image", "Audio", "Video", "Document", "Sticker" });
-        if (IsMediaType(messageType) && !isSelfSent &&
+        if (!payload.IsSync && IsMediaType(messageType) && !isSelfSent &&
             (messageType == MessageType.Audio || !allowedMedia.Contains(messageType.ToString())))
         {
             Console.WriteLine($"[SaveIncomingMessage] Mídia não suportada bloqueada de {payload.From} (msgId={payload.MessageId}, type={messageType})");
@@ -170,8 +180,9 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
             return true;
         }
 
-        // Auto-reply outside business hours/days (message is still saved so agents see it later)
-        if (!isSelfSent && await IsOutsideBusinessHoursAsync(timestamp))
+        // Auto-reply outside business hours/days (message is still saved so agents see it later).
+        // Pulada durante sincronização inicial.
+        if (!payload.IsSync && !isSelfSent && await IsOutsideBusinessHoursAsync(timestamp))
         {
             var outsideMsg = await BuildOutsideHoursMessageAsync();
             if (userId != null)
@@ -221,8 +232,17 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
             mediaFilename: payload.MediaFilename,
             mediaSize: payload.MediaSize,
             mediaCaption: payload.MediaCaption,
-            isForwarded: payload.IsForwarded
+            isForwarded: payload.IsForwarded,
+            source: source,
+            fromMe: isSelfSent
         );
+
+        // Mensagens antigas sincronizadas já foram entregues no WhatsApp.
+        if (payload.IsSync && direction == MessageDirection.Outgoing)
+        {
+            message.UpdateDeliveryStatus(DeliveryStatus.Delivered);
+        }
+
         Console.WriteLine(messageType);
         await _messageRepository.AddAsync(message);
 
@@ -232,23 +252,29 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         chat.UpdateLastMessage(sentAt, message);
         await _chatRepository.UpdateAsync(chat);
 
-        var userName = user?.Name;
-        await _useCaseLogger.LogAsync(
-            action: "SaveIncomingMessage",
-            entityType: "Message",
-            entityId: null,
-            description: $"{(isSelfSent ? "Self-sent" : "Received")} message {(isSelfSent ? "to" : "from")} {payload.From}: \"{Truncate(payload.Body, 80)}\" (type: {payload.MessageType}, direction: {direction})",
-            explicitUserId: userId,
-            explicitUserName: userName
-        );
-
-        // Self-sent messages already broadcast by SendMessageUseCase, skip to avoid duplicates
-        if (!isSelfSent)
+        // Broadcast de tempo real. O webhook é a fonte canônica: para toda
+        // mensagem não-sync o broadcast acontece AQUI. O SendMessageUseCase
+        // só broadcasta (MessageSent) quando ELE salva a mensagem; se o
+        // webhook já a salvou, o dedup acima retorna antes e evita o
+        // broadcast duplicado. Isso garante exatamente UM broadcast por
+        // mensagem, inclusive para envios via API (antes, na corrida em que
+        // o webhook ganhava do dedup do SendMessageUseCase, nenhum broadcast
+        // acontecia e a mensagem não aparecia em tempo real).
+        if (!payload.IsSync)
         {
             var msgResponse = GetMessagesUseCase.MapToDetailResponse(message);
             await _hubContext.Clients.All.SendAsync("MessageReceived", msgResponse);
         }
 
+        var userName = user?.Name;
+        await _useCaseLogger.LogAsync(
+            action: "SaveIncomingMessage",
+            entityType: "Message",
+            entityId: null,
+            description: $"{(isSelfSent ? "Self-sent" : "Received")} message {(isSelfSent ? "to" : "from")} {payload.From}: \"{Truncate(payload.Body, 80)}\" (type: {payload.MessageType}, direction: {direction}, source: {source}{(payload.IsSync ? ", sync: true" : "")})",
+            explicitUserId: userId,
+            explicitUserName: userName
+        );
 
         return true;
     }

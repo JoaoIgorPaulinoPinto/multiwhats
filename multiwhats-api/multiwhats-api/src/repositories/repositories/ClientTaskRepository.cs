@@ -62,7 +62,7 @@ public class ClientTaskRepository : IClientTaskRepository
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var task = await _context.ClientTasks.FindAsync(id);
+        var task = await _context.ClientTasks.FirstOrDefaultAsync(t => t.Id == id);
         if (task is not null)
         {
             _context.ClientTasks.Remove(task);

@@ -95,6 +95,7 @@ public class GetMessagesUseCase : IGetMessagesUseCase
         return new MessageSummaryResponse
         {
             Id = message.Id,
+            MessageId = message.WhatssAppMessageId,
             Body = message.Body,
             Direction = message.Direction,
             Type = message.Type,
@@ -108,6 +109,8 @@ public class GetMessagesUseCase : IGetMessagesUseCase
             MediaSize = message.MediaSize,
             MediaCaption = message.MediaCaption,
             DeliveryStatus = message.DeliveryStatus,
+            Source = message.Source,
+            FromMe = message.FromMe,
             ChatId = message.ChatId,
             CreatedAt = message.CreatedAt
         };
@@ -136,6 +139,8 @@ public class GetMessagesUseCase : IGetMessagesUseCase
             MediaCaption = message.MediaCaption,
             DeliveryStatus = message.DeliveryStatus,
             IsForwarded = message.IsForwarded,
+            Source = message.Source,
+            FromMe = message.FromMe,
             ChatId = message.ChatId,
             UserId = message.UserId,
             OccurrenceId = message.OccurrenceId,

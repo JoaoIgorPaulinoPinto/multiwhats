@@ -64,7 +64,9 @@ public class LegacyDbSyncService : ILegacyDbSyncService
             media_size = message.MediaSize,
             media_caption = message.MediaCaption,
             is_forwarded = message.IsForwarded,
-            reply_to_id = message.ReplyToId
+            reply_to_id = message.ReplyToId,
+            source = message.Source.ToString(),
+            from_me = message.FromMe
         };
 
         await PostAsync("messages", payload);

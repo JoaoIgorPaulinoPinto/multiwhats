@@ -1,5 +1,4 @@
-import { api } from "./api"
-
+import { api } from './api'
 
 export interface UserResponse {
   id: number
@@ -25,22 +24,27 @@ export interface RegistrationCodeResponse {
 
 export const authService = {
   login(name: string, password: string) {
-    return api.post<LoginResponse>("/api/auth/login", { name, password })
+    return api.post<LoginResponse>('/api/auth/login', { name, password })
   },
 
   register(name: string, password: string, registrationCode?: string) {
-    return api.post("/api/auth/register", { name, password, registrationCode })
+    return api.post('/api/auth/register', { name, password, registrationCode })
   },
 
   generateCodes(quantity = 1) {
-    return api.post<RegistrationCodeResponse[]>("/api/auth/codes", { quantity })
+    return api
+      .post<{ message: string; codes: RegistrationCodeResponse[] }>(
+        '/api/auth/codes',
+        { quantity },
+      )
+      .then((res) => (Array.isArray(res.codes) ? res.codes : []))
   },
 
   logout() {
-    return api.post("/api/auth/logout")
+    return api.post('/api/auth/logout')
   },
 
   me() {
-    return api.get<UserResponse>("/api/auth/me")
+    return api.get<UserResponse>('/api/auth/me')
   },
 }

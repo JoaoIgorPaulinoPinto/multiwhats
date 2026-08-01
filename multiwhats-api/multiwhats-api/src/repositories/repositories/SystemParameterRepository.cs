@@ -46,7 +46,7 @@ public class SystemParameterRepository : ISystemParameterRepository
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var param = await _context.SystemParameters.FindAsync(id);
+        var param = await _context.SystemParameters.FirstOrDefaultAsync(p => p.Id == id);
         if (param is null) return false;
         _context.SystemParameters.Remove(param);
         await _context.SaveChangesAsync();

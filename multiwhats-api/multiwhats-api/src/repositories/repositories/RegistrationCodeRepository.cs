@@ -21,6 +21,13 @@ public class RegistrationCodeRepository : IRegistrationCodeRepository
             .FirstOrDefaultAsync(rc => rc.Code == code);
     }
 
+    public async Task<bool> ExistsAsync(string code)
+    {
+        return await _context.Set<RegistrationCode>()
+            .AsNoTracking()
+            .AnyAsync(rc => rc.Code == code);
+    }
+
     public async Task<RegistrationCode?> GetTrackedByCodeAsync(string code)
     {
         return await _context.Set<RegistrationCode>()

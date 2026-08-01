@@ -1,6 +1,7 @@
 using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.data.entities;
+using multiwhats_api.src.helpers;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.AuthInterfaces;
@@ -26,8 +27,22 @@ public class LoginUseCase : ILoginUseCase
     {
         var user = await _userRepository.GetByNameAsync(request.Name);
 
-        if (user == null || user.Password != request.Password || !user.IsActive)
+        if (user == null || !user.IsActive)
             throw new UnauthorizedAccessException("Credenciais inválidas ou usuário inativo.");
+
+        var passwordOk = PasswordHelper.IsHashed(user.Password)
+            ? PasswordHelper.Verify(request.Password, user.Password)
+            : user.Password == request.Password;
+
+        if (!passwordOk)
+            throw new UnauthorizedAccessException("Credenciais inválidas ou usuário inativo.");
+
+        // Migra senhas legadas em texto puro para hash BCrypt no primeiro login.
+        if (!PasswordHelper.IsHashed(user.Password))
+        {
+            user.ChangePassword(PasswordHelper.Hash(request.Password));
+            await _userRepository.UpdateAsync(user);
+        }
 
         var token = _tokenService.GenerateToken(user);
 

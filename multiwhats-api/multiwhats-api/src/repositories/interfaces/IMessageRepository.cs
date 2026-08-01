@@ -13,4 +13,5 @@ public interface IMessageRepository
     Task<List<Message>> GetByOccurrenceAsync(int occurrenceId);
     Task<List<Message>> GetByPhoneNumberAsync(string phoneNumber);
     Task<Message?> GetByMessageIdAsync(string messageId);
+    Task<bool> MarkAsSystemAsync(string messageId);
 }

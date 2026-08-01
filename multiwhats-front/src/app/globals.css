@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 /* Tema claro (padrão) */
 :root {
   --background: #f0f2f5;
@@ -25,7 +26,7 @@
   --surface: #111b21;
   --surface-hover: #202c33;
   --sidebar: #111b21;
-  --chat: linear-gradient(135deg, #202c33 0%, #0b141a 100%, #0b141a 30%);
+  --chat: #0b141a;
   --panel: #111b21;
   --card: #202c33;
   --card-hover: #2a3942;
@@ -70,7 +71,13 @@ body {
   width: 100vw;
   height: 100vh;
 }
+:root {
+  --font-primary: 'Inter', sans-serif;
+}
 
+* {
+  font-family: var(--font-primary);
+}
 body {
   background: var(--background);
   color: var(--text);
@@ -88,9 +95,30 @@ body {
   margin: 0;
   padding: 0;
 }
-
 /* ── Animações globais ─────────────────────────────── */
+/* Scrollbar global */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
 
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
 @keyframes spin {
   to { transform: rotate(360deg); }
 }

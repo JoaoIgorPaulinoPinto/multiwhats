@@ -47,7 +47,7 @@ public class GroupRepository : IGroupRepository
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var group = await _context.Groups.FindAsync(id);
+        var group = await _context.Groups.FirstOrDefaultAsync(g => g.Id == id);
         if (group is not null)
         {
             _context.Groups.Remove(group);

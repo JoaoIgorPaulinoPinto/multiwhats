@@ -94,6 +94,8 @@ public class ClientsController : ControllerBase
         var client = await _getClientsUseCase.ExecuteById(id);
         if (client == null)
             return NotFound(new { message = "Cliente não encontrado." });
-        return Ok(client);
+
+        var contacts = await _getClientsUseCase.ExecuteContacts(id);
+        return Ok(contacts);
     }
 }

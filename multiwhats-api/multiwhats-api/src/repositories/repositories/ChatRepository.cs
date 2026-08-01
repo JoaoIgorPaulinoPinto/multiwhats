@@ -27,9 +27,7 @@ public class ChatRepository : IChatRepository
                 .ThenInclude(c => c.Client)
             .Include(c => c.Client)
             .Include(c => c.AssignedTo)
-            .Include(c => c.Messages
-                .OrderByDescending(m => m.CreatedAt)
-                .Take(1))
+            .Include(c => c.LastMessage)
             .OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -48,7 +46,7 @@ public class ChatRepository : IChatRepository
                 .ThenInclude(c => c.Client)
             .Include(c => c.Client)
             .Include(c => c.AssignedTo)
-            .Include(c => c.Messages.OrderByDescending(m => m.Timestamp).Take(1))
+            .Include(c => c.LastMessage)
             .Include(c => c.Occurrences)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
@@ -97,7 +95,7 @@ public class ChatRepository : IChatRepository
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var chat = await _context.Chats.FindAsync(id);
+        var chat = await _context.Chats.FirstOrDefaultAsync(c => c.Id == id);
         if (chat is not null)
         {
             _context.Chats.Remove(chat);
@@ -119,6 +117,9 @@ public class ChatRepository : IChatRepository
 
     public async Task<bool> MergeChatAsync(int sourceId, int destinationId)
     {
+        if (sourceId == destinationId)
+            return true;
+
         var source = await _context.Chats
             .Include(c => c.Contact)
             .FirstOrDefaultAsync(c => c.Id == sourceId);
@@ -143,10 +144,19 @@ public class ChatRepository : IChatRepository
         foreach (var occ in occurrences)
             occ.UpdateChatId(destinationId);
 
-        if (source.Contact is not null)
+        var latestMovedMessage = messages
+            .OrderByDescending(m => m.SentAt)
+            .FirstOrDefault();
+
+        if (latestMovedMessage is not null
+            && (destination.LastMessageAt is null || latestMovedMessage.SentAt > destination.LastMessageAt.Value))
         {
-            source.UnlinkContact();
-            destination.LinkToContact(source.Contact.Id, source.ClientId);
+            destination.UpdateLastMessage(latestMovedMessage.SentAt, latestMovedMessage);
+        }
+
+        if (source.Contact is not null && destination.ContactId is null)
+        {
+            destination.LinkToContact(source.Contact.Id, destination.ClientId ?? source.ClientId);
         }
 
         _context.Chats.Remove(source);

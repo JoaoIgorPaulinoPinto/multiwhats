@@ -4,6 +4,7 @@ import { useState } from "react"
 import { ChatAreaView } from "../../chat-area/chat-area.view"
 import { ChatSidebarView } from "../../chat-sidebar/chat-sidebar.view"
 import { useChatSidebar } from "../../chat-sidebar/chat-sidebar.logic"
+import type { ChatListResponse } from "../../../services/chats.service"
 import styles from "./chats.module.css"
 
 export function ChatsView() {
@@ -37,6 +38,21 @@ export function ChatsView() {
     setSelectedLastMessageAt(null)
   }
 
+  function handleMerged(result: { survivorJid: string; survivor?: ChatListResponse }) {
+    load()
+    if (!result.survivor) return
+    const s = result.survivor
+    handleSelect(
+      s.id,
+      s.contactName ?? s.name ?? s.phoneNumber ?? `Chat #${s.id}`,
+      s.phoneNumber ?? "",
+      s.jid,
+      s.contactId,
+      s.lastMessage?.body ?? "",
+      s.lastMessageAt,
+    )
+  }
+
   return (
     <div className={styles.container}>
       <ChatSidebarView
@@ -58,6 +74,7 @@ export function ChatsView() {
         lastMessageAt={selectedLastMessageAt}
         onStartChat={handleStartChat}
         onOccurrenceCreated={load}
+        onMerged={handleMerged}
       />
     </div>
   )

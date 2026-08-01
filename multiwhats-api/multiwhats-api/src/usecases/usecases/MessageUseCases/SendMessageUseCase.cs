@@ -23,6 +23,7 @@ public class SendMessageUseCase : ISendMessageUseCase
     private readonly UseCaseLogger _useCaseLogger;
     private readonly IHubContext<WhatsappHub> _hubContext;
     private readonly IUserRepository _userRepository;
+    private readonly IConfiguration _configuration;
 
     public SendMessageUseCase(
         HttpClient httpClient,
@@ -33,7 +34,8 @@ public class SendMessageUseCase : ISendMessageUseCase
         MessageStrategyFactory strategyFactory,
         UseCaseLogger useCaseLogger,
         IHubContext<WhatsappHub> hubContext,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        IConfiguration configuration)
     {
         _httpClient = httpClient;
         _messageRepository = messageRepository;
@@ -44,6 +46,7 @@ public class SendMessageUseCase : ISendMessageUseCase
         _useCaseLogger = useCaseLogger;
         _hubContext = hubContext;
         _userRepository = userRepository;
+        _configuration = configuration;
     }
 
 
@@ -65,7 +68,7 @@ public class SendMessageUseCase : ISendMessageUseCase
                 "application/json"
             );
 
-            var response = await _httpClient.PostAsync("http://localhost:3333/api/enviar", jsonContent);
+            var response = await _httpClient.PostAsync(GetMessageriaUrl(), jsonContent);
             var responseBody = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"[ASP.NET] Resposta do Node.js -> Status: {response.StatusCode} | Corpo: {responseBody}");
 
@@ -104,13 +107,16 @@ public class SendMessageUseCase : ISendMessageUseCase
                 Console.WriteLine("[SendMessage] Aviso: Dispositivo não encontrado. fromJid usará o JID da requisição como fallback.");
             }
 
-            // Dedup: se o webhook já salvou esta mensagem com o mesmo messageId, não salvar novamente
+            // Dedup: se o webhook já salvou esta mensagem com o mesmo messageId,
+            // corrige a origem para System (o message_create do Node pode ter
+            // classificado como "phone" por causa da corrida) e não salva de novo.
             if (!string.IsNullOrEmpty(messageId))
             {
                 var existing = await _messageRepository.GetByMessageIdAsync(messageId);
                 if (existing != null)
                 {
-                    Console.WriteLine($"[SendMessage] Duplicata ignorada msgId={messageId} (já existe id={existing.Id})");
+                    Console.WriteLine($"[SendMessage] Duplicata encontrada msgId={messageId} (já existe id={existing.Id}); corrigindo origem para System");
+                    await _messageRepository.MarkAsSystemAsync(messageId);
                     return true;
                 }
             }
@@ -133,7 +139,9 @@ public class SendMessageUseCase : ISendMessageUseCase
                 mediaMimeType: fields.mediaMimeType,
                 mediaFilename: fields.mediaFilename,
                 mediaSize: fields.mediaSize,
-                mediaCaption: fields.mediaCaption
+                mediaCaption: fields.mediaCaption,
+                source: MessageSource.System,
+                fromMe: true
             );
 
             await _messageRepository.AddAsync(message);
@@ -173,5 +181,13 @@ public class SendMessageUseCase : ISendMessageUseCase
     private static string Truncate(string? value, int maxLength)
     {
         return value?.Length > maxLength ? value[..maxLength] + "..." : value ?? "";
+    }
+
+    private string GetMessageriaUrl()
+    {
+        var baseUrl = _configuration["Messageria:BaseUrl"];
+        return string.IsNullOrWhiteSpace(baseUrl)
+            ? "http://localhost:3333/api/enviar"
+            : $"{baseUrl.TrimEnd('/')}/api/enviar";
     }
 }

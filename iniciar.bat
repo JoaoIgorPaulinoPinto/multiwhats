@@ -10,7 +10,7 @@ start "Messageria" cmd /k "cd /d "%ROOT%multiwhats-api/messageria" && npm start"
 
 timeout /t 10
 
-start "LegacyDatabaseAdapter" cmd /k "cd /d "%ROOT%multiwhats-api/legacydatabaseadapter" && node server.ts"
+start "LegacyDatabaseAdapter" cmd /k "cd /d "%ROOT%multiwhats-api/legacydatabaseadapter" && npm start"
 
 timeout /t 10
 

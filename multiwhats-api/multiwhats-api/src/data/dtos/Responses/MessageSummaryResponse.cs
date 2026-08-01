@@ -5,6 +5,7 @@ namespace multiwhats_api.src.data.dtos.Responses;
 public record MessageSummaryResponse
 {
     public int Id { get; init; }
+    public string? MessageId { get; init; }
     public string? Body { get; init; }
     public MessageDirection Direction { get; init; }
     public MessageType Type { get; init; }
@@ -18,6 +19,8 @@ public record MessageSummaryResponse
     public long? MediaSize { get; init; }
     public string? MediaCaption { get; init; }
     public DeliveryStatus DeliveryStatus { get; init; }
+    public MessageSource Source { get; init; }
+    public bool FromMe { get; init; }
     public int ChatId { get; init; }
     public DateTime CreatedAt { get; init; }
 }

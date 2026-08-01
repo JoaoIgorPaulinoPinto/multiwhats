@@ -75,6 +75,12 @@ public class Message : BaseEntity
     [Column("is_forwarded")]
     public bool IsForwarded { get; private set; }
 
+    [Column("source")]
+    public MessageSource Source { get; private set; }
+
+    [Column("from_me")]
+    public bool FromMe { get; private set; }
+
     [Column("chat_id")]
     public int ChatId { get; private set; }
 
@@ -121,7 +127,9 @@ public class Message : BaseEntity
         long? mediaSize = null,
         string? mediaCaption = null,
         bool isForwarded = false,
-        int? replyToId = null)
+        int? replyToId = null,
+        MessageSource source = MessageSource.Phone,
+        bool fromMe = false)
     {
         FromJid = fromJid ?? throw new ArgumentNullException(nameof(fromJid));
         PhoneNumber = phoneNumber;
@@ -144,12 +152,22 @@ public class Message : BaseEntity
         MediaCaption = mediaCaption;
         IsForwarded = isForwarded;
         ReplyToId = replyToId;
+        Source = source;
+        FromMe = fromMe;
         DeliveryStatus = direction == MessageDirection.Outgoing ? DeliveryStatus.Pending : DeliveryStatus.Delivered;
     }
 
     public void UpdateDeliveryStatus(DeliveryStatus status)
     {
         DeliveryStatus = status;
+    }
+
+    // Corrige a origem de uma mensagem que foi criada pelo sistema (envio via API),
+    // mesmo que o webhook do message_create a tenha salvo antes com outra origem.
+    public void MarkAsSystem()
+    {
+        Source = MessageSource.System;
+        FromMe = true;
     }
 
     public void LinkToOccurrence(int occurrenceId)

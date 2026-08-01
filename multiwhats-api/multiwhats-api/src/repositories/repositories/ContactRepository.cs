@@ -79,7 +79,7 @@ public class ContactRepository : IContactRepository
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var contact = await _context.Contacts.FindAsync(id);
+        var contact = await _context.Contacts.FirstOrDefaultAsync(c => c.Id == id);
         if (contact is not null)
         {
             _context.Contacts.Remove(contact);

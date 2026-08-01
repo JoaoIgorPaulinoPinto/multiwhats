@@ -82,6 +82,12 @@ export const chatsService = {
     return api.get(`/api/chats/${chatId}/occurrences`)
   },
 
+  mergeChats(mergeJid: string, toJid: string) {
+    return api.patch(
+      `/api/chats/merge?mergeJid=${encodeURIComponent(mergeJid)}&toJid=${encodeURIComponent(toJid)}`,
+    )
+  },
+
   sendMessage(jid: string, text: string) {
     return api.post<MessageResponse>("/api/messages/send", { jid, text })
   },

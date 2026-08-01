@@ -1,13 +1,14 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { X } from "lucide-react"
+import { Combine, X } from "lucide-react"
 import styles from "./chat-info-panel.module.css"
-import { chatsService, type ChatFullInfoResponse } from "../../services/chats.service"
+import { chatsService, type ChatFullInfoResponse, type ChatListResponse } from "../../services/chats.service"
 import { useToast } from "../../components/toast/toast.provider"
 import { OCCURRENCE_STATUS_LABELS, PRIORITY_LABELS } from "../../constants"
 import type { OccurrenceStatus, Priority } from "../../types"
 import { formatRelativeTime, formatRelativeToNow } from "../../utils/date-format"
+import { MergeChatModal } from "./merge-chat-modal"
 
 interface Props {
   chatId: number
@@ -15,6 +16,7 @@ interface Props {
   phoneNumber: string
   jid: string
   onClose: () => void
+  onMerged: (result: { survivorJid: string; survivor?: ChatListResponse }) => void
 }
 
 const STATUS_MAP: Record<number, OccurrenceStatus> = {
@@ -24,10 +26,11 @@ const STATUS_MAP: Record<number, OccurrenceStatus> = {
   3: "Closed",
 }
 
-export function ChatInfoPanel({ chatId, contactName, phoneNumber, jid, onClose }: Props) {
+export function ChatInfoPanel({ chatId, contactName, phoneNumber, jid, onClose, onMerged }: Props) {
   const { toast } = useToast()
   const [info, setInfo] = useState<ChatFullInfoResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showMerge, setShowMerge] = useState(false)
 
   const load = useCallback(() => {
     chatsService
@@ -150,10 +153,34 @@ export function ChatInfoPanel({ chatId, contactName, phoneNumber, jid, onClose }
                   </div>
                 )}
               </section>
+
+              <section className={styles.section}>
+                <h4 className={styles.sectionTitle}>Ações</h4>
+                <button
+                  className={styles.mergeBtn}
+                  onClick={() => setShowMerge(true)}
+                >
+                  <Combine size={14} />
+                  Mesclar conversa
+                </button>
+              </section>
             </>
           )}
         </div>
       </aside>
+
+      {showMerge && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <MergeChatModal
+            current={{ id: chatId, name, jid: info?.jid ?? jid }}
+            onClose={() => setShowMerge(false)}
+            onMerged={(result) => {
+              setShowMerge(false)
+              onMerged(result)
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }

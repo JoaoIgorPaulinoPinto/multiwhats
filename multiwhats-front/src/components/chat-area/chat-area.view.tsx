@@ -1,18 +1,32 @@
-"use client"
+'use client'
 
-import { useState, useCallback, useRef } from "react"
-import { Check, CheckCheck, FileWarning, Paperclip, Send, Smile, UserPlus, X, Music, FileText, Upload } from "lucide-react"
-import { AvatarView } from "../avatar/avatar.view"
-import { useChatArea } from "./chat-area.logic"
-import { SaveContactModal, OccurrenceModal } from "./chat-area-modals"
-import { MessageMedia } from "../message-media/message-media.view"
-import { Lightbox } from "../lightbox/lightbox.view"
-import { ChatInfoPanel } from "./chat-info-panel"
-import { formatTime, formatDateSeparator, shouldShowDateSeparator } from "../../utils/date-format"
-import { formatMessageText } from "../../utils/message-formatter"
-import { isContactType } from "../../types"
-import { detectMediaType } from "../../utils/media"
-import styles from "./chat-area.module.css"
+import {
+  FileText,
+  FileWarning,
+  Music,
+  Paperclip,
+  Send,
+  Smile,
+  Upload,
+  UserPlus,
+  X,
+} from 'lucide-react'
+import { useCallback, useRef, useState } from 'react'
+import { isContactType } from '../../types'
+import type { ChatListResponse } from '../../services/chats.service'
+import {
+  formatDateSeparator,
+  formatTime,
+  shouldShowDateSeparator,
+} from '../../utils/date-format'
+import { formatMessageText } from '../../utils/message-formatter'
+import { AvatarView } from '../avatar/avatar.view'
+import { Lightbox } from '../lightbox/lightbox.view'
+import { MessageMedia } from '../message-media/message-media.view'
+import { OccurrenceModal, SaveContactModal } from './chat-area-modals'
+import { useChatArea } from './chat-area.logic'
+import styles from './chat-area.module.css'
+import { ChatInfoPanel } from './chat-info-panel'
 
 interface Props {
   chatId: number | null
@@ -24,9 +38,21 @@ interface Props {
   chatContactId?: number | null
   onStartChat?: (phone: string, name: string) => void
   onOccurrenceCreated?: () => void
+  onMerged?: (result: { survivorJid: string; survivor?: ChatListResponse }) => void
 }
 
-export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContactId, lastMessage, lastMessageAt, onStartChat, onOccurrenceCreated }: Props) {
+export function ChatAreaView({
+  chatId,
+  contactName,
+  phoneNumber,
+  jid,
+  chatContactId,
+  lastMessage,
+  lastMessageAt,
+  onStartChat,
+  onOccurrenceCreated,
+  onMerged,
+}: Props) {
   const {
     inputValue,
     setInputValue,
@@ -47,7 +73,7 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
 
   const [showInfoPanel, setShowInfoPanel] = useState(false)
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
-  const [lightboxAlt, setLightboxAlt] = useState<string>("")
+  const [lightboxAlt, setLightboxAlt] = useState<string>('')
   const [isDragging, setIsDragging] = useState(false)
   const dragCounter = useRef(0)
 
@@ -64,7 +90,7 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
     e.preventDefault()
     e.stopPropagation()
     dragCounter.current++
-    if (e.dataTransfer.types.includes("Files")) setIsDragging(true)
+    if (e.dataTransfer.types.includes('Files')) setIsDragging(true)
   }, [])
 
   const onDragLeave = useCallback((e: React.DragEvent) => {
@@ -79,29 +105,35 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
     e.stopPropagation()
   }, [])
 
-  const onDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    dragCounter.current = 0
-    setIsDragging(false)
-    const file = e.dataTransfer.files?.[0]
-    if (file) handleFileDrop(file)
-  }, [handleFileDrop])
+  const onDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      dragCounter.current = 0
+      setIsDragging(false)
+      const file = e.dataTransfer.files?.[0]
+      if (file) handleFileDrop(file)
+    },
+    [handleFileDrop],
+  )
 
-  const onPaste = useCallback((e: React.ClipboardEvent) => {
-    const items = e.clipboardData?.items
-    if (!items) return
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].kind === "file") {
-        const file = items[i].getAsFile()
-        if (file) {
-          e.preventDefault()
-          handleFileDrop(file)
-          return
+  const onPaste = useCallback(
+    (e: React.ClipboardEvent) => {
+      const items = e.clipboardData?.items
+      if (!items) return
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].kind === 'file') {
+          const file = items[i].getAsFile()
+          if (file) {
+            e.preventDefault()
+            handleFileDrop(file)
+            return
+          }
         }
       }
-    }
-  }, [handleFileDrop])
+    },
+    [handleFileDrop],
+  )
 
   return (
     <main
@@ -112,31 +144,35 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
       onDrop={onDrop}
       onPaste={onPaste}
     >
-
       <header className={styles.chatHeader}>
         {chatId ? (
           <AvatarView name={contactName ?? `Contato ${chatId}`} size={36} />
         ) : (
           <AvatarView name="?" size={36} />
         )}
-        <div className={styles.data} onClick={() => chatId && setShowInfoPanel(true)} style={{ cursor: chatId ? "pointer" : undefined }}>
-          <strong>{chatId ? contactName ?? `Contato #${chatId}` : "Nenhum contato"}</strong>
-          <small>{chatId ? "Online" : "Selecione um contato"}</small>
+        <div
+          className={styles.data}
+          onClick={() => chatId && setShowInfoPanel(true)}
+          style={{ cursor: chatId ? 'pointer' : undefined }}
+        >
+          <strong>
+            {chatId ? (contactName ?? `Contato #${chatId}`) : 'Nenhum contato'}
+          </strong>
+          <small>{chatId ? 'Online' : 'Selecione um contato'}</small>
         </div>
         {chatId && !chatContactId && (
           <button
             className={styles.saveContactBtn}
-            onClick={() => saveContact.openModal(phoneNumber ?? "", contactName ?? "")}
+            onClick={() =>
+              saveContact.openModal(phoneNumber ?? '', contactName ?? '')
+            }
           >
             <UserPlus size={15} />
             Salvar em contatos
           </button>
         )}
         {chatId && (
-          <button
-            className={styles.occBtn}
-            onClick={occurrence.openModal}
-          >
+          <button className={styles.occBtn} onClick={occurrence.openModal}>
             <FileWarning size={15} />
             Abrir Ocorrência
           </button>
@@ -144,19 +180,20 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
       </header>
 
       <section className={styles.messages}>
-        {sendingCount > 0 && Array.from({ length: sendingCount }).map((_, i) => (
-          <div key={`sending-${i}`} className={styles.sent}>
-            <div className={styles.messageRow}>
-              <div className={`${styles.bubble} ${styles.sendingBubble}`}>
-                <span className={styles.sendingDots}>
-                  <span className={styles.dot} />
-                  <span className={styles.dot} />
-                  <span className={styles.dot} />
-                </span>
+        {sendingCount > 0 &&
+          Array.from({ length: sendingCount }).map((_, i) => (
+            <div key={`sending-${i}`} className={styles.sent}>
+              <div className={styles.messageRow}>
+                <div className={`${styles.bubble} ${styles.sendingBubble}`}>
+                  <span className={styles.sendingDots}>
+                    <span className={styles.dot} />
+                    <span className={styles.dot} />
+                    <span className={styles.dot} />
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
         {messages.length === 0 ? (
           <div className={styles.empty}>
             {chatId ? (
@@ -169,7 +206,9 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
                   <div className={styles.bubble}>{lastMessage}</div>
                 </div>
               </>
-            ) : "Selecione um contato para ver as mensagens"}
+            ) : (
+              'Selecione um contato para ver as mensagens'
+            )}
           </div>
         ) : (
           items.map(({ msg, prev }) => {
@@ -181,30 +220,53 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
                     <span>{formatDateSeparator(msg.sentAt)}</span>
                   </div>
                 )}
-                <div className={msg.direction === 0 ? styles.received : styles.sent}>
+                <div
+                  className={
+                    msg.direction === 0 ? styles.received : styles.sent
+                  }
+                >
                   <div className={styles.messageRow}>
-                    <div className={msg.mediaUrl && !msg.body ? `${styles.bubble} ${styles.bubbleMediaOnly}` : styles.bubble}>
-                      {msg.mediaUrl || isContactType(msg.type) ? <MessageMedia msg={msg} onStartChat={onStartChat} onImageClick={handleImageClick} /> : null}
-                     
-                      { !isContactType(msg.type) &&  msg.body && <div>{formatMessageText(msg.body)}</div>}
+                    <div
+                      className={
+                        msg.mediaUrl && !msg.body
+                          ? `${styles.bubble} ${styles.bubbleMediaOnly}`
+                          : styles.bubble
+                      }
+                    >
+                      {msg.mediaUrl || isContactType(msg.type) ? (
+                        <MessageMedia
+                          msg={msg}
+                          onStartChat={onStartChat}
+                          onImageClick={handleImageClick}
+                        />
+                      ) : null}
+
+                      {!isContactType(msg.type) && msg.body && (
+                        <div>{formatMessageText(msg.body)}</div>
+                      )}
                     </div>
                     <div className={styles.messageMeta}>
-                      <span className={styles.timestamp}>{formatTime(msg.sentAt)}</span>
-                      {msg.direction === 1 && (
+                      <span className={styles.timestamp}>
+                        {formatTime(msg.sentAt)}
+                      </span>
+                      {/* {msg.direction === 1 && (
                         <span className={styles.status}>
-                          {msg.deliveryStatus === "Read" || msg.deliveryStatus === 3 ? (
+                          {msg.deliveryStatus === 'Read' ||
+                          msg.deliveryStatus === 3 ? (
                             <CheckCheck size={13} className={styles.read} />
-                          ) : msg.deliveryStatus === "Delivered" || msg.deliveryStatus === 2 ? (
+                          ) : msg.deliveryStatus === 'Delivered' ||
+                            msg.deliveryStatus === 2 ? (
                             <CheckCheck size={13} />
-                          ) : msg.deliveryStatus === "Sent" || msg.deliveryStatus === 1 ? (
+                          ) : msg.deliveryStatus === 'Sent' ||
+                            msg.deliveryStatus === 1 ? (
                             <Check size={13} />
-                          ) : msg.deliveryStatus === "Failed" ? (
+                          ) : msg.deliveryStatus === 'Failed' ? (
                             <X size={11} className={styles.failed} />
                           ) : (
                             <Check size={13} className={styles.pending} />
                           )}
                         </span>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 </div>
@@ -217,16 +279,22 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
       {mediaPreview && (
         <div className={styles.mediaPreviewBar}>
           <div className={styles.mediaPreviewContent}>
-            {mediaType === "Image" || mediaType === "Sticker" ? (
-              <img src={mediaPreview} alt="Preview" className={styles.mediaPreviewImg} />
-            ) : mediaType === "Video" ? (
+            {mediaType === 'Image' || mediaType === 'Sticker' ? (
+              <img
+                src={mediaPreview}
+                alt="Preview"
+                className={styles.mediaPreviewImg}
+              />
+            ) : mediaType === 'Video' ? (
               <video src={mediaPreview} className={styles.mediaPreviewImg} />
-            ) : mediaType === "Audio" ? (
+            ) : mediaType === 'Audio' ? (
               <Music size={20} />
             ) : (
               <FileText size={20} />
             )}
-            <span className={styles.mediaPreviewName}>{selectedFile?.name}</span>
+            <span className={styles.mediaPreviewName}>
+              {selectedFile?.name}
+            </span>
             <button className={styles.mediaPreviewClear} onClick={clearMedia}>
               <X size={14} />
             </button>
@@ -235,13 +303,15 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
       )}
 
       <footer className={styles.inputArea}>
-        <button><Smile size={20} /></button>
+        <button>
+          <Smile size={20} />
+        </button>
         <input
           type="file"
           ref={fileInputRef}
           onChange={handleFileSelect}
           accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
-          style={{ display: "none" }}
+          style={{ display: 'none' }}
         />
         <button onClick={() => fileInputRef.current?.click()}>
           <Paperclip size={20} />
@@ -252,17 +322,17 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.ctrlKey && !e.shiftKey) {
+            if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
               e.preventDefault()
               sendMessage()
             }
           }}
           onInput={(e) => {
             const el = e.currentTarget
-            el.style.height = "auto"
-            el.style.height = Math.min(el.scrollHeight, 120) + "px"
+            el.style.height = 'auto'
+            el.style.height = Math.min(el.scrollHeight, 120) + 'px'
           }}
-          style={{ resize: "none" }}
+          style={{ resize: 'none' }}
         />
         <button
           className={styles.send}
@@ -282,7 +352,11 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
       )}
 
       {lightboxSrc && (
-        <Lightbox src={lightboxSrc} alt={lightboxAlt} onClose={() => setLightboxSrc(null)} />
+        <Lightbox
+          src={lightboxSrc}
+          alt={lightboxAlt}
+          onClose={() => setLightboxSrc(null)}
+        />
       )}
 
       {sendError && <div className={styles.error}>{sendError}</div>}
@@ -324,9 +398,13 @@ export function ChatAreaView({ chatId, contactName, phoneNumber, jid, chatContac
         <ChatInfoPanel
           chatId={chatId}
           contactName={contactName ?? `Contato #${chatId}`}
-          phoneNumber={phoneNumber ?? ""}
+          phoneNumber={phoneNumber ?? ''}
           jid={jid}
           onClose={() => setShowInfoPanel(false)}
+          onMerged={(result) => {
+            setShowInfoPanel(false)
+            onMerged?.(result)
+          }}
         />
       )}
     </main>
