@@ -35,6 +35,9 @@ O MultiWhats é um sistema composto por 3 partes que trabalham juntas:
                       ┌──────────┐        WhatsApp Web.js
                       │ database │        (Puppeteer/Chromium)
                       └──────────┘
+
+** Utilizando um middleware para salvar dados em mysql4 provisoriamente
+
 ```
 
 1. **Frontend (Next.js)** - Interface visual que o operador usa no navegador. Roda na porta 3000.
@@ -44,7 +47,7 @@ O MultiWhats é um sistema composto por 3 partes que trabalham juntas:
 3. **Messageria (Node.js)** - Ponte com o WhatsApp. Usa Puppeteer (um navegador automatizado) para se conectar ao WhatsApp Web. Roda na porta 3333.
 
 **Fluxo simplificado de uma mensagem:**
-- Operador digita no Frontend → Frontend pede ao Backend → Backend salva no MySQL e pede à Messageria → Messageria envia pelo WhatsApp
+- Operador digita no Frontend → Frontend pede ao Backend → Backend salva no Postgresql e pede à Messageria → Messageria envia pelo WhatsApp
 - Cliente responde no WhatsApp → Messageria recebe → Envia para o Backend (webhook) → Backend salva e avisa o Frontend em tempo real (SignalR)
 
 ---
@@ -95,7 +98,7 @@ MySQL (armazena os dados)
 | Componente | Tecnologia | Versão |
 |------------|-----------|--------|
 | Backend | ASP.NET Core (C#) | 10.0 |
-| Banco de Dados | MySQL (via Pomelo) | 8.0+ |
+| Banco de Dados | Postgresql | 8.0+ |
 | ORM | Entity Framework Core | 9.0 |
 | Autenticação | JWT Bearer | - |
 | Tempo Real | SignalR | - |
