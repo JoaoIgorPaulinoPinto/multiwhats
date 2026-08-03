@@ -23,7 +23,8 @@ export function useLogin() {
         await login(name, password)
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Erro desconhecido")
+      const message = e instanceof Error ? e.message : "Erro desconhecido"
+      setError(mode === "login" ? `Falha no login: ${message}` : `Falha no cadastro: ${message}`)
     }
   }
 

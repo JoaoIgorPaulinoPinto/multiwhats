@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ChatListResponse } from '../../../services/chats.service'
 import { chatsService } from '../../../services/chats.service'
 import { useAuthStore } from '../../../stores/auth-store'
@@ -61,6 +61,28 @@ export function ChatsView() {
     setSelectedLastMessageAt(sel.lastMessageAt)
     setSelectedAssignedToUserId(sel.assignedToUserId)
   }
+
+  function clearSelection() {
+    setSelectedId(null)
+    setSelectedName('')
+    setSelectedClientName(null)
+    setSelectedPhone('')
+    setSelectedJid('')
+    setSelectedContactId(null)
+    setSelectedLastMessage('')
+    setSelectedLastMessageAt(null)
+    setSelectedAssignedToUserId(null)
+    setPending(null)
+    setAssignError(null)
+  }
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') clearSelection()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   function handleSelect(
     id: number,
@@ -204,6 +226,7 @@ export function ChatsView() {
           lastMessage={selectedLastMessage}
           lastMessageAt={selectedLastMessageAt}
           canMarkRead={canMarkRead}
+          canOpenOccurrence={canMarkRead}
           onStartChat={handleStartChat}
           onOccurrenceCreated={load}
           onFinishAttendance={handleFinishAttendance}

@@ -46,6 +46,7 @@ interface Props {
   lastMessageAt?: string | null
   chatContactId?: number | null
   canMarkRead?: boolean
+  canOpenOccurrence?: boolean
   onStartChat?: (phone: string, name: string) => void
   onOccurrenceCreated?: () => void
   onFinishAttendance?: () => void
@@ -81,6 +82,7 @@ export function ChatAreaView({
   lastMessage,
   lastMessageAt,
   canMarkRead = false,
+  canOpenOccurrence = false,
   onStartChat,
   onOccurrenceCreated,
   onFinishAttendance,
@@ -213,7 +215,7 @@ export function ChatAreaView({
             Salvar em contatos
           </button>
         )}
-        {chatId && (
+        {chatId && canOpenOccurrence && (
           <button className={styles.occBtn} onClick={occurrence.openModal}>
             <FileWarning size={15} />
             Abrir Ocorrência
@@ -337,46 +339,48 @@ export function ChatAreaView({
         </div>
       )}
 
-      <footer className={styles.inputArea}>
-        <button>
-          <Smile size={20} />
-        </button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileSelect}
-          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
-          style={{ display: 'none' }}
-        />
-        <button onClick={() => fileInputRef.current?.click()}>
-          <Paperclip size={20} />
-        </button>
-        <textarea
-          placeholder="Digite uma mensagem..."
-          rows={1}
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
-              e.preventDefault()
-              sendMessage()
-            }
-          }}
-          onInput={(e) => {
-            const el = e.currentTarget
-            el.style.height = 'auto'
-            el.style.height = Math.min(el.scrollHeight, 120) + 'px'
-          }}
-          style={{ resize: 'none' }}
-        />
-        <button
-          className={styles.send}
-          onClick={sendMessage}
-          disabled={sendingCount > 0 || (!inputValue.trim() && !selectedFile)}
-        >
-          <Send size={17} />
-        </button>
-      </footer>
+      {chatId != null && (
+        <footer className={styles.inputArea}>
+          <button>
+            <Smile size={20} />
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+            style={{ display: 'none' }}
+          />
+          <button onClick={() => fileInputRef.current?.click()}>
+            <Paperclip size={20} />
+          </button>
+          <textarea
+            placeholder="Digite uma mensagem..."
+            rows={1}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+                e.preventDefault()
+                sendMessage()
+              }
+            }}
+            onInput={(e) => {
+              const el = e.currentTarget
+              el.style.height = 'auto'
+              el.style.height = Math.min(el.scrollHeight, 120) + 'px'
+            }}
+            style={{ resize: 'none' }}
+          />
+          <button
+            className={styles.send}
+            onClick={sendMessage}
+            disabled={sendingCount > 0 || (!inputValue.trim() && !selectedFile)}
+          >
+            <Send size={17} />
+          </button>
+        </footer>
+      )}
       {isDragging && (
         <div className={styles.dropOverlay}>
           <div className={styles.dropContent}>

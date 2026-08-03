@@ -29,20 +29,26 @@ class ApiClient {
       headers["Authorization"] = `Bearer ${token}`
     }
 
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-    })
+    let res: Response
+    try {
+      res = await fetch(`${this.baseUrl}${path}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      })
+    } catch {
+      throw new ApiError("Não foi possível conectar ao servidor. Tente novamente.", 0)
+    }
 
     if (!res.ok) {
-      if (res.status === 401) {
+      const error = await res.json().catch(() => ({ message: res.statusText }))
+      const message = error.message ?? `HTTP ${res.status}`
+      if (res.status === 401 && token) {
         localStorage.removeItem("token")
         localStorage.removeItem("user")
         window.location.href = "/login"
       }
-      const error = await res.json().catch(() => ({ message: res.statusText }))
-      throw new ApiError(error.message ?? `HTTP ${res.status}`, res.status)
+      throw new ApiError(message, res.status)
     }
 
     const text = await res.text()

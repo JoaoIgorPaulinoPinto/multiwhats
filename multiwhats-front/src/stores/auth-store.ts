@@ -37,7 +37,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem("user", JSON.stringify(res.user))
       set({ token: res.token, user: res.user, loading: false })
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Erro ao fazer login"
+      const message = e instanceof Error ? e.message : "Não foi possível fazer login. Tente novamente."
       set({ loading: false, error: message })
       throw e
     }
@@ -49,7 +49,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await authService.register(name, password, registrationCode)
       set({ loading: false })
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Erro ao registrar"
+      const message = e instanceof Error ? e.message : "Não foi possível criar a conta. Tente novamente."
       set({ loading: false, error: message })
       throw e
     }
