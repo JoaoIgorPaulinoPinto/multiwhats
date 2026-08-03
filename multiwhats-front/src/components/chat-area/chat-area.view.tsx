@@ -5,6 +5,7 @@ import {
   CheckCheck,
   FileText,
   FileWarning,
+  LogOut,
   Music,
   Paperclip,
   Send,
@@ -47,6 +48,7 @@ interface Props {
   canMarkRead?: boolean
   onStartChat?: (phone: string, name: string) => void
   onOccurrenceCreated?: () => void
+  onFinishAttendance?: () => void
   onMerged?: (result: {
     survivorJid: string
     survivor?: ChatListResponse
@@ -81,6 +83,7 @@ export function ChatAreaView({
   canMarkRead = false,
   onStartChat,
   onOccurrenceCreated,
+  onFinishAttendance,
   onMerged,
 }: Props) {
   const {
@@ -214,6 +217,12 @@ export function ChatAreaView({
           <button className={styles.occBtn} onClick={occurrence.openModal}>
             <FileWarning size={15} />
             Abrir Ocorrência
+          </button>
+        )}
+        {chatId && canMarkRead && (
+          <button className={styles.finishBtn} onClick={onFinishAttendance}>
+            <LogOut size={15} />
+            Finalizar Atendimento
           </button>
         )}
       </header>

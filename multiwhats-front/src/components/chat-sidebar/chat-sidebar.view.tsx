@@ -144,7 +144,7 @@ export function ChatSidebarView({
           className={chatType === 'mine' ? styles.chatTypesActive : undefined}
           onClick={() => setChatType('mine')}
         >
-          Meus Chamados
+          Meus Atendimentos
         </button>
         <button
           className={chatType === 'all' ? styles.chatTypesActive : undefined}

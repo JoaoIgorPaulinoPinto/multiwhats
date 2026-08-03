@@ -1,14 +1,14 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { ChatAreaView } from "../../chat-area/chat-area.view"
-import { ChatSidebarView } from "../../chat-sidebar/chat-sidebar.view"
-import { useChatSidebar } from "../../chat-sidebar/chat-sidebar.logic"
-import { AssignChatModal } from "../../chat-sidebar/assign-chat-modal"
-import { chatsService } from "../../../services/chats.service"
-import { useAuthStore } from "../../../stores/auth-store"
-import type { ChatListResponse } from "../../../services/chats.service"
-import styles from "./chats.module.css"
+import { useState } from 'react'
+import type { ChatListResponse } from '../../../services/chats.service'
+import { chatsService } from '../../../services/chats.service'
+import { useAuthStore } from '../../../stores/auth-store'
+import { ChatAreaView } from '../../chat-area/chat-area.view'
+import { AssignChatModal } from '../../chat-sidebar/assign-chat-modal'
+import { useChatSidebar } from '../../chat-sidebar/chat-sidebar.logic'
+import { ChatSidebarView } from '../../chat-sidebar/chat-sidebar.view'
+import styles from './chats.module.css'
 
 interface PendingSelection {
   id: number
@@ -27,14 +27,22 @@ export function ChatsView() {
     useChatSidebar()
   const currentUserId = useAuthStore((s) => s.user?.id)
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [selectedName, setSelectedName] = useState<string>("")
-  const [selectedClientName, setSelectedClientName] = useState<string | null>(null)
-  const [selectedPhone, setSelectedPhone] = useState<string>("")
-  const [selectedJid, setSelectedJid] = useState<string>("")
-  const [selectedLastMessage, setSelectedLastMessage] = useState<string>("")
-  const [selectedLastMessageAt, setSelectedLastMessageAt] = useState<string | null>(null)
-  const [selectedContactId, setSelectedContactId] = useState<number | null>(null)
-  const [selectedAssignedToUserId, setSelectedAssignedToUserId] = useState<number | null>(null)
+  const [selectedName, setSelectedName] = useState<string>('')
+  const [selectedClientName, setSelectedClientName] = useState<string | null>(
+    null,
+  )
+  const [selectedPhone, setSelectedPhone] = useState<string>('')
+  const [selectedJid, setSelectedJid] = useState<string>('')
+  const [selectedLastMessage, setSelectedLastMessage] = useState<string>('')
+  const [selectedLastMessageAt, setSelectedLastMessageAt] = useState<
+    string | null
+  >(null)
+  const [selectedContactId, setSelectedContactId] = useState<number | null>(
+    null,
+  )
+  const [selectedAssignedToUserId, setSelectedAssignedToUserId] = useState<
+    number | null
+  >(null)
 
   const [pending, setPending] = useState<PendingSelection | null>(null)
   const [assigning, setAssigning] = useState(false)
@@ -74,7 +82,7 @@ export function ChatsView() {
       lastMessageAt,
       assignedToUserId,
     }
-    if (assignedToUserId == null) {
+    if (assignedToUserId == null && canMarkRead) {
       setAssignError(null)
       setPending(sel)
       return
@@ -92,7 +100,9 @@ export function ChatsView() {
       load()
       setPending(null)
     } catch (e) {
-      setAssignError(e instanceof Error ? e.message : "Erro ao iniciar atendimento")
+      setAssignError(
+        e instanceof Error ? e.message : 'Erro ao iniciar atendimento',
+      )
     } finally {
       setAssigning(false)
     }
@@ -104,6 +114,25 @@ export function ChatsView() {
     setPending(null)
   }
 
+  async function handleFinishAttendance() {
+    if (selectedId == null) return
+    if (
+      !window.confirm(
+        'Finalizar o atendimento deste chat? A ocorrência será mantida.',
+      )
+    )
+      return
+    try {
+      const res = await chatsService.unassignChat(selectedId)
+      setSelectedAssignedToUserId(res.assignedToUserId)
+      load()
+    } catch (e) {
+      window.alert(
+        e instanceof Error ? e.message : 'Erro ao finalizar atendimento',
+      )
+    }
+  }
+
   function handleStartChat(phone: string, name: string) {
     const jid = `${phone}@s.whatsapp.net`
     setSelectedId(-1)
@@ -112,12 +141,15 @@ export function ChatsView() {
     setSelectedPhone(phone)
     setSelectedJid(jid)
     setSelectedContactId(null)
-    setSelectedLastMessage("")
+    setSelectedLastMessage('')
     setSelectedLastMessageAt(null)
     setSelectedAssignedToUserId(null)
   }
 
-  function handleMerged(result: { survivorJid: string; survivor?: ChatListResponse }) {
+  function handleMerged(result: {
+    survivorJid: string
+    survivor?: ChatListResponse
+  }) {
     load()
     if (!result.survivor) return
     const s = result.survivor
@@ -125,10 +157,10 @@ export function ChatsView() {
       s.id,
       s.contactName ?? s.name ?? s.phoneNumber ?? `Chat #${s.id}`,
       s.clientName,
-      s.phoneNumber ?? "",
+      s.phoneNumber ?? '',
       s.jid,
       s.contactId,
-      s.lastMessage?.body ?? "",
+      s.lastMessage?.body ?? '',
       s.lastMessageAt,
       s.assignedToUserId,
     )
@@ -163,19 +195,21 @@ export function ChatsView() {
           canMarkRead={canMarkRead}
           onStartChat={handleStartChat}
           onOccurrenceCreated={load}
+          onFinishAttendance={handleFinishAttendance}
           onMerged={handleMerged}
         />
-
-        {pending && (
-          <AssignChatModal
-            chatName={pending.name}
-            saving={assigning}
-            error={assignError}
-            inline
-            onConfirm={handleAssignConfirm}
-            onCancel={handleAssignCancel}
-          />
-        )}
+        {pending ? (
+          canMarkRead ? (
+            <AssignChatModal
+              chatName={pending.name}
+              saving={assigning}
+              error={assignError}
+              inline
+              onConfirm={handleAssignConfirm}
+              onCancel={handleAssignCancel}
+            />
+          ) : null
+        ) : null}
       </div>
     </div>
   )

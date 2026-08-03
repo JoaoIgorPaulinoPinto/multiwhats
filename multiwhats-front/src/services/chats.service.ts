@@ -91,6 +91,14 @@ export const chatsService = {
     }>(`/api/chats/${chatId}/assign`)
   },
 
+  unassignChat(chatId: number) {
+    return api.put<{
+      id: number
+      assignedToUserId: number | null
+      assignedToUserName: string | null
+    }>(`/api/chats/${chatId}/unassign`)
+  },
+
   getOccurrences(chatId: number) {
     return api.get(`/api/chats/${chatId}/occurrences`)
   },

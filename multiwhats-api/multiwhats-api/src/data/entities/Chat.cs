@@ -96,6 +96,11 @@ public class Chat : BaseEntity
         AssignedToUserId = userId;
     }
 
+    public void UnassignUser()
+    {
+        AssignedToUserId = null;
+    }
+
     public void UpdateName(string? name)
     {
         if (name != null) Name = name;

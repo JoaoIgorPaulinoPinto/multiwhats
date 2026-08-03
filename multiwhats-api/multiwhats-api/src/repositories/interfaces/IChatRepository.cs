@@ -16,4 +16,5 @@ public interface IChatRepository
     Task<int> GetOccurrenceCountAsync(int chatId);
     Task<bool> MergeChatAsync(int sourceId, int destinationId);
     Task<Chat?> AssignUserAsync(int chatId, int userId);
+    Task<Chat?> UnAssignUserAsync(int chatId, int userId);
 }

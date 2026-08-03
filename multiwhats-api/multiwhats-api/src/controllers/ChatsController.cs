@@ -22,6 +22,7 @@ public class ChatsController : ControllerBase
     private readonly IGetChatFullInfoUseCase _getChatFullInfoUseCase;
     private readonly IMarkChatMessagesAsReadUseCase _markChatMessagesAsReadUseCase;
     private readonly IAssignChatUseCase _assignChatUseCase;
+    private readonly IUnassignChatUseCase _unassignChatUseCase;
 
     // Extrai o ID do usuário do token JWT
     private int UserId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -34,7 +35,8 @@ public class ChatsController : ControllerBase
         IGetOccurrencesUseCase getOccurrencesUseCase,
         IGetChatFullInfoUseCase getChatFullInfoUseCase,
         IMarkChatMessagesAsReadUseCase markChatMessagesAsReadUseCase,
-        IAssignChatUseCase assignChatUseCase)
+        IAssignChatUseCase assignChatUseCase,
+        IUnassignChatUseCase unassignChatUseCase)
     {
         _mergeChatsUseCase = mergeChatsUseCase;
         _getChatsUseCase = getChatsUseCase;
@@ -44,6 +46,7 @@ public class ChatsController : ControllerBase
         _getChatFullInfoUseCase = getChatFullInfoUseCase;
         _markChatMessagesAsReadUseCase = markChatMessagesAsReadUseCase;
         _assignChatUseCase = assignChatUseCase;
+        _unassignChatUseCase = unassignChatUseCase;
     }
 
     // GET /api/chats - Listar conversas (paginado)
@@ -115,6 +118,16 @@ public class ChatsController : ControllerBase
         var result = await _assignChatUseCase.Execute(id, UserId);
         if (result == null)
             return NotFound(new { message = "Chat não encontrado." });
+
+        return Ok(result);
+    }
+    // PUT /api/chats/{id}/unassign - Finaliza o atendimento (desvincula o usuário do chat, mantendo a ocorrência)
+    [HttpPut("{id}/unassign")]
+    public async Task<IActionResult> Unassign(int id)
+    {
+        var result = await _unassignChatUseCase.Execute(id, UserId);
+        if (result == null)
+            return NotFound(new { message = "Chat não encontrado ou não está atribuído a você." });
 
         return Ok(result);
     }

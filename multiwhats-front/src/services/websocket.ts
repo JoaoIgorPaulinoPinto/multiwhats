@@ -21,6 +21,11 @@ export interface WsEventMap {
     id: number
     assignedToUserId: number | null
     assignedToUserName: string | null
+  },
+  "chat:unassigned": {
+    id: number
+    assignedToUserId: number | null
+    assignedToUserName: string | null
   }
   "message:raw": unknown
 }
@@ -112,6 +117,14 @@ class WsClient {
       assignedToUserName: string | null
     }) => {
       this.emit("chat:assigned", payload)
+    })
+
+    conn.on("ChatUnassigned", (payload: {
+      id: number
+      assignedToUserId: number | null
+      assignedToUserName: string | null
+    }) => {
+      this.emit("chat:unassigned", payload)
     })
   }
 

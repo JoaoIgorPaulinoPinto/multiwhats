@@ -39,12 +39,14 @@ export function useChatSidebar() {
     const unsubSent = ws.on('message:sent', load)
     const unsubStatus = ws.on('message:delivery-status', load)
     const unsubAssigned = ws.on('chat:assigned', load)
+    const unsubUnassigned = ws.on('chat:unassigned', load)
 
     return () => {
       unsubReceived()
       unsubSent()
       unsubStatus()
       unsubAssigned()
+      unsubUnassigned()
     }
   }, [load])
 

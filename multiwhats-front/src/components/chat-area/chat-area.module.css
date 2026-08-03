@@ -79,6 +79,26 @@
   color: var(--text);
 }
 
+.finishBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--danger, #dc2626);
+  background: transparent;
+  color: var(--danger, #dc2626);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.finishBtn:hover {
+  background: var(--danger, #dc2626);
+  color: white;
+}
+
 .messages {
   flex: 1;
   overflow-y: auto;

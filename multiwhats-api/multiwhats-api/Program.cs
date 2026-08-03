@@ -90,6 +90,7 @@ builder.Services.AddScoped<IGetChatsUseCase, GetChatsUseCase>();
 builder.Services.AddScoped<IMergeChatsUseCase, MergeChatsUseCase>();
 builder.Services.AddScoped<IGetChatFullInfoUseCase, GetChatFullInfoUseCase>();
 builder.Services.AddScoped<IAssignChatUseCase, AssignChatUseCase>();
+builder.Services.AddScoped<IUnassignChatUseCase, UnassignChatUseCase>();
 
 // Contacts
 builder.Services.AddScoped<ICreateContactUseCase, CreateContactUseCase>();

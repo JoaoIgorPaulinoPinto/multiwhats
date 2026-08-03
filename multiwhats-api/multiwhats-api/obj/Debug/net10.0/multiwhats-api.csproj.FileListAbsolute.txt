@@ -308,3 +308,10 @@ C:\Users\User\AppData\Local\Temp\opencode\mw-build2\multiwhats-api.deps.json
 C:\Users\User\AppData\Local\Temp\opencode\mw-build2\multiwhats-api.runtimeconfig.json
 C:\Users\User\AppData\Local\Temp\opencode\mw-build2\multiwhats-api.dll
 C:\Users\User\AppData\Local\Temp\opencode\mw-build2\multiwhats-api.pdb
+C:\Users\User\AppData\Local\Temp\opencode\mwa-build\appsettings.Development.json
+C:\Users\User\AppData\Local\Temp\opencode\mwa-build\appsettings.json
+C:\Users\User\AppData\Local\Temp\opencode\mwa-build\multiwhats-api.staticwebassets.endpoints.json
+C:\Users\User\AppData\Local\Temp\opencode\mwa-build\multiwhats-api.deps.json
+C:\Users\User\AppData\Local\Temp\opencode\mwa-build\multiwhats-api.runtimeconfig.json
+C:\Users\User\AppData\Local\Temp\opencode\mwa-build\multiwhats-api.dll
+C:\Users\User\AppData\Local\Temp\opencode\mwa-build\multiwhats-api.pdb
