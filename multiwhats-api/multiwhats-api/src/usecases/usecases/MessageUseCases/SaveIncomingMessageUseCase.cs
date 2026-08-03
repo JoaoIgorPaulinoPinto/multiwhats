@@ -145,7 +145,8 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         {
             Console.WriteLine($"[SaveIncomingMessage] Mídia não suportada bloqueada de {payload.From} (msgId={payload.MessageId}, type={messageType})");
 
-            if (userId != null)
+            /// Removido manualmente logica de aviso automatico de mensagens de alguns tipos de midia
+            /*if (userId != null)
             {
                 try
                 {
@@ -167,7 +168,7 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
                     Console.WriteLine($"[SaveIncomingMessage] Erro ao enviar resposta de mídia não suportada: {ex.Message}");
                 }
             }
-
+9*/
             await _useCaseLogger.LogAsync(
                 action: "SaveIncomingMessage",
                 entityType: "Message",
@@ -182,38 +183,41 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
 
         // Auto-reply outside business hours/days (message is still saved so agents see it later).
         // Pulada durante sincronização inicial.
-        if (!payload.IsSync && !isSelfSent && await IsOutsideBusinessHoursAsync(timestamp))
-        {
-            var outsideMsg = await BuildOutsideHoursMessageAsync();
-            if (userId != null)
-            {
-                try
+
+        /// Removido mensagem automatica de fora de horario de atendimento;
+        /*
+                if (!payload.IsSync && !isSelfSent && await IsOutsideBusinessHoursAsync(timestamp))
                 {
-                    var reply = new SendMessageRequest
+                    var outsideMsg = await BuildOutsideHoursMessageAsync();
+                    if (userId != null)
                     {
-                        Jid = payload.From,
-                        Text = outsideMsg,
-                        Type = MessageType.Text,
-                        SenderName = await GetAutoReplySenderNameAsync()
-                    };
-                    await _sendMessageUseCase.Execute(reply, userId.Value);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[SaveIncomingMessage] Erro ao enviar resposta fora do horário: {ex.Message}");
-                }
-            }
+                        try
+                        {
+                            var reply = new SendMessageRequest
+                            {
+                                Jid = payload.From,
+                                Text = outsideMsg,
+                                Type = MessageType.Text,
+                                SenderName = await GetAutoReplySenderNameAsync()
+                            };
+                            await _sendMessageUseCase.Execute(reply, userId.Value);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[SaveIncomingMessage] Erro ao enviar resposta fora do horário: {ex.Message}");
+                        }
+                    }
 
-            await _useCaseLogger.LogAsync(
-                action: "SaveIncomingMessage",
-                entityType: "Message",
-                entityId: null,
-                description: $"Outside business hours auto-reply sent to {payload.From} (msgId={payload.MessageId})",
-                explicitUserId: userId,
-                explicitUserName: user?.Name
-            );
-        }
-
+                    await _useCaseLogger.LogAsync(
+                        action: "SaveIncomingMessage",
+                        entityType: "Message",
+                        entityId: null,
+                        description: $"Outside business hours auto-reply sent to {payload.From} (msgId={payload.MessageId})",
+                        explicitUserId: userId,
+                        explicitUserName: user?.Name
+                    );
+                }
+        */
         var message = new Message(
             fromJid: actualFromJid,
             toJid: actualToJid,

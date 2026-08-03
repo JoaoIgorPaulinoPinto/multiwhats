@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import notificationSoundFile from '../../sound/notification.mp3'
 import { chatsService } from '../services/chats.service'
 import { ws } from '../services/websocket'
 import { toNumericType } from '../types'
@@ -27,28 +26,21 @@ export function useChatMessaging(
   const [mediaType, setMediaType] = useState<MessageType | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const notificationSound = useRef(
-    typeof Audio !== 'undefined' ? new Audio(notificationSoundFile) : null,
-  )
-  function playNotification() {
-    if (!notificationSound.current) return
-
-    notificationSound.current.currentTime = 0
-    notificationSound.current.play().catch(() => {})
-  }
   const handleNewMessage = useCallback(
     (msg: MessageResponse) => {
       if (msg.chatId !== chatId) return
-      if (msg.direction === 0) playNotification()
-      setMessages((prev) => {
-        const duplicate = prev.some(
-          (m) =>
-            m.id === msg.id ||
-            (!!m.messageId && !!msg.messageId && m.messageId === msg.messageId),
-        )
-        if (duplicate) return prev
-        return [...prev, msg]
-      })
+      if (msg.direction === 0)
+        setMessages((prev) => {
+          const duplicate = prev.some(
+            (m) =>
+              m.id === msg.id ||
+              (!!m.messageId &&
+                !!msg.messageId &&
+                m.messageId === msg.messageId),
+          )
+          if (duplicate) return prev
+          return [...prev, msg]
+        })
       if (chatId !== null) cache.delete(chatId)
     },
     [chatId],

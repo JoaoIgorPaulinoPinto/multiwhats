@@ -11,4 +11,5 @@ public record ChatOccurrenceSummaryResponse
     public string? AssignedToName { get; init; }
     public int MessageCount { get; init; }
     public DateTime CreatedAt { get; init; }
+    public bool byMe { get; set; }
 }

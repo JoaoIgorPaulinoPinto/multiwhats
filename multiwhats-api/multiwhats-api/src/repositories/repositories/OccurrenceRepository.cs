@@ -79,6 +79,7 @@ public class OccurrenceRepository : IOccurrenceRepository
         return await _context.Occurrences
             .AsNoTracking()
             .Where(o => o.ChatId == chatId)
+            .Where(s => s.Status != data.enums.OccurrenceStatus.Closed)
             .OrderByDescending(o => o.CreatedAt)
             .ToListAsync();
     }

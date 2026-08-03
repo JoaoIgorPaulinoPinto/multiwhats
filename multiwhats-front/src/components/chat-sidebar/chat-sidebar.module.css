@@ -35,6 +35,35 @@
 .search input::placeholder {
   color: var(--text-muted);
 }
+.chatTypes{
+display: flex;
+flex-direction: row;
+width: 100%;
+justify-content: space-around;
+align-items: center;
+}
+.chatTypes button
+{
+  background-color: var(--sidebar);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 10px;
+  justify-content: stretch;
+  width: 100%;
+  color: var(--text-muted);
+}
+.chatTypes button:hover
+{
+  background-color: var(--surface-hover);
+  border-radius: 10px 10px 0 0;
+  color: var(--text);
+}
+.chatTypesActive{
+  background-color: var(--surface-hover) !important;
+  border-radius: 10px 10px 0 0 !important;
+  color: var(--text) !important;
+  font-weight: 600;
+}
 
 .chatList {
   flex: 1;

@@ -8,7 +8,8 @@ import type { ChatListResponse } from "../../../services/chats.service"
 import styles from "./chats.module.css"
 
 export function ChatsView() {
-  const { search, setSearch, chats, loading, load } = useChatSidebar()
+  const { search, setSearch, chatType, setChatType, chats, loading, load } =
+    useChatSidebar()
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [selectedName, setSelectedName] = useState<string>("")
   const [selectedPhone, setSelectedPhone] = useState<string>("")
@@ -60,6 +61,8 @@ export function ChatsView() {
         onSelect={handleSelect}
         search={search}
         setSearch={setSearch}
+        chatType={chatType}
+        setChatType={setChatType}
         chats={chats}
         loading={loading}
         load={load}

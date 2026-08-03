@@ -8,6 +8,7 @@ public record ContactListResponse
     public string? PushName { get; init; }
     public bool IsBlocked { get; init; }
     public bool IsGroup { get; init; }
+    public int? ClientId { get; init; }
     public string? ClientName { get; init; }
     public DateTime CreatedAt { get; init; }
 }

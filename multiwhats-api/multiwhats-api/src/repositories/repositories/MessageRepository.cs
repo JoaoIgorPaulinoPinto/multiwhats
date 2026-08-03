@@ -25,6 +25,7 @@ public class MessageRepository : IMessageRepository
         return await _context.Messages
             .AsNoTracking()
             .OrderByDescending(m => m.Timestamp)
+            .ThenByDescending(m => m.Id)
             .ToListAsync();
     }
 
@@ -87,6 +88,7 @@ public class MessageRepository : IMessageRepository
             .AsNoTracking()
             .Where(m => m.ChatId == chatId)
             .OrderByDescending(m => m.Timestamp)
+            .ThenByDescending(m => m.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -106,6 +108,7 @@ public class MessageRepository : IMessageRepository
             .AsNoTracking()
             .Where(m => m.OccurrenceId == occurrenceId)
             .OrderByDescending(m => m.Timestamp)
+            .ThenByDescending(m => m.Id)
             .ToListAsync();
     }
 
@@ -115,6 +118,7 @@ public class MessageRepository : IMessageRepository
             .AsNoTracking()
             .Where(m => m.PhoneNumber == phoneNumber)
             .OrderByDescending(m => m.Timestamp)
+            .ThenByDescending(m => m.Id)
             .ToListAsync();
     }
 
@@ -134,5 +138,16 @@ public class MessageRepository : IMessageRepository
         message.MarkAsSystem();
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<Message?> UpdateDeliveryStatusAsync(string messageId, DeliveryStatus status)
+    {
+        var message = await _context.Messages
+            .FirstOrDefaultAsync(m => m.WhatssAppMessageId == messageId);
+        if (message == null) return null;
+
+        message.UpdateDeliveryStatus(status);
+        await _context.SaveChangesAsync();
+        return message;
     }
 }

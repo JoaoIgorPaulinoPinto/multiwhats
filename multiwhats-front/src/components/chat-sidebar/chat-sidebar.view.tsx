@@ -10,6 +10,7 @@ import type { ChatListResponse } from '../../services/chats.service'
 import { MESSAGE_TYPE_MAP } from '../../types'
 import { formatTime } from '../../utils/date-format'
 import { AvatarView } from '../avatar/avatar.view'
+import type { ChatTypeFilter } from './chat-sidebar.logic'
 import styles from './chat-sidebar.module.css'
 import { NewChatModal } from './new-chat-modal'
 
@@ -26,6 +27,8 @@ interface Props {
   ) => void
   search: string
   setSearch: (v: string) => void
+  chatType: ChatTypeFilter
+  setChatType: (v: ChatTypeFilter) => void
   chats: ChatListResponse[]
   loading: boolean
   load: () => void
@@ -59,6 +62,8 @@ export function ChatSidebarView({
   onSelect,
   search,
   setSearch,
+  chatType,
+  setChatType,
   chats,
   loading,
   load,
@@ -97,6 +102,27 @@ export function ChatSidebarView({
           <RefreshCw size={16} className={loading ? styles.spinning : ''} />
         </button>
       </header>
+
+      <div className={styles.chatTypes}>
+        <button
+          className={chatType === 'open' ? styles.chatTypesActive : undefined}
+          onClick={() => setChatType('open')}
+        >
+          Em aberto
+        </button>
+        <button
+          className={chatType === 'mine' ? styles.chatTypesActive : undefined}
+          onClick={() => setChatType('mine')}
+        >
+          Meus Chamados
+        </button>
+        <button
+          className={chatType === 'all' ? styles.chatTypesActive : undefined}
+          onClick={() => setChatType('all')}
+        >
+          Todos
+        </button>
+      </div>
 
       <section className={styles.chatList}>
         {loading ? (
@@ -144,7 +170,7 @@ export function ChatSidebarView({
                         {occCount}
                       </span>
                     )}
-                    <label>{phone}</label>
+                    <label>#{phone}</label>
                     {chat.lastMessageAt && (
                       <span className={styles.chatTime}>
                         {formatTime(chat.lastMessageAt)}

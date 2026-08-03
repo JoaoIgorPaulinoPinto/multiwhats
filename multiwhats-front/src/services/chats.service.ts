@@ -14,6 +14,7 @@ export interface ChatFullInfoOccurrenceSummary {
   assignedToName: string | null
   messageCount: number
   createdAt: string
+  byMe: boolean
 }
 
 export interface ChatFullInfoResponse {

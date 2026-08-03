@@ -71,6 +71,14 @@ const ASPNET_DEVICE_URL =
 // (source="system") ou do celular (source="phone").
 const apiSentMessageIds = new Set()
 
+// Fila de envios aguardando o ID real da mensagem. O objeto retornado pelo
+// sendMessage nem sempre expõe o id serializado (resposta.id sem _serialized /
+// remote / id), o que fazia o /api/enviar devolver um "fallback-<ts>" e o
+// webhook salvar a MESMA mensagem de novo com o id real (duplicação no banco).
+// Aqui correlacionamos o envio com o evento message_create (que sempre traz o
+// id real) por JID + janela de tempo.
+const sendsAguardandoId = new Map()
+
 // Evita que duas sincronizações iniciais rodem ao mesmo tempo.
 let syncEmAndamento = false
 
@@ -198,9 +206,15 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
     // Obtém o contato do destinatário ou remetente real. Consulta não
     // essencial: se falhar (ex.: author LID não resolvível), seguimos sem
     // o pushname em vez de descartar a mensagem inteira.
+    // IMPORTANTE: para mensagens enviadas (fromMe), msg.getContact() retorna o
+    // contato do PRÓPRIO dono da conta (Message.getContact usa author||from e,
+    // em 1:1, from é o JID de quem envia). Por isso, quando a mensagem foi
+    // enviada por nós, buscamos o contato do destinatário real (msg.to).
     let contatoPushname = null
     try {
-      const contato = await msg.getContact()
+      const contato = enviadaPorMim
+        ? await client.getContactById(msg.to)
+        : await msg.getContact()
       contatoPushname = contato?.pushname ?? null
     } catch (err) {
       log('GETCONTACT_ERRO', {
@@ -244,7 +258,7 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
       phoneNumber: numeroReal,
       body: msg.body,
       timestamp: msg.timestamp,
-      notifyName: msg._data?.notifyName || contatoPushname || null,
+      notifyName: (enviadaPorMim ? null : msg._data?.notifyName) || contatoPushname || null,
       messageType,
       hasMedia,
       mediaUrl,
@@ -284,7 +298,24 @@ client.on('message_create', async (msg) => {
   log('EVENTO_MESSAGE_CREATE', describeMsg(msg, { event: 'message_create' }))
   if (msg.fromMe) {
     const msgId = serializedId(msg)
-    const isApiSent = !!msgId && apiSentMessageIds.has(msgId)
+    // Resolve o primeiro envio pendente para este destino com o ID real.
+    // O guard de tempo evita consumir um pendente com um evento que não
+    // corresponde a esse envio (ex.: mensagem mandada pelo próprio celular).
+    // O evento dispara durante o sendMessage, então isso também identifica a
+    // mensagem como enviada pelo sistema (source="system").
+    let viaApi = false
+    if (msgId) {
+      const fila = sendsAguardandoId.get(msg.to || msg.from)
+      const pendente = fila?.[0]
+      const tsMsg = (msg.timestamp || 0) * 1000
+      if (pendente && Math.abs(tsMsg - pendente.criadoEm) < 15000) {
+        fila.shift()
+        if (fila.length === 0) sendsAguardandoId.delete(msg.to || msg.from)
+        viaApi = true
+        pendente.resolve(msgId)
+      }
+    }
+    const isApiSent = viaApi || (!!msgId && apiSentMessageIds.has(msgId))
     log(
       'MESSAGE_CREATE_FROMME',
       describeMsg(msg, {
@@ -338,6 +369,30 @@ app.post('/api/enviar', async (req, res) => {
       `\n📤 Disparando envio via API para: ${jid} (Tipo: ${type || 'text'})`,
     )
 
+    // Pré-registra a espera do ID real ANTES do envio. O evento message_create
+    // dispara quando a mensagem é criada no web (dentro do sendMessage), então
+    // a promise já estará resolvida quando o sendMessage retornar. Isso evita
+    // o fallback-<ts> e a consequente duplicação no backend (que deduplica por
+    // messageId).
+    const fila = sendsAguardandoId.get(jid) || []
+    let resolveId = null
+    const idRealPromise = new Promise((resolve) => {
+      resolveId = resolve
+    })
+    const pendente = { criadoEm: Date.now() }
+    pendente.resolve = (id) => {
+      clearTimeout(pendente._timeout)
+      resolveId(id)
+    }
+    pendente._timeout = setTimeout(() => {
+      const idx = fila.indexOf(pendente)
+      if (idx >= 0) fila.splice(idx, 1)
+      if (fila.length === 0) sendsAguardandoId.delete(jid)
+      pendente.resolve(null)
+    }, 8000)
+    fila.push(pendente)
+    sendsAguardandoId.set(jid, fila)
+
     let resposta
     const chat = await client.getChatById(jid).catch(() => null)
 
@@ -378,11 +433,12 @@ app.post('/api/enviar', async (req, res) => {
         : await client.sendMessage(jid, media, options)
     }
 
-    const realId = serializedId(resposta)
+    const realId = serializedId(resposta) || (await idRealPromise) || null
+
+    // Nota: não adicionamos aqui a apiSentMessageIds. A classificação
+    // source="system" acontece no handler do message_create quando ele consome
+    // a pendência registrada acima (o evento dispara durante o sendMessage).
     const messageId = realId ?? `fallback-${Date.now()}`
-    if (realId) {
-      apiSentMessageIds.add(realId)
-    }
     log('ENVIAR_API_OK', {
       jid,
       type: type || 'text',

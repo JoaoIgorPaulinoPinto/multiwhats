@@ -1,4 +1,5 @@
 using multiwhats_api.src.data.entities;
+using multiwhats_api.src.data.enums;
 
 namespace multiwhats_api.src.repositories.interfaces;
 
@@ -14,4 +15,5 @@ public interface IMessageRepository
     Task<List<Message>> GetByPhoneNumberAsync(string phoneNumber);
     Task<Message?> GetByMessageIdAsync(string messageId);
     Task<bool> MarkAsSystemAsync(string messageId);
+    Task<Message?> UpdateDeliveryStatusAsync(string messageId, DeliveryStatus status);
 }

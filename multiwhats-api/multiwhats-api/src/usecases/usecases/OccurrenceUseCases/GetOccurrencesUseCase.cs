@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.repositories.interfaces;
@@ -10,11 +12,13 @@ public class GetOccurrencesUseCase : IGetOccurrencesUseCase
 {
     private readonly IOccurrenceRepository _occurrenceRepository;
     private readonly UseCaseLogger _useCaseLogger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public GetOccurrencesUseCase(IOccurrenceRepository occurrenceRepository, UseCaseLogger useCaseLogger)
+    public GetOccurrencesUseCase(IOccurrenceRepository occurrenceRepository, UseCaseLogger useCaseLogger, IHttpContextAccessor httpContextAccessor)
     {
         _occurrenceRepository = occurrenceRepository;
         _useCaseLogger = useCaseLogger;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<List<OccurrenceListResponse>> ExecuteAll()
@@ -50,6 +54,7 @@ public class GetOccurrencesUseCase : IGetOccurrencesUseCase
     public async Task<List<ChatOccurrenceSummaryResponse>> ExecuteByChat(int chatId)
     {
         var occurrences = await _occurrenceRepository.GetByChatAsync(chatId);
+        var currentUserId = GetCurrentUserId();
 
         await _useCaseLogger.LogAsync(
             action: "GetOccurrences",
@@ -58,7 +63,7 @@ public class GetOccurrencesUseCase : IGetOccurrencesUseCase
             description: $"Listed occurrences for chat #{chatId} (count: {occurrences.Count})"
         );
 
-        return occurrences.Select(MapToChatSummaryResponse).ToList();
+        return occurrences.Select(o => MapToChatSummaryResponse(o, currentUserId)).ToList();
     }
 
     private static OccurrenceListResponse MapToListResponse(Occurrence o) => new()
@@ -97,7 +102,7 @@ public class GetOccurrencesUseCase : IGetOccurrencesUseCase
         LastUpdate = o.LastUpdate
     };
 
-    private static ChatOccurrenceSummaryResponse MapToChatSummaryResponse(Occurrence o) => new()
+    private ChatOccurrenceSummaryResponse MapToChatSummaryResponse(Occurrence o, int? currentUserId) => new()
     {
         Id = o.Id,
         Title = o.Title,
@@ -105,9 +110,17 @@ public class GetOccurrencesUseCase : IGetOccurrencesUseCase
         Priority = o.Priority,
         AssignedToName = o.AssignedTo?.Name,
         MessageCount = o.Messages.Count,
-        CreatedAt = o.CreatedAt
+        CreatedAt = o.CreatedAt,
+        byMe = o.CreatedByUserId == currentUserId
     };
 
     private static List<OccurrenceListResponse> MapToListResponses(List<Occurrence> occurrences) =>
         occurrences.Select(MapToListResponse).ToList();
+
+    private int? GetCurrentUserId()
+    {
+        var value = _httpContextAccessor.HttpContext?.User
+            .FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return value != null && int.TryParse(value, out var id) ? id : null;
+    }
 }

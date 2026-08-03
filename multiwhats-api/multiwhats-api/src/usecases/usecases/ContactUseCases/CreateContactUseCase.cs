@@ -72,6 +72,7 @@ public class CreateContactUseCase : ICreateContactUseCase
             PushName = contact.PushName,
             IsBlocked = contact.IsBlocked,
             IsGroup = contact.IsGroup,
+            ClientId = contact.ClientId,
             ClientName = contact.Client?.Name,
             CreatedAt = contact.CreatedAt
         };

@@ -1,14 +1,17 @@
-"use client"
+'use client'
 
-import { useEffect, useState, useCallback } from "react"
-import { kanbanService, type OccurrenceResponse } from "../../../services/kanban.service"
-import type { OccurrenceStatus, OccurrenceStatusNumeric } from "../../../types"
+import { useCallback, useEffect, useState } from 'react'
+import {
+  kanbanService,
+  type OccurrenceResponse,
+} from '../../../services/kanban.service'
+import type { OccurrenceStatus } from '../../../types'
 
 const STATUS_MAP: Record<number, OccurrenceStatus> = {
-  0: "Open",
-  1: "InProgress",
-  2: "Resolved",
-  3: "Closed",
+  0: 'Open',
+  1: 'InProgress',
+  2: 'Resolved',
+  3: 'Closed',
 }
 
 export interface KanbanCard {
@@ -30,13 +33,13 @@ export interface KanbanColumn {
   cards: KanbanCard[]
 }
 
-const COLUMNS_ORDER: OccurrenceStatus[] = ["Open", "InProgress", "Resolved", "Closed"]
+const COLUMNS_ORDER: OccurrenceStatus[] = ['Open', 'InProgress', 'Resolved']
 
 const COLUMN_LABELS: Record<OccurrenceStatus, string> = {
-  Open: "Aberto",
-  InProgress: "Em andamento",
-  Resolved: "Resolvido",
-  Closed: "Fechado",
+  Open: 'Aberto',
+  InProgress: 'Em andamento',
+  Resolved: 'Resolvido',
+  Closed: 'Fechado',
 }
 
 export function useKanban() {
@@ -51,10 +54,10 @@ export function useKanban() {
           data.map((o) => ({
             ...o,
             status: STATUS_MAP[o.status as unknown as number] ?? o.status,
-          }))
-        )
+          })),
+        ),
       )
-      .catch((e) => console.error("[Kanban] erro ao carregar:", e))
+      .catch((e) => console.error('[Kanban] erro ao carregar:', e))
       .finally(() => setLoading(false))
   }, [])
 
@@ -62,19 +65,25 @@ export function useKanban() {
     load()
   }, [load])
 
-  async function advanceStatus(id: number, direction: "Advance" | "Return") {
+  async function advanceStatus(id: number, direction: 'Advance' | 'Return') {
     try {
-      const dirNum = direction === "Advance" ? 0 : 1
+      const dirNum = direction === 'Advance' ? 0 : 1
       const res = await kanbanService.advanceStatus(id, dirNum)
       setOccurrences((prev) =>
         prev.map((o) =>
           o.id === id
-            ? { ...o, ...res.occurrence, status: STATUS_MAP[res.occurrence.status as unknown as number] ?? res.occurrence.status }
-            : o
-        )
+            ? {
+                ...o,
+                ...res.occurrence,
+                status:
+                  STATUS_MAP[res.occurrence.status as unknown as number] ??
+                  res.occurrence.status,
+              }
+            : o,
+        ),
       )
     } catch (e) {
-      console.error("[Kanban] erro ao avançar/retornar ocorrência:", e)
+      console.error('[Kanban] erro ao avançar/retornar ocorrência:', e)
       throw e
     }
   }
@@ -84,7 +93,7 @@ export function useKanban() {
       await kanbanService.deleteOccurrence(id)
       setOccurrences((prev) => prev.filter((o) => o.id !== id))
     } catch (e) {
-      console.error("[Kanban] erro ao deletar ocorrência:", e)
+      console.error('[Kanban] erro ao deletar ocorrência:', e)
       throw e
     }
   }
@@ -108,5 +117,12 @@ export function useKanban() {
       })),
   }))
 
-  return { columns, loading, load, advanceStatus, deleteOccurrence, occurrences }
+  return {
+    columns,
+    loading,
+    load,
+    advanceStatus,
+    deleteOccurrence,
+    occurrences,
+  }
 }

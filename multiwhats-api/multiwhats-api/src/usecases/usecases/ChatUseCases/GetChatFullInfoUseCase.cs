@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using multiwhats_api.src.data.db;
 using multiwhats_api.src.data.dtos.Responses;
@@ -13,12 +15,14 @@ public class GetChatFullInfoUseCase : IGetChatFullInfoUseCase
     private readonly AppDbContext _context;
     private readonly IChatRepository _chatRepository;
     private readonly UseCaseLogger _useCaseLogger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public GetChatFullInfoUseCase(AppDbContext context, IChatRepository chatRepository, UseCaseLogger useCaseLogger)
+    public GetChatFullInfoUseCase(AppDbContext context, IChatRepository chatRepository, UseCaseLogger useCaseLogger, IHttpContextAccessor httpContextAccessor)
     {
         _context = context;
         _chatRepository = chatRepository;
         _useCaseLogger = useCaseLogger;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<ChatFullInfoResponse?> Execute(int id)
@@ -66,6 +70,7 @@ public class GetChatFullInfoUseCase : IGetChatFullInfoUseCase
             + typeCounts.GetValueOrDefault(MessageType.Sticker);
 
         var lastOccurrence = chat.Occurrences.OrderByDescending(o => o.LastUpdate).FirstOrDefault();
+        var currentUserId = GetCurrentUserId();
 
         var occurrenceSummaries = chat.Occurrences.Select(o => new ChatOccurrenceSummaryResponse
         {
@@ -75,7 +80,8 @@ public class GetChatFullInfoUseCase : IGetChatFullInfoUseCase
             Priority = o.Priority,
             AssignedToName = o.AssignedTo?.Name,
             MessageCount = o.Messages?.Count ?? 0,
-            CreatedAt = o.CreatedAt
+            CreatedAt = o.CreatedAt,
+            byMe = o.CreatedByUserId == currentUserId
         }).ToList();
 
         await _useCaseLogger.LogAsync(
@@ -128,5 +134,12 @@ public class GetChatFullInfoUseCase : IGetChatFullInfoUseCase
             CreatedAt = chat.CreatedAt,
             LastUpdate = chat.LastUpdate
         };
+    }
+
+    private int? GetCurrentUserId()
+    {
+        var value = _httpContextAccessor.HttpContext?.User
+            .FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return value != null && int.TryParse(value, out var id) ? id : null;
     }
 }

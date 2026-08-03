@@ -1,4 +1,6 @@
-﻿using multiwhats_api.src.data.dtos.Responses;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+using multiwhats_api.src.data.dtos.Responses;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.services;
 using multiwhats_api.src.usecases.interfaces.ChatInterfaces;
@@ -12,17 +14,20 @@ public class GetChatsUseCase : IGetChatsUseCase
     private readonly IMessageRepository _messageRepository;
     private readonly IOccurrenceRepository _occurrenceRepository;
     private readonly UseCaseLogger _useCaseLogger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public GetChatsUseCase(
         IChatRepository chatRepository,
         IMessageRepository messageRepository,
         IOccurrenceRepository occurrenceRepository,
-        UseCaseLogger useCaseLogger)
+        UseCaseLogger useCaseLogger,
+        IHttpContextAccessor httpContextAccessor)
     {
         _chatRepository = chatRepository;
         _messageRepository = messageRepository;
         _occurrenceRepository = occurrenceRepository;
         _useCaseLogger = useCaseLogger;
+        _httpContextAccessor = httpContextAccessor;
     }
 
 
@@ -30,6 +35,7 @@ public class GetChatsUseCase : IGetChatsUseCase
     {
         var chats = await _chatRepository.GetAllAsync(page, pageSize);
         var totalCount = await _chatRepository.GetTotalCountAsync();
+        var currentUserId = GetCurrentUserId();
 
         var responses = new List<ChatListResponse>();
 
@@ -47,7 +53,8 @@ public class GetChatsUseCase : IGetChatsUseCase
                 Priority = o.Priority,
                 AssignedToName = o.AssignedTo?.Name,
                 MessageCount = o.Messages?.Count ?? 0,
-                CreatedAt = o.CreatedAt
+                CreatedAt = o.CreatedAt,
+                byMe = o.CreatedByUserId == currentUserId
             }).ToList();
 
             responses.Add(new ChatListResponse
@@ -144,5 +151,12 @@ public class GetChatsUseCase : IGetChatsUseCase
             CreatedAt = chat.CreatedAt,
             LastUpdate = chat.LastUpdate
         };
+    }
+
+    private int? GetCurrentUserId()
+    {
+        var value = _httpContextAccessor.HttpContext?.User
+            .FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return value != null && int.TryParse(value, out var id) ? id : null;
     }
 }

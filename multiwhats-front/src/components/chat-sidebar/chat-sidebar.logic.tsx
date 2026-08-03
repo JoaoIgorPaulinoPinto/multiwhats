@@ -9,8 +9,11 @@ import { ws } from '../../services/websocket'
 
 let cachedChats: ChatListResponse[] | null = null
 
+export type ChatTypeFilter = 'open' | 'mine' | 'all'
+
 export function useChatSidebar() {
   const [search, setSearch] = useState('')
+  const [chatType, setChatType] = useState<ChatTypeFilter>('all')
   const [chats, setChats] = useState<ChatListResponse[]>(
     () => cachedChats ?? [],
   )
@@ -42,9 +45,21 @@ export function useChatSidebar() {
   const filtered = chats.filter((c) => {
     const q = search.toLowerCase()
     const display = c.contactName ?? c.name ?? c.phoneNumber ?? `Chat #${c.id}`
-    return display.toLowerCase().includes(q)
+    if (!display.toLowerCase().includes(q)) return false
+    const hasOccurrence = (c.occurrences?.length ?? 0) > 0
+    const hasMyOccurrence = (c.occurrences ?? []).some((o) => o.byMe)
+    if (chatType === 'open') return !hasOccurrence
+    if (chatType === 'mine') return hasMyOccurrence
+    return true
   })
-  console.log(chats)
 
-  return { search, setSearch, chats: filtered, loading, load }
+  return {
+    search,
+    setSearch,
+    chatType,
+    setChatType,
+    chats: filtered,
+    loading,
+    load,
+  }
 }
