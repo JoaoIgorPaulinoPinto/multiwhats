@@ -89,6 +89,7 @@ builder.Services.AddScoped<ICreateChatUseCase, CreateChatUseCase>();
 builder.Services.AddScoped<IGetChatsUseCase, GetChatsUseCase>();
 builder.Services.AddScoped<IMergeChatsUseCase, MergeChatsUseCase>();
 builder.Services.AddScoped<IGetChatFullInfoUseCase, GetChatFullInfoUseCase>();
+builder.Services.AddScoped<IAssignChatUseCase, AssignChatUseCase>();
 
 // Contacts
 builder.Services.AddScoped<ICreateContactUseCase, CreateContactUseCase>();
@@ -101,6 +102,8 @@ builder.Services.AddScoped<IAssignContactUseCase, AssignContactUseCase>();
 builder.Services.AddHttpClient<ISendMessageUseCase, SendMessageUseCase>();
 builder.Services.AddHttpClient<ISaveIncomingMessageUseCase, SaveIncomingMessageUseCase>();
 builder.Services.AddScoped<IGetMessagesUseCase, GetMessagesUseCase>();
+builder.Services.AddScoped<IUpdateMessageDeliveryStatusUseCase, UpdateMessageDeliveryStatusUseCase>();
+builder.Services.AddScoped<IMarkChatMessagesAsReadUseCase, MarkChatMessagesAsReadUseCase>();
 
 // Message Strategies
 builder.Services.AddSingleton<IMessageStrategy, TextMessageStrategy>();

@@ -7,15 +7,15 @@ API REST + WebSocket para gerenciamento de conversas WhatsApp, contatos, cliente
 | Camada | Tecnologia |
 |---|---|
 | Backend | ASP.NET Core 10 (Web API + SignalR) |
-| Database | MySQL (Pomelo EF Core 9.0) |
-| Auth | JWT Bearer (HMAC-SHA256) |
+| Database | PostgreSQL (Npgsql EF Core 10) |
+| Auth | JWT Bearer (HMAC-SHA256) + BCrypt |
 | WhatsApp | Node.js + WhatsApp Web.js (Puppeteer) |
 | Real-time | ASP.NET Core SignalR |
 
 ## Pré-requisitos
 
 - .NET 10 SDK
-- MySQL 8+ (local ou Railway)
+- PostgreSQL 14+ (banco principal)
 - Node.js 18+ (para o serviço de messageria)
 
 ## Como Rodar
@@ -31,7 +31,7 @@ npm start
 
 - API: `http://localhost:5261`
 - Swagger: `http://localhost:5261/swagger`
-- Node.js: `http://localhost:3000`
+- Node.js: `http://localhost:3333`
 
 ## Documentação
 

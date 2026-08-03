@@ -4,6 +4,7 @@ using multiwhats_api.src.data.dtos.Requests;
 using multiwhats_api.src.usecases.interfaces.ChatInterfaces;
 using multiwhats_api.src.usecases.interfaces.MessageInterfaces;
 using multiwhats_api.src.usecases.interfaces.OccurrenceInterfaces;
+using System.Security.Claims;
 
 namespace multiwhats_api.src.controllers;
 
@@ -19,6 +20,11 @@ public class ChatsController : ControllerBase
     private readonly IGetOccurrencesUseCase _getOccurrencesUseCase;
     private readonly IMergeChatsUseCase _mergeChatsUseCase;
     private readonly IGetChatFullInfoUseCase _getChatFullInfoUseCase;
+    private readonly IMarkChatMessagesAsReadUseCase _markChatMessagesAsReadUseCase;
+    private readonly IAssignChatUseCase _assignChatUseCase;
+
+    // Extrai o ID do usuário do token JWT
+    private int UserId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
     public ChatsController(
         IGetChatsUseCase getChatsUseCase,
@@ -26,7 +32,9 @@ public class ChatsController : ControllerBase
         IMergeChatsUseCase mergeChatsUseCase,
         IGetMessagesUseCase getMessagesUseCase,
         IGetOccurrencesUseCase getOccurrencesUseCase,
-        IGetChatFullInfoUseCase getChatFullInfoUseCase)
+        IGetChatFullInfoUseCase getChatFullInfoUseCase,
+        IMarkChatMessagesAsReadUseCase markChatMessagesAsReadUseCase,
+        IAssignChatUseCase assignChatUseCase)
     {
         _mergeChatsUseCase = mergeChatsUseCase;
         _getChatsUseCase = getChatsUseCase;
@@ -34,6 +42,8 @@ public class ChatsController : ControllerBase
         _getMessagesUseCase = getMessagesUseCase;
         _getOccurrencesUseCase = getOccurrencesUseCase;
         _getChatFullInfoUseCase = getChatFullInfoUseCase;
+        _markChatMessagesAsReadUseCase = markChatMessagesAsReadUseCase;
+        _assignChatUseCase = assignChatUseCase;
     }
 
     // GET /api/chats - Listar conversas (paginado)
@@ -88,5 +98,24 @@ public class ChatsController : ControllerBase
             return NotFound(new { message = "Uma ou ambas conversas não encontradas." });
 
         return Ok(new { message = "Conversas mescladas com sucesso." });
+    }
+
+    // PUT /api/chats/{id}/read - Marca como lidas as mensagens recebidas da conversa
+    [HttpPut("{id}/read")]
+    public async Task<IActionResult> MarkMessagesAsRead(int id)
+    {
+        var updated = await _markChatMessagesAsReadUseCase.Execute(id);
+        return Ok(new { updated = updated.Count, message = "Mensagens recebidas marcadas como lidas." });
+    }
+
+    // PUT /api/chats/{id}/assign - Atribui o chat ao usuário logado (iniciar atendimento)
+    [HttpPut("{id}/assign")]
+    public async Task<IActionResult> Assign(int id)
+    {
+        var result = await _assignChatUseCase.Execute(id, UserId);
+        if (result == null)
+            return NotFound(new { message = "Chat não encontrado." });
+
+        return Ok(result);
     }
 }

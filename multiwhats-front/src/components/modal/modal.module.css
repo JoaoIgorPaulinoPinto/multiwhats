@@ -6,6 +6,10 @@
   backdrop-filter: blur(2px);
 }
 
+.overlay.inline {
+  position: absolute;
+}
+
 .modal {
   position: fixed;
   top: 50%;
@@ -22,6 +26,10 @@
   flex-direction: column;
   gap: 14px;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+}
+
+.modal.inline {
+  position: absolute;
 }
 
 .modalHeader {
@@ -111,6 +119,13 @@
   justify-content: flex-end;
   gap: 6px;
   margin-top: 2px;
+}
+
+.modalText {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  margin: 4px 0 12px;
 }
 
 .cancelBtn {

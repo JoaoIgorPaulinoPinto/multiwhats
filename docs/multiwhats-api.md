@@ -18,7 +18,7 @@
 15. [Fluxos de Dados Principais](#fluxos-de-dados-principais)
 16. [Configuração e Execução](#configuração-e-execução)
 17. [Banco de Dados](#banco-de-dados)
-18. [API Documentation (Swagger/Scalar)](#api-documentation-swaggerscalar)
+18. [API Documentation (Swagger)](#api-documentation-swagger)
 
 ---
 
@@ -40,18 +40,19 @@ O sistema é composto por **duas partes** que rodam simultaneamente:
 |---|---|---|
 | ASP.NET Core | 10.0 | Framework web |
 | .NET | 10.0 | Runtime |
-| Entity Framework Core | 9.0 | ORM para banco de dados |
-| MySQL (Pomelo) | 9.0 | Banco de dados relacional |
+| Entity Framework Core | 10.0 | ORM para banco de dados |
+| PostgreSQL (Npgsql) | 10.0 | Banco de dados relacional |
 | JWT Bearer Authentication | 10.0 | Autenticação stateless |
 | SignalR | 10.0 | WebSocket para tempo real |
-| OpenAPI / Scalar | 2.0 / 2.16 | Documentação da API |
+| Swagger (Swashbuckle) | 7.3 | Documentação da API |
+| BCrypt.Net-Next | 4.0.3 | Hash de senhas |
 | C# 13 | 13.0 | Linguagem |
 
 ### Messageria (Node.js)
 | Tecnologia | Versão | Propósito |
 |---|---|---|
 | Node.js | - | Runtime JavaScript |
-| whatsapp-web.js | 1.34.7 | Cliente WhatsApp Web automatizado |
+| whatsapp-web.js | 1.34.6 (fixa) | Cliente WhatsApp Web automatizado |
 | Express | 5.2.1 | Servidor HTTP |
 | Axios | 1.18.1 | Cliente HTTP para chamar a API .NET |
 | qrcode-terminal | 0.12.0 | Exibir QR Code no terminal |
@@ -72,7 +73,7 @@ A API segue uma **arquitetura em camadas** inspirada em Clean Architecture com U
 ├─────────────────────────────────────────────┤
 │           AppDbContext (EF Core)             │  ← ORM + Mapeamento
 ├─────────────────────────────────────────────┤
-│                MySQL                         │  ← Banco de dados
+│                PostgreSQL                    │  ← Banco de dados
 └─────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────┐
@@ -186,7 +187,7 @@ multiwhats-api/
 |---|---|---|
 | Id | int (PK) | ID autoincremento |
 | Name | string (único) | Nome de usuário (login) |
-| Password | string | Senha **em texto puro** (sem hash) |
+| Password | string | Senha **com hash BCrypt** (work factor 12); legadas em texto puro são migradas no primeiro login |
 | Role | UserRole | Support, Dev, ou Admin |
 | IsActive | bool | Se o usuário está ativo |
 
@@ -236,6 +237,7 @@ multiwhats-api/
 |---|---|---|
 | Id | int (PK) | ID |
 | MessageId | string | ID da mensagem no WhatsApp |
+| WhatssAppMessageId | string (índice único) | ID do WhatsApp usado para correlação/dedup (ex: `true_...`) |
 | FromJid | string | JID de origem |
 | ToJid | string | JID de destino |
 | PhoneNumber | string | Número de telefone |
@@ -251,7 +253,7 @@ multiwhats-api/
 | MediaFilename | string? | Nome do arquivo de mídia |
 | MediaSize | long? | Tamanho do arquivo |
 | MediaCaption | string? | Legenda da mídia |
-| DeliveryStatus | DeliveryStatus | Pending, Sent, Delivered, Read, Failed |
+| DeliveryStatus | DeliveryStatus | Pending, Sent, Delivered, Read, Failed (outgoing inicia em Pending; incoming em Delivered) |
 | IsForwarded | bool | Se foi encaminhada |
 | ChatId | int | FK para Chat |
 | UserId | int? | FK para User (quem enviou via sistema) |
@@ -364,9 +366,15 @@ multiwhats-api/
 | Text, Image, Audio, Video, Document, Sticker, Contact, Location, Unknown |
 
 #### DeliveryStatus
-| Valor | Descrição |
-|---|---|
-| Pending, Sent, Delivered, Read, Failed |
+| Valor | Descrição | ACK whatsapp-web.js |
+|---|---|---|
+| Pending | Aguardando envio | 0 |
+| Sent | Enviada | 1 |
+| Delivered | Entregue ao destinatário | 2 |
+| Read | Lida pelo destinatário | 3 (READ/PLAYED) |
+| Failed | Falha no envio | -1 |
+
+Default: `Pending` para mensagens enviadas (outgoing) e `Delivered` para recebidas. Atualizado via `POST /api/webhook/status` (evento `message_ack` do Node.js) — sempre avança, nunca regressa.
 
 #### Priority
 | Valor | Descrição |
@@ -386,7 +394,8 @@ Registra um novo usuário no sistema.
 ```json
 {
   "name": "joao",
-  "password": "123456"
+  "password": "123456",
+  "registrationCode": "09A88A0C"
 }
 ```
 
@@ -402,10 +411,35 @@ Registra um novo usuário no sistema.
 ```
 
 **Regras de Negócio:**
-- Usuário criado com Role = Support (0) por padrão
+- Usuário criado com Role padrão = `Auth:DefaultUserRole` (Support por padrão)
 - Nome deve ser único
-- Senha é armazenada em texto puro (sem hash)
+- Senha é guardada com **hash BCrypt** (work factor 12)
+- Se `Auth:RequireRegistrationCode=true` (default), o campo `registrationCode` é obrigatório — o código é validado, único, expira após `Auth:RegistrationCodeExpiryHours` (48h) e é marcado como usado
 - Não é possível definir role ou isActive no registro
+
+---
+
+#### POST `/api/auth/codes` - [Authorize(Roles = "Admin,Dev")]
+Gera um ou mais códigos de permissão para cadastro de novos usuários.
+
+**Request:**
+```json
+{
+  "count": 1
+}
+```
+
+**Response (200):**
+```json
+[
+  { "id": 11, "code": "09A88A0C", "expiresAt": "2026-08-05T13:42:29", "isUsed": false }
+]
+```
+
+**Regras de Negócio:**
+- Códigos são hex aleatórios (64 bytes) com até 10 tentativas contra colisão (`ExistsAsync`)
+- Expiração conforme `Auth:RegistrationCodeExpiryHours`
+- O frontend expõe a geração na tela **Configurações → Usuários → Gerar código de permissão**
 
 ---
 
@@ -430,10 +464,11 @@ Autentica um usuário e retorna um token JWT.
 
 **Regras de Negócio:**
 - Verifica se o usuário existe por nome
-- Compara senha em texto puro
+- Compara senha com **hash BCrypt** (`PasswordHelper.Verify`); senhas legadas em texto puro são migradas para hash no primeiro login
 - Verifica se usuário está ativo (`IsActive`)
 - Gera token JWT com claims: NameIdentifier (id), Name, Role
-- Token expira em 8 horas pelo TokenService (ou conforme configurado em JwtSettings.ExpiryInMinutes, que é 60min)
+- Token expira conforme `JwtSettings.ExpiryInMinutes` (60 min)
+- Em cada request autenticado, o backend relê role/status do usuário no banco (`OnTokenValidated`) — mudanças valem sem novo login
 
 ---
 
@@ -816,12 +851,44 @@ Recebe mensagens recebidas do WhatsApp via Node.js bridge.
 **Fluxo:**
 1. Recebe o payload do Node.js
 2. `SaveIncomingMessageUseCase` processa:
+   - Dedup por `WhatssAppMessageId` (índice único)
    - Verifica se já existe um chat para este JID
    - Se não existir, cria um novo Chat + (opcionalmente) um Contact
-   - Cria o registro de Message com Direction = Incoming
+   - Cria o registro de Message (Direction = Incoming; mensagens self-sent/fromMe viram Outgoing)
    - Atualiza lastMessageAt, lastMessageBody no chat
-3. Dispara evento SignalR `MessageReceived` para todos os clientes conectados
-4. Retorna `{ "message": "Mensagem recebida com sucesso", "messageId": novoId }`
+3. Dispara **exatamente um** broadcast SignalR: `MessageSent` se a mensagem for Outgoing, `MessageReceived` se for Incoming
+4. Retorna `{ "message": "Notificação enviada para a Web!", "messageId": novoId }`
+
+---
+
+#### POST `/api/webhook/status` - [AllowAnonymous]
+Recebe atualização de **status de entrega (ACK)** das mensagens enviadas, reportada pelo Node.js no evento `message_ack`.
+
+**Request:**
+```json
+{
+  "messageId": "true_5511999999999@c.us_3EB0C0A1...",
+  "deliveryStatus": 2
+}
+```
+
+**Fluxo:**
+1. Recebe o payload do Node.js (mensagens enviadas — `msg.fromMe` apenas)
+2. `UpdateMessageDeliveryStatusUseCase` localiza a mensagem por `WhatssAppMessageId`
+3. Atualiza `DeliveryStatus` no banco
+4. Dispara evento SignalR `MessageDeliveryStatusChanged` (payload = `MessageDetailResponse`) para o frontend atualizar os indicadores em tempo real
+5. Retorna `{ "message": "Status atualizado" | "Mensagem não encontrada" }`
+
+**Mapeamento ACK → DeliveryStatus (no `index.js`):**
+
+| ACK whatsapp-web.js | Valor | DeliveryStatus |
+|---|---|---|
+| `ACK_ERROR` | -1 | Failed (4) |
+| `ACK_PENDING` | 0 | Pending (0) |
+| `ACK_SERVER` | 1 | Sent (1) |
+| `ACK_DEVICE` | 2 | Delivered (2) |
+| `ACK_READ` | 3 | Read (3) |
+| `ACK_PLAYED` | 4 | Read (3) |
 
 ---
 
@@ -871,8 +938,9 @@ public class XxxController : ControllerBase
 - Injeta: `ISaveDeviceUseCase`, IDeviceRepository
 
 ### WebhookController
-- ReceiveMessage (AllowAnonymous)
-- Injeta: `ISaveIncomingMessageUseCase`
+- ReceiveMessage (AllowAnonymous) — `POST /api/webhook/whatsapp`
+- ReceiveDeliveryStatus (AllowAnonymous) — `POST /api/webhook/status`
+- Injeta: `ISaveIncomingMessageUseCase`, `IUpdateMessageDeliveryStatusUseCase`
 
 ---
 
@@ -884,7 +952,7 @@ Cada use case encapsula **uma única operação de negócio**. Eles são registr
 
 #### LoginUseCase
 1. Busca usuário por nome (`IUserRepository.GetByName`)
-2. Verifica senha (comparação direta de strings - texto puro)
+2. Verifica senha com `BCrypt.Verify` (`PasswordHelper`); senhas legadas em texto puro são migradas para hash no primeiro login
 3. Verifica `IsActive`
 4. Gera token JWT via `TokenService.GenerateToken`
 5. Retorna `LoginResponse` com token + dados do usuário
@@ -895,11 +963,20 @@ Cada use case encapsula **uma única operação de negócio**. Eles são registr
 3. Retorna mensagem de sucesso
 
 #### RegisterUserUseCase
-1. Verifica se nome de usuário já existe
-2. Cria entidade User com Role = Support
-3. Salva via `IUserRepository`
-4. Cria audit log
-5. Retorna UserResponse
+1. Valida tamanho mínimo da senha (`Auth:PasswordMinLength`)
+2. Se `Auth:RequireRegistrationCode=true` (default), normaliza o código (`Trim().ToUpperInvariant()`) e valida com `RegistrationCode.IsValid()` (não usado + não expirado); se inválido → erro
+3. Verifica se nome de usuário já existe
+4. Cria entidade User com Role padrão (`Auth:DefaultUserRole`) e senha com **hash BCrypt**
+5. Salva via `IUserRepository`
+6. Marca o código de permissão como usado (`MarkAsUsed(userId)`)
+7. Cria audit log
+8. Retorna UserResponse
+
+#### GenerateRegistrationCodeUseCase
+1. Gera `count` códigos hex aleatórios (64 bytes, `RandomNumberGenerator`) — até 10 tentativas contra colisão (`ExistsAsync`)
+2. Define `ExpiresAt = UtcNow + Auth:RegistrationCodeExpiryHours`
+3. Salva via `IRegistrationCodeRepository`
+4. Retorna `RegistrationCodeResponse[]`
 
 ### ClientUseCases
 
@@ -959,23 +1036,30 @@ Cada use case encapsula **uma única operação de negócio**. Eles são registr
 #### SendMessageUseCase
 1. Valida JID (não vazio)
 2. Sanitiza phoneNumber (strip non-digits)
-3. Envia requisição HTTP POST para `http://localhost:3333/api/enviar` com `{ numero, texto }`
+3. Envia requisição HTTP POST para `Messageria:BaseUrl/api/enviar` (strategy por tipo de mensagem)
 4. Busca ou cria Chat para o JID (se não existir, cria)
-5. Cria registro de Message com Direction = Outgoing
+5. Cria registro de Message com Direction = Outgoing (DeliveryStatus = Pending)
 6. Atualiza `lastMessageAt` e `lastMessageBody` no Chat
-7. Dispara SignalR `MessageSent`
+7. Dispara SignalR `MessageSent` (payload = MessageDetailResponse) — o broadcast é suprimido se a mensagem já tiver sido salva pelo webhook (self-sent), para evitar duplicidade de eventos
 8. Gera audit log
 9. Retorna MessageResponse
 
 #### SaveIncomingMessageUseCase
-1. Recebe WhatsAppWebhookDto
+1. Recebe WhatsAppWebhookDto (dedup por `WhatssAppMessageId`)
 2. Busca Chat por JID
 3. Se não existir Chat, cria um novo (e opcionalmente um Contact se não for grupo)
-4. Cria Message com Direction = Incoming
+4. Cria Message — Direction = Incoming (ou Outgoing se `fromMe`) com DeliveryStatus = Delivered (incoming) / Pending (outgoing)
 5. Atualiza Chat (lastMessageAt, lastMessageBody)
 6. Se for a primeira mensagem, atualiza `Contact.LastMessageAt`
-7. Dispara SignalR `MessageReceived`
+7. Dispara **exatamente um** broadcast SignalR por mensagem: `MessageSent` (outgoing) ou `MessageReceived` (incoming)
 8. Retorna o ID da mensagem criada
+
+#### UpdateMessageDeliveryStatusUseCase
+1. Recebe `{ messageId, deliveryStatus }` do endpoint `/api/webhook/status`
+2. Localiza a Message por `WhatssAppMessageId`
+3. Atualiza `DeliveryStatus` no banco
+4. Dispara SignalR `MessageDeliveryStatusChanged` (payload = MessageDetailResponse)
+5. Retorna a mensagem atualizada (ou `null` se não encontrada)
 
 #### GetMessagesUseCase
 1. Se `chatId` for fornecido: busca mensagens paginadas por ChatId (ordenado por timestamp ASC)
@@ -1075,8 +1159,9 @@ public class XxxRepository : IXxxRepository
 - Os eventos são enviados do servidor para os clientes via `IHubContext<WhatsappHub>`
 - Eventos emitidos:
   - `LogReceived` - Pelo UseCaseLogger
-  - `MessageSent` - Pelo SendMessageUseCase
-  - `MessageReceived` - Pelo SaveIncomingMessageUseCase
+  - `MessageSent` - Pelo SendMessageUseCase / SaveIncomingMessageUseCase (outgoing)
+  - `MessageReceived` - Pelo SaveIncomingMessageUseCase (incoming)
+  - `MessageDeliveryStatusChanged` - Pelo UpdateMessageDeliveryStatusUseCase
 
 ---
 
@@ -1088,8 +1173,9 @@ O hub SignalR está disponível em `/whatsappHub` e usa **transporte WebSocket**
 
 | Evento | Disparado Por | Payload |
 |---|---|---|
-| `MessageReceived` | SaveIncomingMessageUseCase | MessageResponse |
-| `MessageSent` | SendMessageUseCase | MessageResponse |
+| `MessageReceived` | SaveIncomingMessageUseCase (incoming) | MessageDetailResponse |
+| `MessageSent` | SendMessageUseCase / SaveIncomingMessageUseCase (outgoing) | MessageDetailResponse |
+| `MessageDeliveryStatusChanged` | UpdateMessageDeliveryStatusUseCase | MessageDetailResponse |
 | `LogReceived` | UseCaseLogger | AuditLog |
 
 ### Conexão do Cliente
@@ -1124,33 +1210,36 @@ import qrcode from "qrcode-terminal";
 
 **Inicialização:**
 1. Cria cliente `whatsapp-web.js` com autenticação local (`LocalAuth`) - salva sessão em `./.wwebjs_auth/`
-2. Configura `puppeteer.headless: false` (modo headless desabilitado para ver o navegador)
-3. Configura webhook via `puppeteerOptions.args` com `--enable-features=NetworkService`
+2. Configura `puppeteer.headless: true` com `executablePath` do Chrome (`CHROME_PATH`)
+3. Porta `3333` (env `PORT`); URLs da API .NET configuráveis via env
 
 **Eventos do WhatsApp:**
 
 | Evento | Ação |
 |---|---|
 | `qr` | Gera QR code no terminal para autenticação |
-| `ready` | Loga "WhatsApp conectado!", envia POST para `/api/device` na API .NET |
-| `message_create` | Escuta mensagens recebidas, envia POST para `/api/webhook/whatsapp` na API .NET |
+| `authenticated` / `ready` | Loga conexão; envia POST `/api/device` com os dados do dispositivo |
+| `message_create` | Envia mensagens (recebidas e enviadas) via POST `/api/webhook/whatsapp` |
+| `message_ack` | Envia status de entrega via POST `/api/webhook/status` (apenas `fromMe`) |
 
-**Processamento de mensagens recebidas (`message_create`):**
-1. Ignora mensagens do próprio status ("status@broadcast")
-2. Extrai: from (jid), body, timestamp, notifyName, hasMedia, type, isForwarded, id
-3. Para mídia: baixa o arquivo via `message.downloadMedia()`, converte para base64
-4. Monta payload JSON e envia via axios para `http://localhost:5261/api/webhook/whatsapp`
-5. Loga no console
+**Processamento de mensagens (`processarEMandarParaAspNet`):**
+1. Ignora grupos, newsletters e status ("@g.us", "@newsletter", "@broadcast")
+2. Extrai: from/to (jid), body, timestamp, notifyName, hasMedia, type, isForwarded, id (`_serialized`/`$1`)
+3. Para mídia: baixa via `message.downloadMedia()`, converte para base64
+4. Monta payload e envia via axios para `ASPNET_WEBHOOK_URL` com **retry (3 tentativas)** — o backend deduplica por messageId
+5. Correlaciona envios via API com o `message_create` (fila `sendsAguardandoId`) para obter o ID real e evitar duplicação
 
-**Endpoint Express:**
+**Endpoints Express:**
 
 | Método | Rota | Função |
 |---|---|---|
-| POST | `/api/enviar` | Recebe `{ numero, texto }` da API .NET e envia via `client.sendMessage(numero, texto)` |
+| POST | `/api/enviar` | Recebe `{ jid, mensagem, type, mediaBase64, ... }` da API .NET e envia via `client.sendMessage()` |
+| POST | `/api/sync` | Sincroniza mensagens recentes dos chats existentes (dedup no backend) |
+| GET | `/` | Healthcheck "WhatsApp Bridge Online" |
 
 **Inicialização do servidor:**
-- Express escuta na porta 3333
-- Logs indicam: "Servidor rodando na porta 3333" + "Aguardando QRCode..."
+- Express escuta na porta 3333 (env `PORT`)
+- Se a porta já estiver em uso, o processo encerra (evita disputa pela sessão do navegador)
 
 ### Fluxo de Mensagens
 
@@ -1237,9 +1326,13 @@ O `AuthFilter` verifica o token JWT na query string (enviado automaticamente pel
 - `POST /api/device`
 - `GET /api/device`
 - `POST /api/webhook/whatsapp`
+- `POST /api/webhook/status`
 
 ### Endpoints com Restrição de Role
 - `PATCH /api/tasks/{id}/status` - Requer Admin ou Dev
+- `POST /api/auth/codes` - Requer Admin ou Dev
+- `GET/PUT /api/users` - GET: autenticado; PUT: Admin ou Dev
+- `GET/PUT/POST /api/admin/config` - Requer Admin ou Dev
 
 ---
 
@@ -1300,17 +1393,17 @@ O `UseCaseLogger` permite logging manual:
 ```
 WhatsApp Web 
     → whatsapp-web.js (Node.js)
-    → Evento 'message_create'
+    → Evento 'message_create' / 'message'
     → POST /api/webhook/whatsapp (API .NET)
-    → SaveIncomingMessageUseCase
+    → SaveIncomingMessageUseCase (dedup por WhatssAppMessageId)
         → Busca/Cria Chat
-        → Cria Message (Incoming)
+        → Cria Message (Incoming | Outgoing se fromMe)
         → Atualiza Chat (lastMessageAt, lastMessageBody)
-    → SignalR 'MessageReceived'
+    → SignalR 'MessageReceived' (incoming) | 'MessageSent' (outgoing)
     → Clientes Web recebem em tempo real
 ```
 
-### 2. Envio de Mensagem
+### 2. Envio de Mensagem + Status de Entrega
 
 ```
 Usuário Web
@@ -1319,9 +1412,15 @@ Usuário Web
         → Valida JID
         → Envia HTTP POST para Node.js (/api/enviar)
         → Node.js → client.sendMessage() → WhatsApp Web
-        → Cria Message (Outgoing) + Chat no banco
+        → Cria Message (Outgoing, DeliveryStatus=Pending) + Chat no banco
         → SignalR 'MessageSent'
     → Clientes Web recebem confirmação
+    → WhatsApp muda o ACK (enviada → entregue → lida)
+    → Node.js evento 'message_ack' → POST /api/webhook/status { messageId, deliveryStatus }
+    → UpdateMessageDeliveryStatusUseCase
+        → Atualiza DeliveryStatus no banco
+        → SignalR 'MessageDeliveryStatusChanged'
+    → Frontend atualiza o indicador (✓ → ✓✓ → ✓✓ azul)
 ```
 
 ### 3. Login
@@ -1331,7 +1430,7 @@ Usuário
     → POST /api/auth/login
     → LoginUseCase
         → Busca User por nome
-        → Compara senha (texto puro)
+        → Compara senha (BCrypt; legadas migradas no 1º login)
         → Verifica IsActive
         → TokenService.GenerateToken()
     → Retorna token JWT + UserResponse
@@ -1369,7 +1468,7 @@ Usuário
 
 - .NET 10.0 SDK
 - Node.js 18+
-- MySQL (XAMPP ou Railway)
+- PostgreSQL 14+ (banco principal)
 - Navegador Chrome/Chromium (para whatsapp-web.js)
 
 ### Variáveis de Conexão (appsettings.json)
@@ -1377,17 +1476,26 @@ Usuário
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "server=tokaido.proxy.rlwy.net;port=14481;database=railway;user=root;password=...",
-    "Xampp": "Server=localhost;Port=3306;Database=multiwhats_db;User=root;Password=;"
+    "DefaultConnection": "Host=localhost;Port=5432;Database=multiwhats_db;Username=postgres;Password=12345678;",
+    "Xampp": "Server=localhost;Port=3306;Database=multiwhats;User=root;Password=12345678;"
   },
   "JwtSettings": {
     "Secret": "SuaChaveSecretaSuperPoderosaEALeatoriaComMaisDe32Caracteres!",
     "Issuer": "MinhaApiEmissor",
     "Audience": "MeuAppCliente",
     "ExpiryInMinutes": 60
-  }
+  },
+  "Auth": {
+    "PasswordMinLength": 6,
+    "RequireRegistrationCode": false,
+    "RegistrationCodeExpiryHours": 48,
+    "DefaultUserRole": "Support"
+  },
+  "Messageria": { "BaseUrl": "http://localhost:3333" }
 }
 ```
+
+> A connection string `Xampp` (MySQL) é apenas para o sync legado (desativado no código). O banco principal é **PostgreSQL**.
 
 ### Executando
 
@@ -1418,7 +1526,7 @@ npm start
 | API .NET | HTTPS | https://localhost:7069 |
 | Node.js | - | http://localhost:3333 |
 | SignalR Hub | - | http://localhost:5261/whatsappHub |
-| Scalar API Docs | Desenvolvimento | http://localhost:5261/scalar/v1 |
+| Swagger | Desenvolvimento | http://localhost:5261/swagger |
 
 ---
 
@@ -1426,15 +1534,11 @@ npm start
 
 ### Provider
 
-**MySQL** via `Pomelo.EntityFrameworkCore.MySql` versão 9.0.0.
+**PostgreSQL** via `Npgsql.EntityFrameworkCore.PostgreSQL` versão 10.0.3.
 
-Duas connection strings disponíveis:
-- `DefaultConnection`: Railway (cloud)
-- `Xampp`: Localhost (XAMPP) - **atualmente em uso**
+A connection string `DefaultConnection` aponta para o PostgreSQL (banco principal). A string `Xampp` (MySQL) existe apenas para o sync legado, desativado no código.
 
 ### Migrations
-
-Uma única migration: `20260721011142_InitialMigration` (criada em 21/07/2026)
 
 Para recriar o banco:
 ```bash
@@ -1451,27 +1555,25 @@ dotnet ef migrations add NomeDaMigration
 - **Soft Delete Global**: `HasQueryFilter(e => !e.IsDeleted)` aplicado em `BaseEntity`
 - **Cascading**: `OnDelete(DeleteBehavior.SetNull)` para FKs opcionais, `Cascade` para obrigatórias
 - **Timestamps Automáticos**: `CreatedAt` e `LastUpdate` atualizados no `SaveChangesAsync`
-- **Índices**: JID é único em Contacts e Chats; User.Name é único
+- **Índices**: JID único em Contacts e Chats; User.Name único; `WhatssAppMessageId` único em Messages; Code único em RegistrationCodes
+- **Seed**: `SystemConfigService.SeedDefaultParametersAsync()` insere os parâmetros padrão em `system_parameters` no startup
 
 ---
 
-## API Documentation (Swagger/Scalar)
-
-### Scalar (OpenAPI)
+## API Documentation (Swagger)
 
 Disponível em ambiente de desenvolvimento:
-- URL: `http://localhost:5261/scalar/v1`
-- Ativado em Program.cs via condicional `if (app.Environment.IsDevelopment())`
-- Usa `Microsoft.AspNetCore.OpenApi` + `Scalar.AspNetCore`
+- URL: `http://localhost:5261/swagger`
+- Usa `Swashbuckle.AspNetCore` com security definition Bearer
 
 ### Configuração
 
 ```csharp
-builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen();
 // ...
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 ```

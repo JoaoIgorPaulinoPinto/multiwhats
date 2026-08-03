@@ -17,7 +17,7 @@ Frontend / Cliente HTTP
   ┌──────────────▼──────────────────────┐
   │         Use Cases (Negócio)         │          ┌─────────────────────────────────────┐
   │     Orquestra operações, regras     │          │                                     │
-  │                                      ────────> │      MySql 4.1 Database adapter     │
+  │                                      ────────> │   PostgreSQL Database adapter       │
   │         de negócio                  │          │                                     │
   └──────────────┬──────────────────────┘          └─────────────────────────────────────┘
                  │
@@ -33,7 +33,7 @@ Frontend / Cliente HTTP
   │         audit automático            │
   └──────────────┬──────────────────────┘
                  │
-            MySQL (Railway)
+            PostgreSQL (local)
 ```
 
 ## Padrões Utilizados
@@ -98,9 +98,9 @@ Todas as dependências são registradas em `Program.cs` via DI container:
 2. SendMessageUseCase recebe requisição
 3. Seleciona IMessageStrategy via MessageStrategyFactory
 4. Monta payload via BuildNodePayload()
-5. Envia HTTP POST para Node.js (localhost:3000/api/enviar)
+5. Envia HTTP POST para Node.js (localhost:3333/api/enviar)
 6. Node.js envia via WhatsApp Web (Puppeteer)
-7. Salva Message no banco com Direction = Outgoing
+7. Salva Message no banco com Direction = Outgoing, DeliveryStatus = Pending
 8. Emite SignalR notification para frontend
 ```
 
@@ -110,9 +110,19 @@ Todas as dependências são registradas em `Program.cs` via DI container:
 1. WhatsApp entrega mensagem ao Node.js
 2. Node.js faz POST /api/webhook/whatsapp
 3. SaveIncomingMessageUseCase recebe o webhook
-4. Salva Message no banco com Direction = Incoming
-5. Atualiza Contact.LastMessageAt
+4. Salva Message no banco (dedup por WhatssAppMessageId; fromMe → Outgoing)
+5. Atualiza Contact/Chat (LastMessageAt)
 6. Emite SignalR notification para frontend
+```
+
+### Status de Entrega (WhatsApp → ASP.NET)
+
+```
+1. WhatsApp atualiza ACK da mensagem (1=enviada, 2=entregue, 3=lida)
+2. Node.js evento 'message_ack' faz POST /api/webhook/status
+3. UpdateMessageDeliveryStatusUseCase localiza Message por WhatssAppMessageId
+4. Atualiza DeliveryStatus (evita regressão)
+5. Emite SignalR 'MessageDeliveryStatusChanged' para o frontend
 ```
 
 ## Comunicação Entre Serviços
@@ -120,11 +130,17 @@ Todas as dependências são registradas em `Program.cs` via DI container:
 ```
 ASP.NET Core API (porta 5261)
         │
-        ├── POST http://localhost:3000/api/enviar
+        ├── POST http://localhost:3333/api/enviar
         │       → Envia mensagens via WhatsApp
         │
+        ├── POST http://localhost:3333/api/sync
+        │       → Sincroniza mensagens recentes dos chats
+        │
         └── Recebe POST /api/webhook/whatsapp
-                ← Recebe mensagens do WhatsApp
+        │       ← Recebe mensagens do WhatsApp
+        │
+        └── Recebe POST /api/webhook/status
+                ← Recebe status de entrega do WhatsApp
 
 SignalR Hub (/whatsappHub)
         │

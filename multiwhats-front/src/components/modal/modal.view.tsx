@@ -7,13 +7,17 @@ interface ModalProps {
   children: React.ReactNode
   actions?: React.ReactNode
   error?: string | null
+  inline?: boolean
 }
 
-export function Modal({ title, onClose, children, actions, error }: ModalProps) {
+export function Modal({ title, onClose, children, actions, error, inline }: ModalProps) {
   return (
     <>
-      <div className={styles.overlay} onClick={onClose} />
-      <div className={styles.modal}>
+      <div
+        className={`${styles.overlay}${inline ? ` ${styles.inline}` : ''}`}
+        onClick={onClose}
+      />
+      <div className={`${styles.modal}${inline ? ` ${styles.inline}` : ''}`}>
         <div className={styles.modalHeader}>
           <h3>{title}</h3>
           <button className={styles.closeBtn} onClick={onClose}>

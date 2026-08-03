@@ -264,10 +264,15 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         // mensagem, inclusive para envios via API (antes, na corrida em que
         // o webhook ganhava do dedup do SendMessageUseCase, nenhum broadcast
         // acontecia e a mensagem não aparecia em tempo real).
+        // O evento é escolhido pela direção: outgoing vira MessageSent,
+        // incoming vira MessageReceived.
         if (!payload.IsSync)
         {
             var msgResponse = GetMessagesUseCase.MapToDetailResponse(message);
-            await _hubContext.Clients.All.SendAsync("MessageReceived", msgResponse);
+            var eventName = direction == MessageDirection.Outgoing
+                ? "MessageSent"
+                : "MessageReceived";
+            await _hubContext.Clients.All.SendAsync(eventName, msgResponse);
         }
 
         var userName = user?.Name;

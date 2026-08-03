@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { chatsService } from '../services/chats.service'
 import { ws } from '../services/websocket'
-import { toNumericType } from '../types'
+import { toNumericStatus, toNumericType } from '../types'
 import type { MessageResponse, MessageType } from '../types/chat'
 import { detectMediaType, fileToBase64 } from '../utils/media'
 const cache = new Map<number, MessageResponse[]>()
@@ -13,6 +13,7 @@ export function useChatMessaging(
   jid: string,
   lastMessage?: string,
   lastMessageAt?: string | null,
+  canMarkRead = false,
 ) {
   const [inputValue, setInputValue] = useState('')
   const [messages, setMessages] = useState<MessageResponse[]>([])
@@ -26,22 +27,52 @@ export function useChatMessaging(
   const [mediaType, setMediaType] = useState<MessageType | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const markChatAsRead = useCallback((chatId: number) => {
+    const applyRead = (m: MessageResponse): MessageResponse =>
+      m.direction === 0 && toNumericStatus(m.deliveryStatus) < 3
+        ? { ...m, deliveryStatus: 'Read' as const }
+        : m
+    setMessages((prev) => prev.map(applyRead))
+    const cached = cache.get(chatId)
+    if (cached) cache.set(chatId, cached.map(applyRead))
+    chatsService.markChatRead(chatId).catch((e: unknown) => {
+      console.error(`[ChatMessages] erro ao marcar mensagens como lidas:`, e)
+    })
+  }, [])
+
   const handleNewMessage = useCallback(
     (msg: MessageResponse) => {
       if (msg.chatId !== chatId) return
-      if (msg.direction === 0)
-        setMessages((prev) => {
-          const duplicate = prev.some(
-            (m) =>
-              m.id === msg.id ||
-              (!!m.messageId &&
-                !!msg.messageId &&
-                m.messageId === msg.messageId),
-          )
-          if (duplicate) return prev
-          return [...prev, msg]
-        })
+      setMessages((prev) => {
+        const duplicate = prev.some(
+          (m) =>
+            m.id === msg.id ||
+            (!!m.messageId &&
+              !!msg.messageId &&
+              m.messageId === msg.messageId),
+        )
+        if (duplicate) return prev
+        return [...prev, msg]
+      })
       if (chatId !== null) cache.delete(chatId)
+      if (chatId !== null && msg.direction === 0 && canMarkRead)
+        markChatAsRead(chatId)
+    },
+    [chatId, canMarkRead, markChatAsRead],
+  )
+
+  const handleDeliveryStatus = useCallback(
+    (msg: MessageResponse) => {
+      if (msg.chatId !== chatId || !msg.messageId) return
+      const apply = (m: MessageResponse) =>
+        m.messageId === msg.messageId
+          ? { ...m, deliveryStatus: msg.deliveryStatus }
+          : m
+      setMessages((prev) => prev.map(apply))
+      if (chatId !== null) {
+        const cached = cache.get(chatId)
+        if (cached) cache.set(chatId, cached.map(apply))
+      }
     },
     [chatId],
   )
@@ -49,11 +80,13 @@ export function useChatMessaging(
   useEffect(() => {
     const unsubReceived = ws.on('message:received', handleNewMessage)
     const unsubSent = ws.on('message:sent', handleNewMessage)
+    const unsubStatus = ws.on('message:delivery-status', handleDeliveryStatus)
     return () => {
       unsubReceived()
       unsubSent()
+      unsubStatus()
     }
-  }, [handleNewMessage])
+  }, [handleNewMessage, handleDeliveryStatus])
 
   useEffect(() => {
     setInputValue('')
@@ -100,6 +133,7 @@ export function useChatMessaging(
     const cached = cache.get(chatId)
     if (cached) {
       setMessages(cached)
+      if (canMarkRead) markChatAsRead(chatId)
       if (lastFetched.current === chatId) return
     }
 
@@ -165,6 +199,7 @@ export function useChatMessaging(
           )
         cache.set(chatId, newItems)
         if (!isSame) setMessages(newItems.slice())
+        if (canMarkRead) markChatAsRead(chatId)
       })
       .catch((e: unknown) => {
         console.error(`[ChatArea] erro ao carregar mensagens:`, e)
@@ -173,7 +208,7 @@ export function useChatMessaging(
       .finally(() => {
         if (requestChatId === lastFetched.current) setLoading(false)
       })
-  }, [chatId])
+  }, [chatId, canMarkRead, markChatAsRead])
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]

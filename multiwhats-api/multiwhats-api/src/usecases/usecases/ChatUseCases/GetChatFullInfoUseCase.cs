@@ -112,7 +112,13 @@ public class GetChatFullInfoUseCase : IGetChatFullInfoUseCase
             CreatedByName = chat.CreatedBy?.Name,
             LastMessageAt = chat.LastMessageAt,
             LastMessage = chat.LastMessage != null
-                ? new LastMessageResponse { Type = chat.LastMessage.Type, Body = chat.LastMessage.Body }
+                ? new LastMessageResponse
+                {
+                    Type = chat.LastMessage.Type,
+                    Body = chat.LastMessage.Body,
+                    Direction = chat.LastMessage.Direction,
+                    DeliveryStatus = chat.LastMessage.DeliveryStatus
+                }
                 : null,
             MessageCount = msgCount,
             OutgoingMessageCount = directionCounts.GetValueOrDefault(MessageDirection.Outgoing),

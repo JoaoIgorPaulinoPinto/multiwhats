@@ -79,6 +79,18 @@ export const chatsService = {
     )
   },
 
+  markChatRead(chatId: number) {
+    return api.put(`/api/chats/${chatId}/read`)
+  },
+
+  assignChat(chatId: number) {
+    return api.put<{
+      id: number
+      assignedToUserId: number | null
+      assignedToUserName: string | null
+    }>(`/api/chats/${chatId}/assign`)
+  },
+
   getOccurrences(chatId: number) {
     return api.get(`/api/chats/${chatId}/occurrences`)
   },

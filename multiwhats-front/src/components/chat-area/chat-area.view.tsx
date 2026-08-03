@@ -1,6 +1,8 @@
 'use client'
 
 import {
+  Check,
+  CheckCheck,
   FileText,
   FileWarning,
   Music,
@@ -12,8 +14,13 @@ import {
   X,
 } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
-import { isContactType } from '../../types'
 import type { ChatListResponse } from '../../services/chats.service'
+import {
+  DELIVERY_STATUS_LABELS,
+  isContactType,
+  toNumericStatus,
+  type DeliveryStatus,
+} from '../../types'
 import {
   formatDateSeparator,
   formatTime,
@@ -31,24 +38,47 @@ import { ChatInfoPanel } from './chat-info-panel'
 interface Props {
   chatId: number | null
   contactName?: string
+  clientName?: string | null
   phoneNumber?: string
   jid: string
   lastMessage: string
   lastMessageAt?: string | null
   chatContactId?: number | null
+  canMarkRead?: boolean
   onStartChat?: (phone: string, name: string) => void
   onOccurrenceCreated?: () => void
-  onMerged?: (result: { survivorJid: string; survivor?: ChatListResponse }) => void
+  onMerged?: (result: {
+    survivorJid: string
+    survivor?: ChatListResponse
+  }) => void
+}
+
+function StatusTicks({ status }: { status: DeliveryStatus }) {
+  const numeric = toNumericStatus(status)
+  const title = DELIVERY_STATUS_LABELS[numeric] ?? ''
+  let icon: React.ReactNode
+  if (numeric === 3) icon = <CheckCheck size={13} className={styles.read} />
+  else if (numeric === 2) icon = <CheckCheck size={13} />
+  else if (numeric === 1) icon = <Check size={13} />
+  else if (numeric === 4) icon = <X size={11} className={styles.failed} />
+  else icon = <Check size={13} className={styles.pending} />
+  return (
+    <span className={styles.status} title={title}>
+      {icon}
+    </span>
+  )
 }
 
 export function ChatAreaView({
   chatId,
   contactName,
+  clientName,
   phoneNumber,
   jid,
   chatContactId,
   lastMessage,
   lastMessageAt,
+  canMarkRead = false,
   onStartChat,
   onOccurrenceCreated,
   onMerged,
@@ -69,7 +99,14 @@ export function ChatAreaView({
     clearMedia,
     saveContact,
     occurrence,
-  } = useChatArea(chatId, jid, lastMessage, lastMessageAt, onOccurrenceCreated)
+  } = useChatArea(
+    chatId,
+    jid,
+    lastMessage,
+    lastMessageAt,
+    onOccurrenceCreated,
+    canMarkRead,
+  )
 
   const [showInfoPanel, setShowInfoPanel] = useState(false)
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
@@ -156,9 +193,11 @@ export function ChatAreaView({
           style={{ cursor: chatId ? 'pointer' : undefined }}
         >
           <strong>
-            {chatId ? (contactName ?? `Contato #${chatId}`) : 'Nenhum contato'}
+            {chatId ? (contactName ?? clientName) : 'Nenhum contato'}
           </strong>
-          <small>{chatId ? 'Online' : 'Selecione um contato'}</small>
+          <small>
+            {chatId ? (clientName ?? 'Online') : 'Selecione um contato'}
+          </small>
         </div>
         {chatId && !chatContactId && (
           <button
@@ -249,24 +288,11 @@ export function ChatAreaView({
                       <span className={styles.timestamp}>
                         {formatTime(msg.sentAt)}
                       </span>
-                      {/* {msg.direction === 1 && (
-                        <span className={styles.status}>
-                          {msg.deliveryStatus === 'Read' ||
-                          msg.deliveryStatus === 3 ? (
-                            <CheckCheck size={13} className={styles.read} />
-                          ) : msg.deliveryStatus === 'Delivered' ||
-                            msg.deliveryStatus === 2 ? (
-                            <CheckCheck size={13} />
-                          ) : msg.deliveryStatus === 'Sent' ||
-                            msg.deliveryStatus === 1 ? (
-                            <Check size={13} />
-                          ) : msg.deliveryStatus === 'Failed' ? (
-                            <X size={11} className={styles.failed} />
-                          ) : (
-                            <Check size={13} className={styles.pending} />
-                          )}
-                        </span>
-                      )} */}
+                      {msg.direction === 1 ? (
+                        <StatusTicks status={msg.deliveryStatus} />
+                      ) : (
+                        ''
+                      )}
                     </div>
                   </div>
                 </div>

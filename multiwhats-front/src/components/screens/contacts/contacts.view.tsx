@@ -2,6 +2,7 @@
 
 import { Info, Pencil, Phone, Search, Trash2, X } from 'lucide-react'
 import { AvatarView } from '../../../components/avatar/avatar.view'
+import { SearchableSelect } from '../../../components/searchable-select/searchable-select.view'
 import { useContacts } from './contacts.logic'
 import styles from './contacts.module.css'
 
@@ -176,23 +177,14 @@ export function ContactsView() {
 
             <div className={styles.field}>
               <label>Empresa</label>
-              <select
-                className={styles.select}
-                value={assignClientId ?? ''}
-                onChange={(e) =>
-                  setAssignClientId(
-                    e.target.value ? Number(e.target.value) : null,
-                  )
-                }
+              <SearchableSelect
+                options={clients}
+                value={assignClientId}
+                onChange={setAssignClientId}
+                emptyLabel="Sem empresa"
+                placeholder="Selecione uma empresa"
                 disabled={saving}
-              >
-                <option value="">Sem empresa</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
             <div className={styles.modalActions}>

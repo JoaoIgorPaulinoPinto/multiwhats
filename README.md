@@ -32,21 +32,22 @@ O MultiWhats é um sistema composto por 3 partes que trabalham juntas:
 └──────────────┘     └──────┬───────┘     └──────┬───────┘
                             │                     │
                             ▼                     ▼
-                      ┌──────────┐        WhatsApp Web.js
-                      │  MySQL   │        (Puppeteer/Chromium)
-                      │ (Railway)│
-                      └──────────┘
+                      ┌────────────┐      WhatsApp Web.js
+                      │ PostgreSQL │      (Puppeteer/Chromium)
+                      │    :5432   │
+                      └────────────┘
 ```
 
 1. **Frontend (Next.js)** - Interface visual que o operador usa no navegador. Roda na porta 3000.
 
-2. **Backend (ASP.NET Core)** - "Cérebro" do sistema. Recebe pedidos do frontend, gerencia dados no banco MySQL, e envia/recebe mensagens do WhatsApp. Roda na porta 5261.
+2. **Backend (ASP.NET Core)** - "Cérebro" do sistema. Recebe pedidos do frontend, gerencia dados no banco PostgreSQL, e envia/recebe mensagens do WhatsApp. Roda na porta 5261.
 
 3. **Messageria (Node.js)** - Ponte com o WhatsApp. Usa Puppeteer (um navegador automatizado) para se conectar ao WhatsApp Web. Roda na porta 3333.
 
 **Fluxo simplificado de uma mensagem:**
-- Operador digita no Frontend → Frontend pede ao Backend → Backend salva no MySQL e pede à Messageria → Messageria envia pelo WhatsApp
+- Operador digita no Frontend → Frontend pede ao Backend → Backend salva no PostgreSQL e pede à Messageria → Messageria envia pelo WhatsApp
 - Cliente responde no WhatsApp → Messageria recebe → Envia para o Backend (webhook) → Backend salva e avisa o Frontend em tempo real (SignalR)
+- WhatsApp reporta o status de entrega (enviada/entregue/lida/falhou) → Messageria notifica `POST /api/webhook/status` → Backend atualiza e o Frontend vê o indicador em tempo real
 
 ---
 
@@ -63,10 +64,11 @@ Controller (recebe HTTP)
 Use Case (executa regra de negócio)
     │
     ▼
+    ▼
 Repository (acessa o banco de dados)
     │
     ▼
-MySQL (armazena os dados)
+PostgreSQL (armazena os dados)
 ```
 
 **Camadas:**
@@ -81,7 +83,7 @@ MySQL (armazena os dados)
 
 1. **Use Case Pattern** - Cada operação (criar cliente, enviar mensagem, etc.) é uma classe separada. Isso evita "controllers gigantes" com tudo misturado.
 
-2. **Repository Pattern** - Todo acesso ao banco é feito por interfaces. Se amanhã trocarmos o MySQL por PostgreSQL, só precisamos trocar a implementação do Repository, sem mudar os Use Cases.
+2. **Repository Pattern** - Todo acesso ao banco é feito por interfaces. A camada de dados foi migrada de MySQL para PostgreSQL trocando apenas o provider do EF Core (Pomelo → Npgsql), sem mudar os Use Cases.
 
 3. **Strategy Pattern** - O envio de mensagens usa o padrão Strategy para tratar cada tipo de mensagem (texto, imagem, áudio, vídeo, documento, sticker) de forma diferente, sem condicionais gigantes.
 
@@ -96,9 +98,9 @@ MySQL (armazena os dados)
 | Componente | Tecnologia | Versão |
 |------------|-----------|--------|
 | Backend | ASP.NET Core (C#) | 10.0 |
-| Banco de Dados | MySQL (via Pomelo) | 8.0+ |
-| ORM | Entity Framework Core | 9.0 |
-| Autenticação | JWT Bearer | - |
+| Banco de Dados | PostgreSQL (via Npgsql) | 14+ |
+| ORM | Entity Framework Core | 10.0 |
+| Autenticação | JWT Bearer + BCrypt (senhas) | - |
 | Tempo Real | SignalR | - |
 | Documentação | Swagger/OpenAPI | 7.3 |
 | Messageria | Node.js + WhatsApp Web.js | - |
@@ -149,6 +151,8 @@ Message (Mensagem)
  ├── Direction: Incoming | Outgoing
  ├── Type: Text | Image | Audio | Video | Document | Sticker
  ├── DeliveryStatus: Pending | Sent | Delivered | Read | Failed
+ │     (atualizado em tempo real via ack do WhatsApp)
+ ├── WhatssAppMessageId: ID do WhatsApp (deduplicação)
  ├── ChatId (FK obrigatório — sempre pertence a uma conversa)
  ├── OccurrenceId? (FK — pode estar vinculada a um chamado)
  └── ReplyToId? (FK — pode ser resposta a outra mensagem)
@@ -186,7 +190,7 @@ ClientTask (Demanda da Empresa)
 ### 1. Criar arquivo `.env` na raiz do projeto
 
 ```bash
-DB_CONNECTION_STRING=server=****************;port=*******;database=******;user=*****;password=***********;AllowZeroDateTime=True;DateTimeKind=Utc
+DB_CONNECTION_STRING=Host=localhost;Port=5432;Database=multiwhats_db;Username=postgres;Password=***********
 JWT_SECRET=*******************************************************
 ```
 
@@ -235,13 +239,13 @@ docker compose down --rmi local
 
 ### Pré-requisitos
 - .NET 10 SDK
-- MySQL rodando localmente (ou remoto)
+- PostgreSQL rodando localmente (ou remoto)
 - Node.js 18+ (para a messageria)
 
 ### Backend (ASP.NET Core)
 
 ```bash
-cd multiwhats-api/multiwhats-api/multiwhats-api
+cd multiwhats-api/multiwhats-api
 
 # Instalar dependências
 dotnet restore
@@ -273,9 +277,10 @@ O serviço de messageria estará em `http://localhost:3333`.
 
 | Método | Endpoint | Descrição | Autorização |
 |--------|----------|-----------|-------------|
-| POST | `/api/auth/register` | Criar novo usuário | Pública |
+| POST | `/api/auth/register` | Criar novo usuário (exige código de permissão se `Auth:RequireRegistrationCode=true`) | Pública |
 | POST | `/api/auth/login` | Fazer login (retorna JWT) | Pública |
 | POST | `/api/auth/logout` | Revogar token atual | Autenticado |
+| POST | `/api/auth/codes` | Gerar código de permissão para cadastro | Admin/Dev |
 
 ### Clientes
 
@@ -349,7 +354,19 @@ O serviço de messageria estará em `http://localhost:3333`.
 
 | Método | Endpoint | Descrição | Autorização |
 |--------|----------|-----------|-------------|
-| POST | `/api/webhook/whatsapp` | Receber mensagens do WhatsApp | Pública |
+| POST | `/api/webhook/whatsapp` | Receber mensagens do WhatsApp (Messageria) | Pública |
+| POST | `/api/webhook/status` | Receber atualização de status de entrega (ack) das mensagens enviadas | Pública |
+
+Payload de status (`POST /api/webhook/status`):
+
+```json
+{
+  "messageId": "true_5511999999999@c.us_3EB0C0...",
+  "deliveryStatus": 2
+}
+```
+
+O Node.js mapeia o ACK do WhatsApp para o enum `DeliveryStatus` (`0=Pending, 1=Sent, 2=Delivered, 3=Read, 4=Failed`) no evento `message_ack` e envia ao backend, que persiste e notifica o frontend via SignalR (`MessageDeliveryStatusChanged`).
 
 ---
 
@@ -358,8 +375,14 @@ O serviço de messageria estará em `http://localhost:3333`.
 ### Como funciona o Login
 
 1. O operador envia `POST /api/auth/login` com nome e senha.
-2. O Backend valida as credenciais e retorna um **token JWT**.
+2. O Backend valida as credenciais (senha conferida com **hash BCrypt**; senhas legadas em texto puro são migradas no primeiro login) e retorna um **token JWT**.
 3. O Frontend salva esse token e envia em todas as requisições no header `Authorization: Bearer {token}`.
+
+### Cadastro com Código de Permissão
+
+1. Um Admin/Dev gera um código em **Configurações → Usuários → Gerar código de permissão** (`POST /api/auth/codes`).
+2. O novo operador acessa `/login`, alterna para "Criar conta", informa nome, senha e o código.
+3. O código é único, expira após `Auth:RegistrationCodeExpiryHours` (default 48h) e só pode ser usado uma vez.
 
 ### Roles (Perfis de Acesso)
 
@@ -638,13 +661,13 @@ Content-Type: application/json
 # Sobe a API ASP.NET Core em http://localhost:5261
 dotnet run
 
-# Sobe o serviço Node.js em http://localhost:3000
-cd messageria && npm start
+# Sobe o serviço Node.js em http://localhost:3333
+cd multiwhats-api/messageria && npm start
 
 # Cria uma nova migration do Entity Framework
 dotnet ef migrations add NomeDaMigration
 
-# Aplica as migrations pendentes no banco MySQL
+# Aplica as migrations pendentes no banco PostgreSQL
 dotnet ef database update
 
 # Rodar com Docker

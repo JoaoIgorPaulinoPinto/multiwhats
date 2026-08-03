@@ -164,4 +164,16 @@ public class ChatRepository : IChatRepository
 
         return true;
     }
+
+    public async Task<Chat?> AssignUserAsync(int chatId, int userId)
+    {
+        var chat = await _context.Chats
+            .Include(c => c.AssignedTo)
+            .FirstOrDefaultAsync(c => c.Id == chatId);
+        if (chat == null) return null;
+
+        chat.AssignUser(userId);
+        await _context.SaveChangesAsync();
+        return chat;
+    }
 }

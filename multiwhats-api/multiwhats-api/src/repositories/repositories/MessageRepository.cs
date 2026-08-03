@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using multiwhats_api.src.data.db;
 using multiwhats_api.src.data.entities;
+using multiwhats_api.src.data.enums;
 using multiwhats_api.src.repositories.interfaces;
 using multiwhats_api.src.services;
 using Npgsql;
@@ -149,5 +150,23 @@ public class MessageRepository : IMessageRepository
         message.UpdateDeliveryStatus(status);
         await _context.SaveChangesAsync();
         return message;
+    }
+
+    public async Task<List<Message>> MarkChatIncomingAsReadAsync(int chatId)
+    {
+        var messages = await _context.Messages
+            .Where(m => m.ChatId == chatId
+                && m.Direction == MessageDirection.Incoming
+                && m.DeliveryStatus != DeliveryStatus.Read
+                && m.DeliveryStatus != DeliveryStatus.Failed)
+            .ToListAsync();
+
+        foreach (var message in messages)
+            message.UpdateDeliveryStatus(DeliveryStatus.Read);
+
+        if (messages.Count > 0)
+            await _context.SaveChangesAsync();
+
+        return messages;
     }
 }

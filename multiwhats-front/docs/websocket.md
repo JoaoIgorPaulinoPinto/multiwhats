@@ -37,6 +37,7 @@ ws.onStateChange((state) => {
 |---|---|---|
 | `message:received` | `MessageResponse` | Mensagem recebida via webhook |
 | `message:sent` | `MessageResponse` | Mensagem enviada pelo usuário |
+| `message:delivery-status` | `MessageResponse` | Status de entrega atualizado (Pending/Sent/Delivered/Read/Failed) |
 
 ### Inscrição em Eventos
 
@@ -85,11 +86,17 @@ Hook que gerencia mensagens de um chat específico.
 - Filtra mensagens pelo `chatId` ativo
 - Adiciona a mensagem ao estado local e invalida o cache
 
+### `chat-area.logic.tsx`
+
+- Escuta `message:received`, `message:sent` e `message:delivery-status`
+- Em `message:delivery-status`, atualiza a mensagem existente pelo `id` (preservando a posição) em vez de adicionar nova
+- Atualiza o indicador de entrega na bolha (✓/✓✓/✓✓ azul)
+
 ### `chat-sidebar.logic.tsx`
 
 Hook que gerencia a lista de chats na sidebar.
 
-- Escuta `message:received` e `message:sent`
+- Escuta `message:received`, `message:sent` e `message:delivery-status`
 - Re-carrega a lista completa de chats via REST API
 - Mantém cache local (`cachedChats`) para renderização inicial otimizada
 
@@ -105,6 +112,7 @@ Mapeado em `/whatsappHub`. Não possui métodos invocáveis pelo cliente — ape
 |---|---|---|
 | `SendMessageUseCase.cs` | `MessageSent` | Após envio de mensagem |
 | `SaveIncomingMessageUseCase.cs` | `MessageReceived` | Após recebimento via webhook |
+| `UpdateMessageDeliveryStatusUseCase.cs` | `MessageDeliveryStatusChanged` | Após ACK do WhatsApp (webhook de status) |
 | `UseCaseLogger.cs` | `LogReceived` | (não consumido no frontend) |
 
 ### Fluxo de Dados
@@ -121,6 +129,20 @@ Mapeado em `/whatsappHub`. Não possui métodos invocáveis pelo cliente — ape
                                   SignalR → WsClient.on("message:received")
                                            ↓
                                   useChatMessaging / chatSidebar
+```
+
+```
+[WhatsApp] muda ACK → [Node.js] 'message_ack' → POST /api/webhook/status
+                                           ↓
+                                  WebhookController
+                                           ↓
+                                  UpdateMessageDeliveryStatusUseCase
+                                           ↓
+                                  IHubContext<WhatsappHub> → 'MessageDeliveryStatusChanged'
+                                           ↓
+                                  WsClient.on("message:delivery-status")
+                                           ↓
+                                  chat-area.logic.tsx (atualiza bolha)
 ```
 
 ## Configuração

@@ -1,13 +1,27 @@
 'use client'
 
-import { AlertCircle, MessageSquarePlus, RefreshCw, Search } from 'lucide-react'
+import {
+  AlertCircle,
+  Check,
+  CheckCheck,
+  MessageSquarePlus,
+  RefreshCw,
+  Search,
+  X,
+} from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useState } from 'react'
 import {
   OCCURRENCE_STATUS_COLORS,
   OCCURRENCE_STATUS_LABELS,
 } from '../../constants'
 import type { ChatListResponse } from '../../services/chats.service'
-import { MESSAGE_TYPE_MAP } from '../../types'
+import type { DeliveryStatus } from '../../types'
+import {
+  DELIVERY_STATUS_LABELS,
+  MESSAGE_TYPE_MAP,
+  toNumericStatus,
+} from '../../types'
 import { formatTime } from '../../utils/date-format'
 import { AvatarView } from '../avatar/avatar.view'
 import type { ChatTypeFilter } from './chat-sidebar.logic'
@@ -19,11 +33,13 @@ interface Props {
   onSelect: (
     id: number,
     name: string,
+    clientName: string | null,
     phoneNumber: string,
     jid: string,
     contactId: number | null,
     lastMessage: string,
     lastMessageAt: string | null,
+    assignedToUserId: number | null,
   ) => void
   search: string
   setSearch: (v: string) => void
@@ -32,6 +48,20 @@ interface Props {
   chats: ChatListResponse[]
   loading: boolean
   load: () => void
+}
+
+function StatusIcon({ status }: { status: DeliveryStatus }) {
+  const numeric = typeof status === 'number' ? status : toNumericStatus(status)
+  const label = DELIVERY_STATUS_LABELS[numeric] ?? ''
+  let icon: ReactNode
+  if (numeric === 3)
+    icon = <CheckCheck size={13} className={styles.statusRead} />
+  else if (numeric === 2)
+    icon = <CheckCheck size={13} className={styles.status} />
+  else if (numeric === 1) icon = <Check size={13} className={styles.status} />
+  else if (numeric === 4) icon = <X size={11} className={styles.statusFailed} />
+  else icon = <Check size={13} className={styles.statusPending} />
+  return <span title={label}>{icon}</span>
 }
 
 function SkeletonChatItem() {
@@ -72,7 +102,7 @@ export function ChatSidebarView({
 
   function handleNewChatStart(phone: string, name: string) {
     const jid = `${phone}@s.whatsapp.net`
-    onSelect(-1, name, phone, jid, null, '', null)
+    onSelect(-1, name, null, phone, jid, null, '', null, null)
     setShowNewChat(false)
   }
 
@@ -143,6 +173,11 @@ export function ChatSidebarView({
               chat.phoneNumber ??
               `Chat #${chat.id}`
             const occCount = chat.occurrences?.length ?? 0
+            const isUnread = !!(
+              chat.lastMessage &&
+              chat.lastMessage.direction === 0 &&
+              toNumericStatus(chat.lastMessage.deliveryStatus ?? 2) < 3
+            )
 
             return (
               <div
@@ -152,15 +187,24 @@ export function ChatSidebarView({
                   onSelect(
                     chat.id,
                     displayName,
+                    chat.clientName,
                     phone,
                     jid,
                     chat.contactId,
                     chat.lastMessage?.body ?? '...',
                     chat.lastMessageAt,
+                    chat.assignedToUserId,
                   )
                 }
               >
-                <AvatarView name={displayName} size={42} />
+                <div className={styles.avatarWrap}>
+                  <AvatarView name={displayName} size={42} />
+                  {isUnread && (
+                    <span className={styles.unreadBadge} title="Não lida">
+                      !
+                    </span>
+                  )}
+                </div>
                 <div className={styles.chatInfo}>
                   <div className={styles.chatTop}>
                     <strong>{displayName}</strong>
@@ -170,7 +214,9 @@ export function ChatSidebarView({
                         {occCount}
                       </span>
                     )}
-                    <label>#{phone}</label>
+                    <span className={styles.assignedName}>
+                      {chat.assignedToUserName}
+                    </span>
                     {chat.lastMessageAt && (
                       <span className={styles.chatTime}>
                         {formatTime(chat.lastMessageAt)}
@@ -180,6 +226,7 @@ export function ChatSidebarView({
                   {chat.clientName && (
                     <span className={styles.clientName}>{chat.clientName}</span>
                   )}
+
                   {chat.occurrences && chat.occurrences.length > 0 && (
                     <div className={styles.occurrences}>
                       {chat.occurrences.slice(0, 2).map((occ) => (
@@ -210,9 +257,23 @@ export function ChatSidebarView({
                     </div>
                   )}
                   {chat.lastMessage?.body ? (
-                    <p className={styles.lastMsg}>{chat.lastMessage.body}</p>
+                    <p className={styles.lastMsg}>
+                      {chat.lastMessage.direction === 1 &&
+                        chat.lastMessage.deliveryStatus !== undefined && (
+                          <StatusIcon
+                            status={chat.lastMessage.deliveryStatus}
+                          />
+                        )}
+                      {chat.lastMessage.body}
+                    </p>
                   ) : (
                     <p className={styles.lastMsg}>
+                      {chat.lastMessage?.direction === 1 &&
+                        chat.lastMessage.deliveryStatus !== undefined && (
+                          <StatusIcon
+                            status={chat.lastMessage.deliveryStatus}
+                          />
+                        )}
                       {chat.lastMessage
                         ? `${MESSAGE_TYPE_MAP[chat.lastMessage.type] ?? 'Mensagem'}`
                         : ''}

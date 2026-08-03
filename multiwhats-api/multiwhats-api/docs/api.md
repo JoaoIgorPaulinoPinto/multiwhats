@@ -8,17 +8,51 @@ Base URL: `http://localhost:5261`
 
 ### POST `/api/auth/register`
 
-Registra um novo usuário.
+Registra um novo usuário (senha com hash BCrypt, role padrão Support).
 
 - **Auth:** Anônimo
 - **Request:**
 ```json
 {
   "name": "Joao",
-  "password": "123123"
+  "password": "123123",
+  "registrationCode": "09A88A0C"
 }
 ```
 - **Response 201:** `{ "id": 1, "name": "Joao", "role": "Support", "isActive": true }`
+- **Observações:**
+  - `registrationCode` é opcional (obrigatório quando `Auth:RequireRegistrationCode` = true)
+  - O código é normalizado (`Trim().ToUpperInvariant()`), validado (existente, não usado, não expirado) e marcado como usado na mesma transação
+  - Falha com 400: código inválido, usado ou expirado
+
+---
+
+### POST `/api/auth/codes`
+
+Gera código(s) de permissão para cadastro.
+
+- **Auth:** Requer token com role **Admin** ou **Dev**
+- **Request:**
+```json
+{ "quantity": 1 }
+```
+- **Response 200:**
+```json
+{
+  "message": "1 código(s) de permissão gerado(s)",
+  "codes": [
+    {
+      "id": 1,
+      "code": "09A88A0C",
+      "isUsed": false,
+      "usedByUserId": null,
+      "expiresAt": "2026-08-05T13:42:29Z",
+      "createdAt": "2026-08-03T13:42:29Z"
+    }
+  ]
+}
+```
+- **Observação:** o código é hex com 64 bytes aleatórios e expira conforme `Auth:RegistrationCodeExpiryHours` (padrão 48h).
 
 ---
 
@@ -46,6 +80,7 @@ Autentica e retorna JWT.
   }
 }
 ```
+- **Observações:** senha verificada com BCrypt.Verify; senhas legadas em texto puro são migradas para hash no primeiro login. Conta inativa → 401/403.
 
 ---
 
@@ -224,7 +259,7 @@ Detalhe de uma conversa com ocorrências.
 
 ---
 
-### GET `/api/params/{id}/messages`
+### GET `/api/chats/{id}/messages`
 
 Lista mensagens de uma conversa com paginação.
 
@@ -407,6 +442,93 @@ Recebe mensagens do Node.js (WhatsApp).
 
 - **Auth:** Anônimo
 - **Request:** Ver [Webhook DTO](webhook.md)
+
+---
+
+### POST `/api/webhook/status`
+
+Recebe atualização de status de entrega do Node.js (evento `message_ack`).
+
+- **Auth:** Anônimo
+- **Request:**
+```json
+{
+  "messageId": "true_abc123def456",
+  "deliveryStatus": "Delivered"
+}
+```
+- **Response 200:** `{ "message": "Status atualizado com sucesso" }`
+- **Observações:**
+  - `messageId` = `WhatssAppMessageId` (correlação com o ACK do WhatsApp)
+  - `deliveryStatus` aceita `Pending`, `Sent`, `Delivered`, `Read`, `Failed`
+  - O status só avança (nunca regressa, ex: `Read` → `Delivered` é ignorado)
+  - Emite SignalR `MessageDeliveryStatusChanged` para o frontend
+- **Request:** Ver [Webhook DTO](webhook.md)
+
+---
+
+## USERS — `/api/users`
+
+### GET `/api/users`
+
+Lista todos os usuários.
+
+- **Auth:** Requer token
+- **Response:** Array de `{ id, name, role, isActive, createdAt }`
+
+---
+
+### PUT `/api/users/{id}`
+
+Atualiza um usuário.
+
+- **Auth:** Requer token com role **Admin** ou **Dev**
+- **Request:**
+```json
+{
+  "name": "Joao Silva",
+  "newPassword": "nova123",
+  "role": "Dev",
+  "isActive": true
+}
+```
+- **Response:** `{ "message": "Usuário atualizado", "user": { ... } }`
+
+---
+
+## ADMIN/CONFIG — `/api/admin/config`
+
+### GET `/api/admin/config`
+
+Lista parâmetros do sistema.
+
+- **Auth:** Requer token com role **Admin** ou **Dev**
+- **Response:** Array de `SystemParameterResponse`
+
+---
+
+### GET `/api/admin/config/{key}`
+
+Busca um parâmetro por chave.
+
+- **Auth:** Requer token com role **Admin** ou **Dev**
+
+---
+
+### PUT `/api/admin/config/{key}`
+
+Atualiza o valor de um parâmetro.
+
+- **Auth:** Requer token com role **Admin** ou **Dev**
+- **Request:** `{ "value": "true" }`
+
+---
+
+### POST `/api/admin/config/reload`
+
+Recarrega o cache de configurações no backend.
+
+- **Auth:** Requer token com role **Admin** ou **Dev**
 
 ---
 

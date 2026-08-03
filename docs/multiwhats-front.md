@@ -17,10 +17,12 @@
 14. [Tela de Contatos](#tela-de-contatos)
 15. [Tela de Empresas (Companies)](#tela-de-empresas-companies)
 16. [Tela de Kanban](#tela-de-kanban)
-17. [Componentes Compartilhados](#componentes-compartilhados)
-18. [Fluxos de Dados Completos](#fluxos-de-dados-completos)
-19. [Configuração e Execução](#configuração-e-execução)
-20. [Padrões e Convenções de Código](#padrões-e-convenções-de-código)
+17. [Tela de Usuários](#tela-de-usuários)
+18. [Tela de Configurações](#tela-de-configurações)
+19. [Componentes Compartilhados](#componentes-compartilhados)
+20. [Fluxos de Dados Completos](#fluxos-de-dados-completos)
+21. [Configuração e Execução](#configuração-e-execução)
+22. [Padrões e Convenções de Código](#padrões-e-convenções-de-código)
 
 ---
 
@@ -29,11 +31,13 @@
 O **MultiWhats Front-end** é uma aplicação web moderna construída com **Next.js 16** que serve como interface de usuário para o sistema MultiWhats - um CRM integrado ao WhatsApp para gestão multi-empresas.
 
 A interface permite:
-- **Visualizar e gerenciar conversas do WhatsApp** em tempo real (receber e enviar mensagens)
+- **Visualizar e gerenciar conversas do WhatsApp** em tempo real (receber e enviar mensagens, com indicadores de entrega ✓/✓✓/✓✓ azul)
 - **Gerenciar contatos** (associar a empresas, editar, excluir)
 - **Gerenciar empresas/clientes** (CRUD completo com contatos vinculados)
 - **Visualizar quadro Kanban** de tarefas e ocorrências
-- **Autenticação** com login/registro via JWT
+- **Gerenciar usuários** (listar, alterar nome/senha/role, ativar/desativar) — Admin/Dev
+- **Configurar o sistema** (parâmetros globais + gerar códigos de permissão para cadastro) — Admin/Dev
+- **Autenticação** com login/registro via JWT (cadastro com código de permissão)
 - **Tema claro/escuro** com persistência em localStorage
 
 ---
@@ -138,8 +142,12 @@ multiwhats-front/
 │   │       │   └── page.tsx         ← Rota /contacts
 │   │       ├── companies/
 │   │       │   └── page.tsx         ← Rota /companies
-│   │       └── kanban/
-│   │           └── page.tsx         ← Rota /kanban
+│   │       ├── kanban/
+│   │       │   └── page.tsx         ← Rota /kanban
+│   │       ├── settings/
+│   │       │   └── page.tsx         ← Rota /settings
+│   │       └── users/
+│   │           └── page.tsx         ← Rota /users
 │   ├── components/                  ← Componentes React
 │   │   ├── auth/
 │   │   │   ├── login.view.tsx
@@ -183,6 +191,14 @@ multiwhats-front/
 │   │           ├── kanban.view.tsx
 │   │           ├── kanban.logic.tsx
 │   │           └── kanban.module.css
+│   │       ├── users/
+│   │       │   ├── users.view.tsx
+│   │       │   ├── users.logic.tsx
+│   │       │   └── users.module.css
+│   │       └── settings/
+│   │           ├── settings.view.tsx
+│   │           ├── settings.logic.tsx
+│   │           └── settings.module.css
 │   ├── data/
 │   │   └── mock-data.ts            ← Dados mockados (não utilizados atualmente)
 │   ├── services/
@@ -192,6 +208,8 @@ multiwhats-front/
 │   │   ├── companies.service.ts     ← Serviço de empresas (clients)
 │   │   ├── contacts.service.ts      ← Serviço de contatos
 │   │   ├── kanban.service.ts        ← Serviço de tarefas/ocorrências
+│   │   ├── settings.service.ts      ← Serviço de parâmetros do sistema
+│   │   ├── users.service.ts         ← Serviço de usuários
 │   │   ├── paginated.response.ts    ← Interface de resposta paginada
 │   │   └── websocket.ts             ← Cliente SignalR (WebSocket)
 │   └── stores/
@@ -294,7 +312,7 @@ interface AuthState {
     error: string | null;
     
     login: (name: string, password: string) => Promise<void>;
-    register: (name: string, password: string) => Promise<void>;
+    register: (name: string, password: string, registrationCode?: string) => Promise<void>;
     logout: () => Promise<void>;
     hydrate: () => void;
 }
@@ -304,6 +322,11 @@ interface AuthState {
 1. Chama `authService.login(name, password)` → recebe `{ token, user }`
 2. Salva `token` e `user` (JSON) no `localStorage`
 3. Atualiza estado global (`set({ user, token, loading: false })`)
+
+### Fluxo de Registro
+1. Chama `authService.register(name, password, registrationCode)` → POST `/api/auth/register`
+2. Em seguida faz login automático (`authService.login`) para entrar direto
+3. O `registrationCode` é opcional (depende do parâmetro `Auth:RequireRegistrationCode` no backend)
 
 ### Fluxo de Logout
 1. Chama `authService.logout()` → revoga token no backend
@@ -357,7 +380,8 @@ class ApiClient {
 ```typescript
 export const authService = {
     login(name: string, password: string)  → POST /api/auth/login
-    register(name: string, password: string) → POST /api/auth/register
+    register(name: string, password: string, registrationCode?: string) → POST /api/auth/register
+    generateCodes(quantity = 1) → POST /api/auth/codes (Admin/Dev)
     logout()  → POST /api/auth/logout
     me()  → GET /api/auth/me
 };
@@ -366,6 +390,33 @@ export const authService = {
 **Retornos:**
 - `login`: `LoginResponse` = `{ token: string, user: UserResponse }`
 - `register`: `UserResponse` = `{ id, name, role, isActive, createdAt }`
+- `generateCodes`: `RegistrationCodeResponse[]` = `{ id, code, isUsed, usedByUserId, expiresAt, createdAt }`
+
+### Settings Service (`services/settings.service.ts`)
+
+```typescript
+export const settingsService = {
+    list()  → GET /api/admin/config
+    getByKey(key: string)  → GET /api/admin/config/:key
+    update(key: string, value: string)  → PUT /api/admin/config/:key
+    reload()  → POST /api/admin/config/reload
+};
+```
+
+Retorna parâmetros do sistema (`SystemParameterResponse`): `{ id, key, value, type, group, description, isRequired, createdAt, updatedAt, updatedByUserId }`. Tipos: `String`, `Int`, `Bool`, `JsonList`.
+
+### Users Service (`services/users.service.ts`)
+
+```typescript
+export type UserRole = "Support" | "Dev" | "Admin";
+
+export const usersService = {
+    list()  → GET /api/users
+    update(id: number, data: UpdateUserRequest)  → PUT /api/users/:id
+};
+```
+
+`UpdateUserRequest` = `{ name?, newPassword?, role?, isActive? }`. Roles exibidos em português via `ROLE_LABELS` (`Support` → Suporte, `Dev` → Desenvolvedor, `Admin` → Administrador).
 
 ### Chats Service (`services/chats.service.ts`)
 
@@ -404,8 +455,10 @@ interface MessageResponse {
 
 type MessageDirection = 0 | 1;  // 0 = Incoming, 1 = Outgoing
 type MessageType = "Text" | "Image" | "Audio" | "Video" | "Document" | "Sticker" | "Contact" | "Location" | "Unknown";
-type DeliveryStatus = "Pending" | "Sent" | "Delivered" | "Read" | "Failed";
+type DeliveryStatus = "Pending" | "Sent" | "Delivered" | "Read" | "Failed" | 0 | 1 | 2 | 3 | 4;
 ```
+
+O status de entrega pode chegar como string ou número (enum). `toNumericStatus()` converte para o número equivalente (`Pending=0, Sent=1, Delivered=2, Read=3, Failed=4`) e `DELIVERY_STATUS_LABELS` traduz para o rótulo em português (Pendente, Enviada, Entregue, Lida, Falhou).
 
 ### Contacts Service (`services/contacts.service.ts`)
 
@@ -515,6 +568,9 @@ this.connection = new signalR.HubConnectionBuilder()
 | `message:raw` | ReceberNovaMensagem | API (webhook) | MessageResponse |
 | `message:received` | MessageReceived | API (webhook) | MessageResponse |
 | `message:sent` | MessageSent | API (envio) | MessageResponse |
+| `message:delivery-status` | MessageDeliveryStatusChanged | API (webhook de status) | MessageResponse |
+
+Os eventos SignalR são mapeados para os nomes `message:*` em `WsEventMap` dentro de `registerHandlers()` (`services/websocket.ts`): `MessageReceived` → `message:received`, `MessageSent` → `message:sent`, `MessageDeliveryStatusChanged` → `message:delivery-status`.
 
 ### Padrão de Uso nos Componentes
 
@@ -561,8 +617,12 @@ src/app/
     │   └── page.tsx              ← /contacts
     ├── companies/
     │   └── page.tsx              ← /companies
-    └── kanban/
-        └── page.tsx              ← /kanban
+    ├── kanban/
+    │   └── page.tsx              ← /kanban
+    ├── settings/
+    │   └── page.tsx              ← /settings (Admin/Dev)
+    └── users/
+        └── page.tsx              ← /users (Admin/Dev)
 ```
 
 ### Guardas de Autenticação
@@ -606,10 +666,10 @@ A navegação é feita exclusivamente via `useRouter().push()` (não usa `<Link>
 
 **Funcionalidades:**
 - Alternância entre modo **Login** e **Registro**
-- Campos: Nome de usuário, Senha
+- Campos: Nome de usuário, Senha e (no modo registro) **Código de permissão**
 - Botão de submit com ícone dinâmico (LogIn ou UserPlus)
 - Indicador de loading
-- Exibição de erros (credenciais inválidas, usuário já existe, etc.)
+- Exibição de erros (credenciais inválidas, código inválido/expirado, usuário já existe, etc.)
 
 ### Hook `useLogin()` (`login.logic.tsx`)
 
@@ -618,23 +678,19 @@ function useLogin() {
     const [mode, setMode] = useState<'login' | 'register'>('login');
     const [name, setName] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState<string | null>(null);
+    const [registrationCode, setRegistrationCode] = useState('');
     
     const handleSubmit = async () => {
         if (mode === 'register') {
-            await authStore.register(name, password);
+            await authStore.register(name, password, registrationCode.trim() || undefined);
         }
         await authStore.login(name, password);
     };
-    
-    const toggleMode = () => {
-        setMode(m => m === 'login' ? 'register' : 'login');
-        setError(null);
-    };
-    
-    return { mode, name, setName, password, setPassword, error, handleSubmit, toggleMode };
+    ...
 }
 ```
+
+> O código de registro é opcional e só é exigido pelo backend quando o parâmetro `Auth:RequireRegistrationCode` está ligado.
 
 ### Layout Visual
 
@@ -689,6 +745,7 @@ Barra de navegação vertical fixa com 60px de largura:
 | Users | `/contacts` | Contatos |
 | LayoutDashboard | `/kanban` | Kanban |
 | Building2 | `/companies` | Empresas |
+| Settings | `/settings` | Configurações (Admin/Dev) |
 
 **Recursos:**
 - Destaque do item ativo via `usePathname()`
@@ -756,7 +813,8 @@ function useChatSidebar() {
         const refresh = () => chatsService.listChats().then(r => setChats(r.items));
         const unsub1 = ws.on('message:received', refresh);
         const unsub2 = ws.on('message:sent', refresh);
-        return () => { unsub1(); unsub2(); };
+        const unsub3 = ws.on('message:delivery-status', refresh);
+        return () => { unsub1(); unsub2(); unsub3(); };
     }, []);
     
     // Filtro client-side
@@ -802,9 +860,19 @@ function useChatArea(chatId: number, jid: string) {
                 cache.get(chatId)?.push(msg);
             }
         };
+        const onDeliveryStatus = (data: any) => {
+            const msg = data as MessageResponse;
+            if (msg.chatId === chatId) {
+                setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, deliveryStatus: msg.deliveryStatus } : m));
+                cache.get(chatId)?.forEach(m => {
+                    if (m.id === msg.id) m.deliveryStatus = msg.deliveryStatus;
+                });
+            }
+        };
         const unsub1 = ws.on('message:received', onReceived);
         const unsub2 = ws.on('message:sent', onReceived);
-        return () => { unsub1(); unsub2(); };
+        const unsub3 = ws.on('message:delivery-status', onDeliveryStatus);
+        return () => { unsub1(); unsub2(); unsub3(); };
     }, [chatId]);
     
     // Envia mensagem
@@ -820,6 +888,7 @@ function useChatArea(chatId: number, jid: string) {
 **Recursos do ChatArea:**
 - **Bolhas de mensagem**: Estilo diferente para mensagens recebidas (esquerda, fundo branco) e enviadas (direita, fundo verde)
 - **Avatar**: Exibe iniciais do contato no topo
+- **Indicadores de status de entrega**: Nas mensagens enviadas, um ícone ao lado do timestamp indica o estado — ✓ (Enviada), ✓✓ (Entregue), ✓✓ azul (Lida), relógio (Pendente), ícone de erro (Falhou), baseado em `DELIVERY_STATUS_LABELS`/`toNumericStatus`
 - **Input**: Campo de texto com botão de enviar verde
 - **Salvar contato**: Se o contato não estiver associado a nenhum cliente, exibe botão "Salvar nos contatos" que abre modal com formulário
 - **Modal de Salvar Contato**: Campos JID (readonly), Telefone, Nome, PushName (readonly), Empresa (select)
@@ -984,6 +1053,71 @@ function useKanban() {
 
 ---
 
+## Tela de Usuários
+
+### `/users` → `screens/users/users.view.tsx`
+
+Área restrita a **Admin/Dev**. Lista todos os usuários do sistema e permite editar.
+
+**Hook `useUsers()` (`users.logic.tsx`):**
+
+```typescript
+function useUsers() {
+    const [users, setUsers] = useState<UserResponse[]>([]);
+    const [editingUser, setEditingUser] = useState<UserResponse | null>(null);
+    
+    // Carrega lista no mount via usersService.list() → GET /api/users
+    // saveEdit → usersService.update(id, { name?, newPassword?, role?, isActive? })
+    //   → PUT /api/users/:id
+    // Novo registro: o usuário só pode ser criado na tela de login,
+    //   aqui apenas nome, senha, role e status são alteráveis
+}
+```
+
+**Funcionalidades:**
+- Lista com nome, role (traduzida via `ROLE_LABELS`) e status (Ativo/Inativo)
+- Modal de edição com: nome, nova senha (opcional), role (select Support/Dev/Admin) e ativar/desativar
+- Sem exclusão de usuários
+
+---
+
+## Tela de Configurações
+
+### `/settings` → `screens/settings/settings.view.tsx`
+
+Área restrita a **Admin/Dev**. Central de parâmetros globais do sistema + geração de códigos de permissão.
+
+**Hook `useSettings()` (`settings.logic.tsx`):**
+
+```typescript
+function useSettings() {
+    const [parameters, setParameters] = useState<SystemParameterResponse[]>([]);
+    const [generatedCodes, setGeneratedCodes] = useState<RegistrationCodeResponse[]>([]);
+    
+    // load() → settingsService.list() → GET /api/admin/config
+    // save() → settingsService.update(key, value) por parâmetro alterado → PUT /api/admin/config/:key
+    // reload() → settingsService.reload() → POST /api/admin/config/reload (recarrega cache no backend)
+    // generateCode() → authService.generateCodes(1) → POST /api/auth/codes
+}
+```
+
+**Parâmetros agrupados por categoria** (com busca, colapso por grupo e labels em português):
+
+| Grupo | Exemplos |
+|---|---|
+| Auth | `PasswordMinLength`, `RequireRegistrationCode`, `RegistrationCodeExpiryHours` |
+| Business | `Enabled`, `OpenTime`, `CloseTime`, `WorkingDays`, `OutsideHoursMessage`, `Timezone` |
+| Media | `AllowedTypes`, `UnsupportedMessage` |
+| Replies | `SenderName` |
+| Occurrence | `StatusFlow` |
+
+- **Tipos de parâmetro**: `String` (texto), `Int` (número), `Bool` (ligado/desligado), `JsonList` (select múltiplo — dias da semana, tipos de mídia, fluxo de ocorrências)
+- **Validação**: inteiros e horários `HH:mm` validados antes de salvar
+- **Códigos de permissão**: botão "Gerar código" chama `authService.generateCodes(1)` e exibe o código (hex) com validade — usado para o cadastro de novos usuários quando `Auth:RequireRegistrationCode` está ativo
+- Indicação de alterações não salvas (dirty count) e botão de recarregar cache
+
+---
+
 ## Componentes Compartilhados
 
 ### Avatar (`avatar/`)
@@ -1083,10 +1217,22 @@ Usuário digita texto e clica Enviar
     → chat-area.logic.tsx: sendMessage(text)
     → chats.service.ts: POST /api/messages/send { jid, text }
     → API envia para Node.js (whatsapp-web.js envia via WhatsApp)
-    → API salva mensagem no banco
+    → API salva mensagem no banco (DeliveryStatus=Pending)
     → API dispara SignalR 'MessageSent'
     → chat-area recebe evento e adiciona à lista
-    → Bolha azul aparece na UI
+    → Bolha com relógio (pendente) aparece na UI
+```
+
+### 3.1. Atualização de Status de Entrega
+
+```
+WhatsApp confirma envio/entrega/leitura (ACK 1/2/3)
+    → Node.js evento 'message_ack' → POST /api/webhook/status
+    → API atualiza Message.DeliveryStatus
+    → API dispara SignalR 'MessageDeliveryStatusChanged'
+    → websocket.ts recebe e emite 'message:delivery-status'
+    → chat-area.logic.tsx: atualiza a mensagem correspondente (mesmo id)
+    → Ícone muda: ✓ (Enviada) → ✓✓ (Entregue) → ✓✓ azul (Lida)
 ```
 
 ### 4. Gerenciamento de Contatos

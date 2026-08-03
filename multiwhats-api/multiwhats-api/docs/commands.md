@@ -84,23 +84,26 @@ Quando a API está rodando, acesse:
 | Serviço | Porta HTTP | Porta HTTPS |
 |---|---|---|
 | ASP.NET API | 5261 | 7069 |
-| Node.js | 3000 | — |
+| Node.js (messageria) | 3333 | — |
 | Docker | 8080 | 8081 |
-| MySQL (local/XAMPP) | 3306 | — |
-| MySQL (Railway) | 40401 | — |
+| PostgreSQL (local) | 5432 | — |
 
 ## Variáveis de Ambiente
 
 Em produção, as configurações podem ser sobrescritas via variáveis de ambiente:
 
 ```bash
-# Connection String
-ConnectionStrings__DefaultConnection="server=...;database=...;..."
+# Connection String (PostgreSQL)
+ConnectionStrings__DefaultConnection="Host=...;Port=5432;Database=...;Username=...;Password=..."
 
 # JWT
 JwtSettings__Secret="sua-chave-secreta"
 JwtSettings__Issuer="seu-issuer"
 JwtSettings__Audience="sua-audience"
+
+# Bridge Node.js
+Messageria__BaseUrl="http://localhost:3333"
+DB_CONNECTION_STRING="Host=...;Port=5432;Database=...;Username=...;Password=..."
 ```
 
 ## Verificação Rápida

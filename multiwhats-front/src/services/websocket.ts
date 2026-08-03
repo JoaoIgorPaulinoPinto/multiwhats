@@ -16,6 +16,12 @@ export type WsConnectionState = "disconnected" | "connecting" | "connected" | "r
 export interface WsEventMap {
   "message:received": MessageResponse
   "message:sent": MessageResponse
+  "message:delivery-status": MessageResponse
+  "chat:assigned": {
+    id: number
+    assignedToUserId: number | null
+    assignedToUserName: string | null
+  }
   "message:raw": unknown
 }
 
@@ -94,6 +100,18 @@ class WsClient {
 
     conn.on("MessageSent", (payload: MessageResponse) => {
       this.emit("message:sent", payload)
+    })
+
+    conn.on("MessageDeliveryStatusChanged", (payload: MessageResponse) => {
+      this.emit("message:delivery-status", payload)
+    })
+
+    conn.on("ChatAssigned", (payload: {
+      id: number
+      assignedToUserId: number | null
+      assignedToUserName: string | null
+    }) => {
+      this.emit("chat:assigned", payload)
     })
   }
 

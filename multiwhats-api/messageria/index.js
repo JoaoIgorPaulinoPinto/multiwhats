@@ -65,6 +65,8 @@ const ASPNET_WEBHOOK_URL =
   process.env.ASPNET_WEBHOOK_URL || 'http://localhost:5261/api/webhook/whatsapp'
 const ASPNET_DEVICE_URL =
   process.env.ASPNET_DEVICE_URL || 'http://localhost:5261/api/device'
+const ASPNET_STATUS_URL =
+  process.env.ASPNET_STATUS_URL || 'http://localhost:5261/api/webhook/status'
 
 // Rastreia os IDs das mensagens enviadas pelo sistema via API. Serve para
 // diferenciar, no evento message_create, se a mensagem veio do sistema
@@ -329,6 +331,53 @@ client.on('message_create', async (msg) => {
     }
     await processarEMandarParaAspNet(msg, true, {
       source: isApiSent ? 'system' : 'phone',
+    })
+  }
+})
+
+// ==========================================
+// STATUS DE ENTREGA (ack do WhatsApp)
+// ==========================================
+// O whatsapp-web.js dispara message_ack quando o status de uma mensagem
+// enviada muda: 0=Pending, 1=Sent(server), 2=Delivered(device), 3=Read.
+// Mapeamos para o enum DeliveryStatus do backend (Pending=0, Sent=1,
+// Delivered=2, Read=3, Failed=4) e enviamos ao endpoint de status.
+const ACK_PARA_STATUS = {
+  [-1]: 4, // ACK_ERROR  -> Failed
+  [0]: 0, // ACK_PENDING -> Pending
+  [1]: 1, // ACK_SERVER  -> Sent
+  [2]: 2, // ACK_DEVICE  -> Delivered
+  [3]: 3, // ACK_READ    -> Read
+  [4]: 3, // ACK_PLAYED  -> Read (áudio/vídeo reproduzido)
+}
+
+client.on('message_ack', async (msg, ack) => {
+  try {
+    const messageId = serializedId(msg)
+    const status = ACK_PARA_STATUS[ack]
+    if (!messageId || status === undefined) return
+    // Só nos interessa o status das mensagens que enviamos.
+    if (!msg.fromMe) return
+
+    log('EVENTO_MESSAGE_ACK', {
+      messageId,
+      ack,
+      status,
+      fromMe: msg.fromMe,
+    })
+
+    await axios.post(
+      ASPNET_STATUS_URL,
+      { messageId, deliveryStatus: status },
+      { timeout: 15000 },
+    )
+  } catch (err) {
+    log('STATUS_ERRO', {
+      messageId: serializedId(msg),
+      ack,
+      error: err.message || String(err),
+      responseStatus: err.response?.status ?? null,
+      responseData: err.response?.data ?? null,
     })
   }
 })

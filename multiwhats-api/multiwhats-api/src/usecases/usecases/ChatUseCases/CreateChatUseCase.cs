@@ -63,7 +63,9 @@ public class CreateChatUseCase : ICreateChatUseCase
             : new LastMessageResponse
             {
                 Type = chat.LastMessage.Type,
-                Body = chat.LastMessage.Body
+                Body = chat.LastMessage.Body,
+                Direction = chat.LastMessage.Direction,
+                DeliveryStatus = chat.LastMessage.DeliveryStatus
             },
             AssignedToUserId = chat.AssignedToUserId,
             AssignedToUserName = chat.AssignedTo?.Name,

@@ -5,6 +5,7 @@ import {
   chatsService,
   type ChatListResponse,
 } from '../../services/chats.service'
+import { useAuthStore } from '../../stores/auth-store'
 import { ws } from '../../services/websocket'
 
 let cachedChats: ChatListResponse[] | null = null
@@ -18,6 +19,7 @@ export function useChatSidebar() {
     () => cachedChats ?? [],
   )
   const [loading, setLoading] = useState(cachedChats === null)
+  const currentUserId = useAuthStore((s) => s.user?.id)
 
   const load = useCallback(() => {
     chatsService
@@ -35,10 +37,14 @@ export function useChatSidebar() {
 
     const unsubReceived = ws.on('message:received', load)
     const unsubSent = ws.on('message:sent', load)
+    const unsubStatus = ws.on('message:delivery-status', load)
+    const unsubAssigned = ws.on('chat:assigned', load)
 
     return () => {
       unsubReceived()
       unsubSent()
+      unsubStatus()
+      unsubAssigned()
     }
   }, [load])
 
@@ -48,8 +54,10 @@ export function useChatSidebar() {
     if (!display.toLowerCase().includes(q)) return false
     const hasOccurrence = (c.occurrences?.length ?? 0) > 0
     const hasMyOccurrence = (c.occurrences ?? []).some((o) => o.byMe)
+    const assignedByMe =
+      currentUserId != null && c.assignedToUserId === currentUserId
     if (chatType === 'open') return !hasOccurrence
-    if (chatType === 'mine') return hasMyOccurrence
+    if (chatType === 'mine') return hasMyOccurrence || assignedByMe
     return true
   })
 

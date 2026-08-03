@@ -95,6 +95,16 @@ export function ChatInfoPanel({ chatId, contactName, phoneNumber, jid, onClose, 
               </section>
 
               <section className={styles.section}>
+                <h4 className={styles.sectionTitle}>Atendimento</h4>
+                <div className={styles.infoRow}>
+                  <span className={styles.label}>Responsável</span>
+                  <span className={styles.value}>
+                    {info?.assignedToUserName ?? "—"}
+                  </span>
+                </div>
+              </section>
+
+              <section className={styles.section}>
                 <h4 className={styles.sectionTitle}>Estatísticas</h4>
                 <div className={styles.statsGrid}>
                   <div className={styles.statCard}>

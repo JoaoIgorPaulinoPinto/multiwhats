@@ -283,6 +283,20 @@ whatsapp-web.js recebe a mensagem
    → salva Message (Incoming) + broadcast SignalR ("MessageReceived")
 ```
 
+**Status de entrega (ACK):**
+```
+WhatsApp confirma o envio/entrega/leitura da mensagem enviada
+   → whatsapp-web.js dispara 'message_ack'
+   → POST /api/webhook/status (público) { messageId, deliveryStatus }
+   → UpdateMessageDeliveryStatusUseCase:
+      1. Localiza Message por WhatssAppMessageId
+      2. Só avança o status (nunca regressa: Read não volta a Delivered)
+      3. Broadcast SignalR ("MessageDeliveryStatusChanged")
+   → Frontend atualiza o indicador (✓ → ✓✓ → ✓✓ azul)
+```
+
+Mapeamento do ACK: `1`=Sent, `2`=Delivered, `3`(READ/PLAYED)=Read, `0`=Pending, `-1`=Failed. O webhook de status é deduplicado para `fromMe` (o Node.js só envia status de mensagens enviadas pelo próprio número).
+
 ### 6.2 Autenticação e Autorização
 
 - Login: `POST /api/auth/login` → retorna **JWT** (válido por `JwtSettings:ExpiryInMinutes`, default 60 min).

@@ -1,8 +1,9 @@
-"use client"
+'use client'
 
-import { PRIORITY_LABELS } from "../../constants"
-import { Modal, ModalField } from "../modal/modal.view"
-import styles from "../modal/modal.module.css"
+import { PRIORITY_LABELS } from '../../constants'
+import styles from '../modal/modal.module.css'
+import { Modal, ModalField } from '../modal/modal.view'
+import { SearchableSelect } from '../searchable-select/searchable-select.view'
 
 interface SaveContactModalProps {
   formJid: string
@@ -37,39 +38,33 @@ export function SaveContactModal({
 }: SaveContactModalProps) {
   return (
     <Modal title="Salvar em contatos" onClose={onClose} error={error}>
-      <ModalField label="JID (WhatsApp ID)">
-        <input value={formJid} readOnly className={styles.readOnly} />
-      </ModalField>
-
-      <ModalField label="Telefone">
-        <input value={formPhone} onChange={(e) => setFormPhone(e.target.value)} />
+      <ModalField label="Telefone (Não é o identificador)">
+        <input
+          value={formPhone}
+          onChange={(e) => setFormPhone(e.target.value)}
+        />
       </ModalField>
 
       <ModalField label="Nome">
         <input value={formName} onChange={(e) => setFormName(e.target.value)} />
       </ModalField>
 
-      <ModalField label="Push Name (WhatsApp)">
-        <input value={formPushName} readOnly className={styles.readOnly} />
-      </ModalField>
-
       <ModalField label="Empresa">
-        <select
-          className={styles.select}
-          value={assignClientId ?? ""}
-          onChange={(e) => setAssignClientId(e.target.value ? Number(e.target.value) : null)}
-        >
-          <option value="">Sem empresa</option>
-          {clients.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+        <SearchableSelect
+          options={clients}
+          value={assignClientId}
+          onChange={setAssignClientId}
+          emptyLabel="Sem empresa"
+          placeholder="Selecione uma empresa"
+        />
       </ModalField>
 
       <div className={styles.modalActions}>
-        <button className={styles.cancelBtn} onClick={onClose}>Cancelar</button>
+        <button className={styles.cancelBtn} onClick={onClose}>
+          Cancelar
+        </button>
         <button className={styles.saveBtn} onClick={onSave} disabled={saving}>
-          {saving ? "Salvando..." : "Salvar"}
+          {saving ? 'Salvando...' : 'Salvar'}
         </button>
       </div>
     </Modal>
@@ -117,7 +112,7 @@ export function OccurrenceModal({
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Descreva o problema..."
           rows={3}
-          style={{ resize: "vertical" }}
+          style={{ resize: 'vertical' }}
         />
       </ModalField>
 
@@ -127,16 +122,26 @@ export function OccurrenceModal({
           value={priority}
           onChange={(e) => setPriority(Number(e.target.value))}
         >
-          {(Object.entries(PRIORITY_LABELS) as [string, string][]).map(([value, label]) => (
-            <option key={value} value={value}>{label}</option>
-          ))}
+          {(Object.entries(PRIORITY_LABELS) as [string, string][]).map(
+            ([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ),
+          )}
         </select>
       </ModalField>
 
       <div className={styles.modalActions}>
-        <button className={styles.cancelBtn} onClick={onClose}>Cancelar</button>
-        <button className={styles.saveBtn} onClick={onSave} disabled={saving || !title.trim()}>
-          {saving ? "Criando..." : "Criar Ocorrência"}
+        <button className={styles.cancelBtn} onClick={onClose}>
+          Cancelar
+        </button>
+        <button
+          className={styles.saveBtn}
+          onClick={onSave}
+          disabled={saving || !title.trim()}
+        >
+          {saving ? 'Criando...' : 'Criar Ocorrência'}
         </button>
       </div>
     </Modal>

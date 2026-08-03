@@ -16,4 +16,5 @@ public interface IMessageRepository
     Task<Message?> GetByMessageIdAsync(string messageId);
     Task<bool> MarkAsSystemAsync(string messageId);
     Task<Message?> UpdateDeliveryStatusAsync(string messageId, DeliveryStatus status);
+    Task<List<Message>> MarkChatIncomingAsReadAsync(int chatId);
 }

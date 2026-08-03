@@ -1,7 +1,7 @@
-import type { MessageDirection, MessageType, DeliveryStatus } from "./index"
-import type { OccurrenceSummary, OccurrenceDetail } from "./occurrence"
+import type { DeliveryStatus, MessageDirection, MessageType } from './index'
+import type { OccurrenceDetail, OccurrenceSummary } from './occurrence'
 
-export type { MessageDirection, MessageType, DeliveryStatus }
+export type { DeliveryStatus, MessageDirection, MessageType }
 
 export interface ChatListResponse {
   id: number
@@ -13,7 +13,13 @@ export interface ChatListResponse {
   clientId: number | null
   clientName: string | null
   lastMessageAt: string | null
-  lastMessage: { type: number; body: string | null } | null
+  lastMessage: {
+    type: number
+    body: string | null
+    direction?: MessageDirection
+    deliveryStatus?: DeliveryStatus
+  } | null
+  assignedToUserId: number | null
   assignedToUserName: string | null
   messageCount: number
   occurrences: OccurrenceSummary[] | null
@@ -30,7 +36,12 @@ export interface ChatDetailResponse {
   clientId: number | null
   clientName: string | null
   lastMessageAt: string | null
-  lastMessage: { type: number; body: string | null } | null
+  lastMessage: {
+    type: number
+    body: string | null
+    direction?: MessageDirection
+    deliveryStatus?: DeliveryStatus
+  } | null
   occurrences: OccurrenceDetail[] | null
   assignedToUserId: number | null
   assignedToUserName: string | null

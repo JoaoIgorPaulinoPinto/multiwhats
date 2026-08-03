@@ -125,11 +125,35 @@ align-items: center;
 }
 
 .lastMsg {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
   color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.status {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.statusRead {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.statusPending {
+  color: var(--text-muted);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.statusFailed {
+  color: var(--danger, #e53e3e);
+  flex-shrink: 0;
 }
 
 .clientName {
@@ -139,6 +163,20 @@ align-items: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.assignedName {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .assignedName,
+:root[data-theme="dark"] .assignedName {
+  color: #6ee7b7;
 }
 
 .occurrences {
@@ -191,6 +229,31 @@ align-items: center;
   color: #d97706;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.avatarWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.unreadBadge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  border: 2px solid var(--sidebar);
+  line-height: 1;
+  box-sizing: border-box;
 }
 
 [data-theme="dark"] .occBadge,

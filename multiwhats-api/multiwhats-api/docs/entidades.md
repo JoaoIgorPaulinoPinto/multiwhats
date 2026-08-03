@@ -3,8 +3,8 @@
 ## Diagrama de Relacionamentos
 
 ```
-Client ──1:N── Contact ──1:N── Message
-  │                │
+Client ──1:N── Contact ──1:N── Chat ──1:N── Message
+  │                │            │
   │                └──1:N── Occurrence
   │
   └──1:N── ClientTask
@@ -12,11 +12,13 @@ Client ──1:N── Contact ──1:N── Message
 Group ──1:N── Contact
 
 User ──(criado/alterado por)── AuditLog
+User ──1:N── RegistrationCode (criado por)
+User ──(atualizado por)── SystemParameter
 ```
 
 ## BaseEntity
 
-Todas as entidades (exceto `Device` e `AuditLog`) herdam de `BaseEntity`:
+Todas as entidades (exceto `Device`, `AuditLog` e `RegistrationCode`) herdam de `BaseEntity`:
 
 | Campo | Tipo | Descrição |
 |---|---|---|
@@ -76,17 +78,37 @@ Representa um contato/telefone no WhatsApp.
 
 ---
 
-## Message (Mensagem)
-
-Mensagem enviada ou recebida no WhatsApp.
+## Chat (Conversa)
 
 | Campo | Tipo | Descrição |
 |---|---|---|
 | Id | int | PK |
-| MessageId | string? | ID serializado WhatsApp (dedup) |
+| Jid | string | JID da conversa (`5511999999999@c.us`) **UNIQUE** |
+| PhoneNumber | string? | Número limpo |
+| Name | string? | Nome do contato/chat |
+| ContactId | int? | FK → Contact |
+| ClientId | int? | FK → Client |
+| LastMessageAt | DateTime? | Última mensagem (timestamp) |
+| LastMessageId | int? | FK → Message (última mensagem) |
+| AssignedToUserId | int? | FK → User (responsável) |
+
+**Relacionamentos:**
+- `N:1` → Contact, Client, User (AssignedTo)
+- `1:N` → Messages, Occurrences
+
+---
+
+## Message (Mensagem)
+
+Mensagem enviada ou recebida no WhatsApp. Toda mensagem pertence a um `Chat`.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| Id | int | PK |
+| WhatssAppMessageId | string? | ID serializado do WhatsApp (**UNIQUE**, usado no dedup e no webhook de status) |
 | FromJid | string | JID do remetente |
 | ToJid | string? | JID do destinatário |
-| PhoneNumber | string | Número limpo |
+| PhoneNumber | string? | Número limpo |
 | Body | string? | Texto da mensagem |
 | Direction | MessageDirection | `Incoming` \| `Outgoing` |
 | Type | MessageType | `Text` \| `Image` \| `Audio` \| `Video` \| `Document` \| `Sticker` \| `Contact` \| `Location` \| `Unknown` |
@@ -94,28 +116,26 @@ Mensagem enviada ou recebida no WhatsApp.
 | SentAt | DateTime | DateTime do envio/recebimento |
 | NotifyName | string? | Nome de notificação |
 | HasMedia | bool | Se possui mídia |
-| MediaUrl | string? | Base64 ou URL da mídia (**LONGTEXT**) |
+| MediaUrl | string? | Base64 ou URL da mídia (TEXT) |
 | MediaMimeType | string? | Tipo MIME |
 | MediaFilename | string? | Nome do arquivo |
 | MediaSize | long? | Tamanho em bytes |
 | MediaCaption | string? | Legenda da mídia |
-| DeliveryStatus | DeliveryStatus | `Pending` \| `Sent` \| `Delivered` \| `Read` \| `Failed` |
+| DeliveryStatus | DeliveryStatus | `Pending` \| `Sent` \| `Delivered` \| `Read` \| `Failed` (default: Pending para outgoing, Delivered para incoming) |
 | IsForwarded | bool | Se foi encaminhada |
-| ContactId | int? | FK → Contact |
+| Source | MessageSource | `Phone` \| `System` (corrigido no webhook de envio) |
+| FromMe | bool | Se foi enviada pelo próprio número |
+| ChatId | int | FK → Chat (obrigatório) |
 | UserId | int? | FK → User (quem enviou) |
 | OccurrenceId | int? | FK → Occurrence (vínculo opcional) |
 | ReplyToId | int? | FK → Message (resposta a) |
 
 **Relacionamentos:**
-- `N:1` → Contact
-- `N:1` → User
-- `N:1` → Occurrence
+- `N:1` → Chat, Contact (via Chat), User, Occurrence
 - `N:1` → Message (ReplyTo — set null on delete)
 - `1:N` → Chat (via Chat.LastMessage)
 
-**Índices:** INDEX em `MessageId`, `PhoneNumber`, `Timestamp`.
-
-**Cascade:** Delete → Chat (cascade), ReplyTo → Message (set null).
+**Índices:** UNIQUE em `WhatssAppMessageId`; INDEX em `PhoneNumber`, `Timestamp`.
 
 ---
 
@@ -185,13 +205,48 @@ Usuário que acessa a API.
 |---|---|---|
 | Id | int | PK |
 | Name | string | Nome de login **UNIQUE** |
-| Password | string | Senha (⚠️ armazenada em texto puro) |
+| Password | string | Senha com hash **BCrypt** (work factor 12; legadas migram no 1º login) |
 | Role | UserRole | `Support` \| `Dev` \| `Admin` |
 | IsActive | bool | Se a conta está ativa |
 
 **Índices:** UNIQUE em `Name`.
 
 ---
+
+## RegistrationCode (Código de Permissão)
+
+Código de cadastro gerado por Admin/Dev para criar novos usuários.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| Id | int | PK |
+| Code | string | Valor hex (64 bytes aleatórios via `RandomNumberGenerator`), **UNIQUE** |
+| IsUsed | bool | Se já foi usado |
+| UsedByUserId | int? | FK → User (quem usou) |
+| CreatedByUserId | int | FK → User (quem gerou) |
+| ExpiresAt | DateTime | Validade (UTC + `Auth:RegistrationCodeExpiryHours`) |
+| CreatedAt | DateTime | Data de criação |
+
+**Regras:** o registro valida `!IsUsed && ExpiresAt > now`; ao usar, `MarkAsUsed(userId)` é chamado dentro da mesma transação. Não herda de `BaseEntity`.
+
+---
+
+## SystemParameter (Parâmetro do Sistema)
+
+Configurações globais editáveis em runtime (via `/api/admin/config`).
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| Id | int | PK |
+| Key | string | Chave única (ex: `Auth:PasswordMinLength`) |
+| Value | string? | Valor atual |
+| Type | string | `String` \| `Int` \| `Bool` \| `JsonList` |
+| Group | string? | Categoria (Auth, Business, Media, Replies, Occurrence) |
+| Description | string? | Descrição |
+| IsRequired | bool | Se o valor é obrigatório |
+| UpdatedByUserId | int? | FK → User (última alteração) |
+
+Seed inicial em `SystemConfigService.SeedDefaultParametersAsync()`.
 
 ## Device (Dispositivo Conectado)
 
@@ -238,5 +293,9 @@ Registro de todas as alterações feitas no sistema.
 
 | Migration | Data | Descrição |
 |---|---|---|
-| `Initial` | 2026-07-23 | Schema completo inicial |
-| `AddLastMessageTypeToChat` | 2026-07-24 | Adiciona LastMessage navigation ao Chat |
+| `20260730170246_InitialCreate` | 2026-07-30 | Schema completo inicial (PostgreSQL) |
+| `20260730201519_AddUniqueIndexOnWhatsAppMessageId` | 2026-07-30 | Índice único em `Message.WhatssAppMessageId` (dedup) |
+| `20260730203228_FIXDUPLICATEDMESSAGES` | 2026-07-30 | Correção de duplicação de mensagens |
+| `20260731010540_AddSystemParameters` | 2026-07-31 | Entidade `SystemParameter` |
+| `20260731011146_AddSettingsToBD` | 2026-07-31 | Seed dos parâmetros padrão |
+| `20260731133730_AddMessageSourceAndFromMe` | 2026-07-31 | Campos `Source` e `FromMe` em Message |

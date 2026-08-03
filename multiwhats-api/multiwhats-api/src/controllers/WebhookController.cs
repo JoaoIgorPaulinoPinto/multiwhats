@@ -11,13 +11,16 @@ public class WebhookController : ControllerBase
 {
     private readonly IHubContext<WhatsappHub> _hubContext;
     private readonly ISaveIncomingMessageUseCase _saveIncomingMessageUseCase;
+    private readonly IUpdateMessageDeliveryStatusUseCase _updateMessageDeliveryStatusUseCase;
 
     public WebhookController(
         IHubContext<WhatsappHub> hubContext,
-        ISaveIncomingMessageUseCase saveIncomingMessageUseCase)
+        ISaveIncomingMessageUseCase saveIncomingMessageUseCase,
+        IUpdateMessageDeliveryStatusUseCase updateMessageDeliveryStatusUseCase)
     {
         _hubContext = hubContext;
         _saveIncomingMessageUseCase = saveIncomingMessageUseCase;
+        _updateMessageDeliveryStatusUseCase = updateMessageDeliveryStatusUseCase;
     }
 
     // POST /api/webhook/whatsapp - Receber mensagens do WhatsApp via webhook
@@ -43,6 +46,26 @@ public class WebhookController : ControllerBase
             }
             Console.ResetColor();
 
+            return StatusCode(500, new { error = ex.Message, type = ex.GetType().Name });
+        }
+    }
+
+    // POST /api/webhook/status - Recebe atualização de status de entrega (ack)
+    // das mensagens enviadas, reportada pelo Node (message_ack).
+    [HttpPost("status")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ReceiveDeliveryStatus([FromBody] MessageDeliveryStatusDto payload)
+    {
+        try
+        {
+            var updated = await _updateMessageDeliveryStatusUseCase.Execute(payload);
+            return Ok(new { message = updated != null ? "Status atualizado" : "Mensagem não encontrada" });
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"[Webhook] ERRO status: {ex.GetType().Name}: {ex.Message}");
+            Console.ResetColor();
             return StatusCode(500, new { error = ex.Message, type = ex.GetType().Name });
         }
     }

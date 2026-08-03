@@ -41,15 +41,28 @@ Tipo de conteúdo da mensagem.
 
 Status de entrega da mensagem.
 
+| Valor | Descrição | ACK whatsapp-web.js |
+|---|---|---|
+| `Pending` | Aguardando envio | `0` |
+| `Sent` | Enviada | `1` |
+| `Delivered` | Entregue ao destinatário | `2` |
+| `Read` | Lida pelo destinatário | `3` (READ/PLAYED) |
+| `Failed` | Falha no envio | `-1` |
+
+**Uso:** `Message.DeliveryStatus` — atualizado via `POST /api/webhook/status` (evento `message_ack` do Node.js), sempre avançando (nunca regressa).
+
+---
+
+## MessageSource
+
+Origem da mensagem.
+
 | Valor | Descrição |
 |---|---|
-| `Pending` | Aguardando envio |
-| `Sent` | Enviada |
-| `Delivered` | Entregue ao destinatário |
-| `Read` | Lida pelo destinatário |
-| `Failed` | Falha no envio |
+| `Phone` | Chegou pelo webhook do WhatsApp |
+| `System` | Enviada pelo sistema via API (corrigido quando o `message_create` confirma o envio) |
 
-**Uso:** `Message.DeliveryStatus`
+**Uso:** `Message.Source` — a combinação com `FromMe` controla os eventos SignalR emitidos (`MessageReceived` vs `MessageSent`).
 
 ---
 
