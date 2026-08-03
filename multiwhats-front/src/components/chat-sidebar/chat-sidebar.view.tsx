@@ -40,6 +40,7 @@ interface Props {
     lastMessage: string,
     lastMessageAt: string | null,
     assignedToUserId: number | null,
+    hasUnread: boolean,
   ) => void
   search: string
   setSearch: (v: string) => void
@@ -102,7 +103,7 @@ export function ChatSidebarView({
 
   function handleNewChatStart(phone: string, name: string) {
     const jid = `${phone}@s.whatsapp.net`
-    onSelect(-1, name, null, phone, jid, null, '', null, null)
+    onSelect(-1, name, null, phone, jid, null, '', null, null, false)
     setShowNewChat(false)
   }
 
@@ -194,15 +195,17 @@ export function ChatSidebarView({
                     chat.lastMessage?.body ?? '...',
                     chat.lastMessageAt,
                     chat.assignedToUserId,
+                    isUnread,
                   )
                 }
               >
                 <div className={styles.avatarWrap}>
                   <AvatarView name={displayName} size={42} />
                   {isUnread && (
-                    <span className={styles.unreadBadge} title="Não lida">
-                      !
-                    </span>
+                    <span
+                      className={styles.unreadBadge}
+                      title="Não lida"
+                    ></span>
                   )}
                 </div>
                 <div className={styles.chatInfo}>

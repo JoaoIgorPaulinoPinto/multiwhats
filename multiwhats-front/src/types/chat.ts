@@ -18,6 +18,7 @@ export interface ChatListResponse {
     body: string | null
     direction?: MessageDirection
     deliveryStatus?: DeliveryStatus
+    unread: boolean
   } | null
   assignedToUserId: number | null
   assignedToUserName: string | null

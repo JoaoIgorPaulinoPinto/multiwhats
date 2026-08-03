@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { ChatListResponse } from '../../../services/chats.service'
 import { chatsService } from '../../../services/chats.service'
 import { useAuthStore } from '../../../stores/auth-store'
+import { toNumericStatus } from '../../../types'
 import { ChatAreaView } from '../../chat-area/chat-area.view'
 import { AssignChatModal } from '../../chat-sidebar/assign-chat-modal'
 import { useChatSidebar } from '../../chat-sidebar/chat-sidebar.logic'
@@ -20,6 +21,7 @@ interface PendingSelection {
   lastMessage: string
   lastMessageAt: string | null
   assignedToUserId: number | null
+  hasUnread: boolean
 }
 
 export function ChatsView() {
@@ -70,6 +72,7 @@ export function ChatsView() {
     lastMessage: string,
     lastMessageAt: string | null,
     assignedToUserId: number | null,
+    hasUnread: boolean,
   ) {
     const sel: PendingSelection = {
       id,
@@ -81,12 +84,14 @@ export function ChatsView() {
       lastMessage,
       lastMessageAt,
       assignedToUserId,
+      hasUnread,
     }
-    if (assignedToUserId == null && canMarkRead) {
+    if (hasUnread && assignedToUserId !== currentUserId) {
       setAssignError(null)
       setPending(sel)
       return
     }
+    setPending(null)
     applySelection(sel)
   }
 
@@ -135,6 +140,7 @@ export function ChatsView() {
 
   function handleStartChat(phone: string, name: string) {
     const jid = `${phone}@s.whatsapp.net`
+    setPending(null)
     setSelectedId(-1)
     setSelectedName(name)
     setSelectedClientName(null)
@@ -163,6 +169,11 @@ export function ChatsView() {
       s.lastMessage?.body ?? '',
       s.lastMessageAt,
       s.assignedToUserId,
+      !!(
+        s.lastMessage &&
+        s.lastMessage.direction === 0 &&
+        toNumericStatus(s.lastMessage.deliveryStatus ?? 2) < 3
+      ),
     )
   }
 
@@ -199,16 +210,14 @@ export function ChatsView() {
           onMerged={handleMerged}
         />
         {pending ? (
-          canMarkRead ? (
-            <AssignChatModal
-              chatName={pending.name}
-              saving={assigning}
-              error={assignError}
-              inline
-              onConfirm={handleAssignConfirm}
-              onCancel={handleAssignCancel}
-            />
-          ) : null
+          <AssignChatModal
+            chatName={pending.name}
+            saving={assigning}
+            error={assignError}
+            inline
+            onConfirm={handleAssignConfirm}
+            onCancel={handleAssignCancel}
+          />
         ) : null}
       </div>
     </div>
