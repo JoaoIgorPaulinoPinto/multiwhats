@@ -75,11 +75,21 @@ export function ChatsView() {
     setPending(null)
     setAssignError(null)
   }
-
+  function showUnreadCountInTabName() {
+    const count = chats.filter(
+      (chat) =>
+        chat.lastMessage?.deliveryStatus === 0 &&
+        chat.lastMessage?.direction === 1,
+    ).length
+    const c = chats.map((c) => c)
+    document.title = count > 0 ? `(${count}) MultiWhats` : 'MultiWhats'
+    console.log(c)
+  }
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') clearSelection()
     }
+    showUnreadCountInTabName()
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])

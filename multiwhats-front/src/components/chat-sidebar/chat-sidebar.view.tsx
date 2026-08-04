@@ -1,5 +1,6 @@
 'use client'
 
+import { formatTime } from '@/utils/date-format'
 import {
   AlertCircle,
   Check,
@@ -22,7 +23,6 @@ import {
   MESSAGE_TYPE_MAP,
   toNumericStatus,
 } from '../../types'
-import { formatTime } from '../../utils/date-format'
 import { AvatarView } from '../avatar/avatar.view'
 import type { ChatTypeFilter } from './chat-sidebar.logic'
 import styles from './chat-sidebar.module.css'
@@ -145,7 +145,7 @@ export function ChatSidebarView({
           className={chatType === 'mine' ? styles.chatTypesActive : undefined}
           onClick={() => setChatType('mine')}
         >
-          Meus Atendimentos
+          Atendimentos
         </button>
         <button
           className={chatType === 'all' ? styles.chatTypesActive : undefined}
@@ -214,17 +214,6 @@ export function ChatSidebarView({
                     <span className={styles.assignedName}>
                       {chat.assignedToUserName}
                     </span>
-                    {chat.lastMessageAt && (
-                      <span className={styles.chatTime}>
-                        {formatTime(chat.lastMessageAt)}
-                      </span>
-                    )}
-                    {isUnread && (
-                      <span
-                        className={styles.unreadBadge}
-                        title="Não lida"
-                      ></span>
-                    )}
                   </div>
                   {chat.clientName && (
                     <span className={styles.clientName}>{chat.clientName}</span>
@@ -280,7 +269,20 @@ export function ChatSidebarView({
                         ? `${MESSAGE_TYPE_MAP[chat.lastMessage.type] ?? 'Mensagem'}`
                         : ''}
                     </p>
-                  )}{' '}
+                  )}
+                </div>
+                <div className={styles.dateAndDot}>
+                  {chat.lastMessageAt && (
+                    <span className={styles.chatTime}>
+                      {formatTime(chat.lastMessageAt)}
+                    </span>
+                  )}
+                  {isUnread && (
+                    <span
+                      className={styles.unreadBadge}
+                      title="Não lida"
+                    ></span>
+                  )}
                 </div>
               </div>
             )

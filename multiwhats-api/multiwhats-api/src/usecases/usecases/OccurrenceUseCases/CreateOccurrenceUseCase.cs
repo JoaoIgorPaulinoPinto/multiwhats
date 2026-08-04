@@ -48,10 +48,8 @@ public class CreateOccurrenceUseCase : ICreateOccurrenceUseCase
             Description = created.Description,
             Status = created.Status,
             Priority = created.Priority,
-            ChatId = created.ChatId,
             ChatName = created.Chat?.Name ?? created.Chat?.PhoneNumber,
             AssignedToUserId = created.AssignedToUserId,
-            CreatedByUserId = created.CreatedByUserId,
             CreatedAt = created.CreatedAt,
             LastUpdate = created.LastUpdate
         };

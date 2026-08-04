@@ -48,7 +48,7 @@ public class AdvanceOccurrenceStatusUseCase : IAdvanceOccurrenceStatusUseCase
             entityId: id,
             description: $"Ocorrência #{id} {direction} para status {updated.Status} (usuário #{userId})"
         );
-
+        var contactName = occurrence.Chat.Contact?.Name ?? updated.Chat?.Name ?? updated.Chat?.PhoneNumber;
         return new OccurrenceDetailResponse
         {
             Id = updated.Id,
@@ -56,11 +56,9 @@ public class AdvanceOccurrenceStatusUseCase : IAdvanceOccurrenceStatusUseCase
             Description = updated.Description,
             Status = updated.Status,
             Priority = updated.Priority,
-            ChatId = updated.ChatId,
-            ChatName = updated.Chat?.Name ?? updated.Chat?.PhoneNumber,
+            ChatName = contactName,
             AssignedToUserId = updated.AssignedToUserId,
             AssignedToName = updated.AssignedTo?.Name,
-            CreatedByUserId = updated.CreatedByUserId,
             CreatedByName = updated.CreatedBy?.Name,
             MessageCount = updated.Messages?.Count ?? 0,
             CreatedAt = updated.CreatedAt,

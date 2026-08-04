@@ -1,4 +1,4 @@
-import type { OccurrenceStatus, Priority } from "./index"
+import type { OccurrenceStatus, Priority } from './index'
 
 export interface OccurrenceSummary {
   id: number
@@ -33,11 +33,8 @@ export interface OccurrenceResponse {
   description: string | null
   status: OccurrenceStatus
   priority: Priority
-  chatId: number
   chatName: string | null
-  assignedToUserId: number | null
   assignedToName: string | null
-  createdByUserId: number | null
   createdByName: string | null
   messageCount: number
   createdAt: string
