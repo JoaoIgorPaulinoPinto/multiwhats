@@ -5,8 +5,8 @@ import {
   chatsService,
   type ChatListResponse,
 } from '../../services/chats.service'
-import { useAuthStore } from '../../stores/auth-store'
 import { ws } from '../../services/websocket'
+import { useAuthStore } from '../../stores/auth-store'
 
 let cachedChats: ChatListResponse[] | null = null
 
@@ -55,11 +55,10 @@ export function useChatSidebar() {
     const display = c.contactName ?? c.name ?? c.phoneNumber ?? `Chat #${c.id}`
     if (!display.toLowerCase().includes(q)) return false
     const hasOccurrence = (c.occurrences?.length ?? 0) > 0
-    const hasMyOccurrence = (c.occurrences ?? []).some((o) => o.byMe)
     const assignedByMe =
       currentUserId != null && c.assignedToUserId === currentUserId
-    if (chatType === 'open') return !hasOccurrence
-    if (chatType === 'mine') return hasMyOccurrence || assignedByMe
+    if (chatType === 'open') return !hasOccurrence && !assignedByMe
+    if (chatType === 'mine') return assignedByMe
     return true
   })
 

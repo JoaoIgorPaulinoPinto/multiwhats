@@ -201,12 +201,6 @@ export function ChatSidebarView({
               >
                 <div className={styles.avatarWrap}>
                   <AvatarView name={displayName} size={42} />
-                  {isUnread && (
-                    <span
-                      className={styles.unreadBadge}
-                      title="Não lida"
-                    ></span>
-                  )}
                 </div>
                 <div className={styles.chatInfo}>
                   <div className={styles.chatTop}>
@@ -225,11 +219,16 @@ export function ChatSidebarView({
                         {formatTime(chat.lastMessageAt)}
                       </span>
                     )}
+                    {isUnread && (
+                      <span
+                        className={styles.unreadBadge}
+                        title="Não lida"
+                      ></span>
+                    )}
                   </div>
                   {chat.clientName && (
                     <span className={styles.clientName}>{chat.clientName}</span>
                   )}
-
                   {chat.occurrences && chat.occurrences.length > 0 && (
                     <div className={styles.occurrences}>
                       {chat.occurrences.slice(0, 2).map((occ) => (
@@ -281,7 +280,7 @@ export function ChatSidebarView({
                         ? `${MESSAGE_TYPE_MAP[chat.lastMessage.type] ?? 'Mensagem'}`
                         : ''}
                     </p>
-                  )}
+                  )}{' '}
                 </div>
               </div>
             )

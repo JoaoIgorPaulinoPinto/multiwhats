@@ -1,17 +1,16 @@
 @echo off
-
 set ROOT=%~dp0
 
-start "API" cmd /k "cd /d "%ROOT%multiwhats-api/multiwhats-api" && dotnet run"
+start /B cmd /c "cd /d "%ROOT%multiwhats-api\multiwhats-api" && dotnet run"
 
-timeout /t 10
+timeout /t 10 >nul
 
-start "Messageria" cmd /k "cd /d "%ROOT%multiwhats-api/messageria" && npm start"
+start /B cmd /c "cd /d "%ROOT%multiwhats-api\messageria" && npm start"
 
-timeout /t 10
+timeout /t 10 >nul
 
-start "LegacyDatabaseAdapter" cmd /k "cd /d "%ROOT%multiwhats-api/legacydatabaseadapter" && npm start"
+start /B cmd /c "cd /d "%ROOT%multiwhats-api\legacydatabaseadapter" && npm start"
 
-timeout /t 10
+timeout /t 10 >nul
 
-start "Front" cmd /k "cd /d "%ROOT%multiwhats-front" && npm run dev"
+start /B cmd /c "cd /d "%ROOT%multiwhats-front" && npm start"

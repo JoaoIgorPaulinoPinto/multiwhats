@@ -1,29 +1,45 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\",
+  "WorkspaceRootPath": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\systemconfigcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\projetos\\novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\usecases\\usecases\\authusecases\\generateregistrationcodeusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|solutionrelative:multiwhats-api\\src\\usecases\\usecases\\authusecases\\generateregistrationcodeusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\projetos\\novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\systemconfigcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|solutionrelative:multiwhats-api\\src\\controllers\\systemconfigcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\usecases\\usecases\\messageusecases\\saveincomingmessageusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\projetos\\novo\\multiwhats\\multiwhats-api\\multiwhats-api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|solutionrelative:multiwhats-api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\projetos\\novo\\multiwhats\\multiwhats-api\\multiwhats-api\\multiwhats-api.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|",
+      "RelativeMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|solutionrelative:multiwhats-api\\multiwhats-api.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\projetos\\novo\\multiwhats\\multiwhats-api\\multiwhats-api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|solutionrelative:multiwhats-api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\projetos\\novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\usecases\\usecases\\messageusecases\\saveincomingmessageusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|solutionrelative:multiwhats-api\\src\\usecases\\usecases\\messageusecases\\saveincomingmessageusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\occurrencescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\projetos\\novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\occurrencescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|solutionrelative:multiwhats-api\\src\\controllers\\occurrencescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\data\\dtos\\responses\\chatdetailresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\projetos\\novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\data\\dtos\\responses\\chatdetailresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|solutionrelative:multiwhats-api\\src\\data\\dtos\\responses\\chatdetailresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\chatscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\projetos\\novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\chatscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|solutionrelative:multiwhats-api\\src\\controllers\\chatscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\contactscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\projetos\\novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\contactscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|solutionrelative:multiwhats-api\\src\\controllers\\contactscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
@@ -34,89 +50,107 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "SaveIncomingMessageUseCase.cs",
-              "DocumentMoniker": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\usecases\\usecases\\MessageUseCases\\SaveIncomingMessageUseCase.cs",
-              "RelativeDocumentMoniker": "multiwhats-api\\src\\usecases\\usecases\\MessageUseCases\\SaveIncomingMessageUseCase.cs",
-              "ToolTip": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\usecases\\usecases\\MessageUseCases\\SaveIncomingMessageUseCase.cs",
-              "RelativeToolTip": "multiwhats-api\\src\\usecases\\usecases\\MessageUseCases\\SaveIncomingMessageUseCase.cs",
-              "ViewState": "AgIAAHEAAAAAUITVWELfv4UAAABNAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "GenerateRegistrationCodeUseCase.cs",
+              "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\usecases\\usecases\\AuthUseCases\\GenerateRegistrationCodeUseCase.cs",
+              "RelativeDocumentMoniker": "multiwhats-api\\src\\usecases\\usecases\\AuthUseCases\\GenerateRegistrationCodeUseCase.cs",
+              "ToolTip": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\usecases\\usecases\\AuthUseCases\\GenerateRegistrationCodeUseCase.cs",
+              "RelativeToolTip": "multiwhats-api\\src\\usecases\\usecases\\AuthUseCases\\GenerateRegistrationCodeUseCase.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAMwB0AAAA9AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-31T02:31:16.441Z",
+              "WhenOpened": "2026-07-31T12:50:45.236Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "multiwhats-api\\Properties\\launchSettings.json",
+              "ToolTip": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\Properties\\launchSettings.json",
+              "RelativeToolTip": "multiwhats-api\\Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-07-31T12:25:27.625Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "multiwhats-api",
+              "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\multiwhats-api.csproj",
+              "RelativeDocumentMoniker": "multiwhats-api\\multiwhats-api.csproj",
+              "ToolTip": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\multiwhats-api.csproj",
+              "RelativeToolTip": "multiwhats-api\\multiwhats-api.csproj",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-07-31T12:25:27.084Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\appsettings.json",
+              "RelativeDocumentMoniker": "multiwhats-api\\appsettings.json",
+              "ToolTip": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\appsettings.json",
+              "RelativeToolTip": "multiwhats-api\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-07-31T12:25:22.349Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "SaveIncomingMessageUseCase.cs",
+              "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\usecases\\usecases\\MessageUseCases\\SaveIncomingMessageUseCase.cs",
+              "RelativeDocumentMoniker": "multiwhats-api\\src\\usecases\\usecases\\MessageUseCases\\SaveIncomingMessageUseCase.cs",
+              "ToolTip": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\usecases\\usecases\\MessageUseCases\\SaveIncomingMessageUseCase.cs",
+              "RelativeToolTip": "multiwhats-api\\src\\usecases\\usecases\\MessageUseCases\\SaveIncomingMessageUseCase.cs",
+              "ViewState": "AgIAAHEAAAAAUITVWELfv4UAAABNAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-31T02:31:16.441Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "SystemConfigController.cs",
-              "DocumentMoniker": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\SystemConfigController.cs",
+              "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\SystemConfigController.cs",
               "RelativeDocumentMoniker": "multiwhats-api\\src\\controllers\\SystemConfigController.cs",
-              "ToolTip": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\SystemConfigController.cs",
+              "ToolTip": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\SystemConfigController.cs",
               "RelativeToolTip": "multiwhats-api\\src\\controllers\\SystemConfigController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAPAAAAAAAAAA==",
+              "ViewState": "AgIAACAAAAAAAAAAAAAwwAoAAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-07-31T01:29:33.344Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 7,
               "Title": "ChatDetailResponse.cs",
-              "DocumentMoniker": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\data\\dtos\\Responses\\ChatDetailResponse.cs",
+              "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\data\\dtos\\Responses\\ChatDetailResponse.cs",
               "RelativeDocumentMoniker": "multiwhats-api\\src\\data\\dtos\\Responses\\ChatDetailResponse.cs",
-              "ToolTip": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\data\\dtos\\Responses\\ChatDetailResponse.cs",
+              "ToolTip": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\data\\dtos\\Responses\\ChatDetailResponse.cs",
               "RelativeToolTip": "multiwhats-api\\src\\data\\dtos\\Responses\\ChatDetailResponse.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-31T00:38:18.995Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T00:38:18.995Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 6,
               "Title": "OccurrencesController.cs",
-              "DocumentMoniker": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\OccurrencesController.cs",
+              "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\OccurrencesController.cs",
               "RelativeDocumentMoniker": "multiwhats-api\\src\\controllers\\OccurrencesController.cs",
-              "ToolTip": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\OccurrencesController.cs",
+              "ToolTip": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\OccurrencesController.cs",
               "RelativeToolTip": "multiwhats-api\\src\\controllers\\OccurrencesController.cs",
               "ViewState": "AgIAAEsAAAAAAAAAAAAmwGEAAAAyAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-31T00:32:11.265Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:1:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "ChatsController.cs",
-              "DocumentMoniker": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\ChatsController.cs",
-              "RelativeDocumentMoniker": "multiwhats-api\\src\\controllers\\ChatsController.cs",
-              "ToolTip": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\ChatsController.cs",
-              "RelativeToolTip": "multiwhats-api\\src\\controllers\\ChatsController.cs",
-              "ViewState": "AgIAABQAAAAAAAAAAAAQwCsAAAA1AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-31T00:36:50.952Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "ContactsController.cs",
-              "DocumentMoniker": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\ContactsController.cs",
-              "RelativeDocumentMoniker": "multiwhats-api\\src\\controllers\\ContactsController.cs",
-              "ToolTip": "C:\\Users\\joaoi\\source\\repos\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\ContactsController.cs",
-              "RelativeToolTip": "multiwhats-api\\src\\controllers\\ContactsController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-31T00:32:09.09Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T00:32:11.265Z"
             },
             {
               "$type": "Bookmark",
@@ -125,6 +159,34 @@
             {
               "$type": "Bookmark",
               "Name": "ST:3:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "ChatsController.cs",
+              "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\ChatsController.cs",
+              "RelativeDocumentMoniker": "multiwhats-api\\src\\controllers\\ChatsController.cs",
+              "ToolTip": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\ChatsController.cs",
+              "RelativeToolTip": "multiwhats-api\\src\\controllers\\ChatsController.cs",
+              "ViewState": "AgIAABQAAAAAAAAAAAAQwCsAAAA1AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-31T00:36:50.952Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "ContactsController.cs",
+              "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\ContactsController.cs",
+              "RelativeDocumentMoniker": "multiwhats-api\\src\\controllers\\ContactsController.cs",
+              "ToolTip": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\ContactsController.cs",
+              "RelativeToolTip": "multiwhats-api\\src\\controllers\\ContactsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-31T00:32:09.09Z"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
             }
           ]
         },

@@ -5,7 +5,7 @@
   min-width: 0;
   position: relative;
 
-  background: #0b141a url("/background.png") repeat;
+  background: var(--surface) url("/background.png") repeat;
   background-size: 1000px;
 }
 .chatHeader {
