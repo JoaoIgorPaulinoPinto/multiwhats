@@ -1,10 +1,24 @@
-import { api } from "./api"
-import type { PaginatedResponse } from "./paginated.response"
-import type { OccurrenceStatus, Priority } from "../types"
-import type { OccurrenceSummary, OccurrenceDetail } from "../types/occurrence"
-import type { ChatListResponse, ChatDetailResponse, MessageResponse, MessageType } from "../types/chat"
+import type { OccurrenceStatus, Priority } from '../types'
+import type {
+  ChatDetailResponse,
+  ChatListResponse,
+  MessageResponse,
+  MessageType,
+} from '../types/chat'
+import type { OccurrenceDetail, OccurrenceSummary } from '../types/occurrence'
+import { api } from './api'
+import type { PaginatedResponse } from './paginated.response'
 
-export type { OccurrenceStatus, Priority, OccurrenceSummary, OccurrenceDetail, ChatListResponse, ChatDetailResponse, MessageResponse, MessageType }
+export type {
+  ChatDetailResponse,
+  ChatListResponse,
+  MessageResponse,
+  MessageType,
+  OccurrenceDetail,
+  OccurrenceStatus,
+  OccurrenceSummary,
+  Priority,
+}
 
 export interface ChatFullInfoOccurrenceSummary {
   id: number
@@ -57,12 +71,16 @@ export interface ChatFullInfoResponse {
 }
 
 export const chatsService = {
-  listChats(page = 1, pageSize = 20) {
-    return api.get<PaginatedResponse<ChatListResponse>>(`/api/chats?page=${page}&pageSize=${pageSize}`)
+  listChats(page = 1, pageSize = 30) {
+    return api.get<PaginatedResponse<ChatListResponse>>(
+      `/api/chats?page=${page}&pageSize=${pageSize}`,
+    )
   },
 
   listAllChats() {
-    return api.get<PaginatedResponse<ChatListResponse>>(`/api/chats?page=1&pageSize=10000`)
+    return api.get<PaginatedResponse<ChatListResponse>>(
+      `/api/chats?page=1&pageSize=10000`,
+    )
   },
 
   getChat(id: number) {
@@ -73,7 +91,7 @@ export const chatsService = {
     return api.get<ChatFullInfoResponse>(`/api/chats/${id}/full-info`)
   },
 
-  getMessages(chatId: number, page = 1, pageSize = 50) {
+  getMessages(chatId: number, page = 1, pageSize = 100) {
     return api.get<PaginatedResponse<MessageResponse>>(
       `/api/chats/${chatId}/messages?page=${page}&pageSize=${pageSize}`,
     )
@@ -110,11 +128,21 @@ export const chatsService = {
   },
 
   sendMessage(jid: string, text: string) {
-    return api.post<MessageResponse>("/api/messages/send", { jid, text })
+    return api.post<MessageResponse>('/api/messages/send', { jid, text })
   },
 
-  sendMediaMessage(jid: string, type: number, MediaBase64: string, options?: { text?: string; mediaMimeType?: string; mediaFilename?: string; mediaCaption?: string }) {
-    return api.post<MessageResponse>("/api/messages/send", {
+  sendMediaMessage(
+    jid: string,
+    type: number,
+    MediaBase64: string,
+    options?: {
+      text?: string
+      mediaMimeType?: string
+      mediaFilename?: string
+      mediaCaption?: string
+    },
+  ) {
+    return api.post<MessageResponse>('/api/messages/send', {
       jid,
       text: options?.text,
       type,

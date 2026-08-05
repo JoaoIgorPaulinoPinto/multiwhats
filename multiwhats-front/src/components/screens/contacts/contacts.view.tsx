@@ -1,28 +1,43 @@
 'use client'
 
-import { Info, Pencil, Phone, Search, Trash2, X } from 'lucide-react'
+import { Pencil, Phone, Plus, Search, Trash2, Users, X } from 'lucide-react'
 import { AvatarView } from '../../../components/avatar/avatar.view'
 import { SearchableSelect } from '../../../components/searchable-select/searchable-select.view'
+import type { ChatListResponse } from '../../../services/chats.service'
 import { useContacts } from './contacts.logic'
 import styles from './contacts.module.css'
+
+function chatLabel(chat: ChatListResponse): string {
+  const name =
+    chat.contactName ?? chat.name ?? chat.phoneNumber ?? `Chat #${chat.id}`
+  return chat.clientName ? `${name} — ${chat.clientName}` : name
+}
 
 export function ContactsView() {
   const {
     contacts,
     clients,
+    chats,
     loading,
     saving,
     deleting,
     search,
     setSearch,
+    creating,
+    formChatId,
     formName,
     formPushName,
+    formPhone,
     assignClientId,
+    selectChat,
     setFormName,
+    setFormPhone,
     setAssignClientId,
+    startCreate,
     startEdit,
     cancelEdit,
     saveEdit,
+    createContact,
     deleteContact,
     modalOpen,
   } = useContacts()
@@ -34,20 +49,24 @@ export function ContactsView() {
     <div className={styles.page}>
       <aside className={styles.sidebar}>
         <header className={styles.header}>
-          <h2>Contatos</h2>
-          <div className={styles.headerActions}>
-            <button
-              className={styles.addBtnDisabled}
-              disabled
-              title="Crie contatos acessando um chat e clicando em 'Salvar em contatos'"
-            >
-              <Info size={18} />
-              Novo
-            </button>
-          </div>
-          <div className={styles.createHint}>
-            Para criar um novo contato, acesse um chat e clique em &quot;Salvar
-            em contatos&quot;.
+          <div className={styles.headerRow}>
+            <div className={styles.headerTitle}>
+              <div className={styles.headerIcon}>
+                <Users size={20} />
+              </div>
+              <div>
+                <h2>Contatos</h2>
+                <p className={styles.subtitle}>
+                  Contatos salvos e seus vínculos com empresas.
+                </p>
+              </div>
+            </div>
+            <div className={styles.headerActions}>
+              <button className={styles.addBtn} onClick={startCreate}>
+                <Plus size={18} />
+                Novo
+              </button>
+            </div>
           </div>
           <div className={styles.search}>
             <Search size={18} />
@@ -155,11 +174,39 @@ export function ContactsView() {
           <div className={styles.overlay} onClick={cancelEdit} />
           <div className={`${styles.modal} fadeIn`}>
             <div className={styles.modalHeader}>
-              <h3>Editar contato</h3>
+              <h3>{creating ? 'Novo contato' : 'Editar contato'}</h3>
               <button className={styles.closeBtn} onClick={cancelEdit}>
                 <X size={20} />
               </button>
             </div>
+
+            {creating && (
+              <div className={styles.field}>
+                <label>Chat *</label>
+                <SearchableSelect
+                  options={chats.map((chat) => ({
+                    id: chat.id,
+                    name: chatLabel(chat),
+                  }))}
+                  value={formChatId === '' ? null : formChatId}
+                  onChange={(v) => selectChat(v ?? '')}
+                  emptyLabel="Selecione um chat"
+                  placeholder="Selecione um chat"
+                  disabled={saving}
+                />
+              </div>
+            )}
+
+            {creating && (
+              <div className={styles.field}>
+                <label>Telefone</label>
+                <input
+                  value={formPhone}
+                  onChange={(e) => setFormPhone(e.target.value)}
+                  disabled={saving}
+                />
+              </div>
+            )}
 
             <div className={styles.field}>
               <label>Nome</label>
@@ -197,14 +244,18 @@ export function ContactsView() {
               </button>
               <button
                 className={styles.saveBtn}
-                onClick={saveEdit}
-                disabled={saving}
+                onClick={creating ? createContact : saveEdit}
+                disabled={
+                  saving || (creating && (formChatId === '' || !formPhone))
+                }
               >
                 {saving ? (
                   <span className={styles.btnLoading}>
                     <span className="spinner" />
                     Salvando...
                   </span>
+                ) : creating ? (
+                  'Criar contato'
                 ) : (
                   'Salvar'
                 )}

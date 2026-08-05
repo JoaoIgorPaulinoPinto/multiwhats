@@ -23,8 +23,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   hydrate: () => {
     const rawUser = localStorage.getItem("user")
     const rawToken = localStorage.getItem("token")
+    let user: UserResponse | null = null
+    if (rawUser) {
+      try {
+        user = JSON.parse(rawUser)
+      } catch {
+        localStorage.removeItem("user")
+      }
+    }
     set({
-      user: rawUser ? JSON.parse(rawUser) : null,
+      user,
       token: rawToken ?? null,
     })
   },
@@ -34,6 +42,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const res: LoginResponse = await authService.login(name, password)
       localStorage.setItem("token", res.token)
+      localStorage.setItem("refreshToken", res.refreshToken)
       localStorage.setItem("user", JSON.stringify(res.user))
       set({ token: res.token, user: res.user, loading: false })
     } catch (e) {
@@ -62,6 +71,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       // limpa mesmo se a API falhar
     }
     localStorage.removeItem("token")
+    localStorage.removeItem("refreshToken")
     localStorage.removeItem("user")
     set({ token: null, user: null, error: null })
   },

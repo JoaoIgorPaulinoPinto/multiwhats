@@ -46,9 +46,15 @@ interface Props {
   setSearch: (v: string) => void
   chatType: ChatTypeFilter
   setChatType: (v: ChatTypeFilter) => void
+  onlyMine: boolean
+  setOnlyMine: (v: boolean) => void
   chats: ChatListResponse[]
   loading: boolean
   load: () => void
+  loadMore: () => void
+  loadingMore: boolean
+  hasNext: boolean
+  totalCount: number
 }
 
 function StatusIcon({ status }: { status: DeliveryStatus }) {
@@ -95,9 +101,15 @@ export function ChatSidebarView({
   setSearch,
   chatType,
   setChatType,
+  onlyMine,
+  setOnlyMine,
   chats,
   loading,
   load,
+  loadMore,
+  loadingMore,
+  hasNext,
+  totalCount,
 }: Props) {
   const [showNewChat, setShowNewChat] = useState(false)
 
@@ -139,13 +151,13 @@ export function ChatSidebarView({
           className={chatType === 'open' ? styles.chatTypesActive : undefined}
           onClick={() => setChatType('open')}
         >
-          Em aberto
+          Aguardando
         </button>
         <button
           className={chatType === 'mine' ? styles.chatTypesActive : undefined}
           onClick={() => setChatType('mine')}
         >
-          Atendimentos
+          Em atendimento
         </button>
         <button
           className={chatType === 'all' ? styles.chatTypesActive : undefined}
@@ -154,6 +166,17 @@ export function ChatSidebarView({
           Todos
         </button>
       </div>
+
+      {chatType === 'mine' && (
+        <label className={styles.onlyMine}>
+          <input
+            type="checkbox"
+            checked={onlyMine}
+            onChange={(e) => setOnlyMine(e.target.checked)}
+          />
+          Mostrar apenas meus atendimentos
+        </label>
+      )}
 
       <section className={styles.chatList}>
         {loading ? (
@@ -289,6 +312,23 @@ export function ChatSidebarView({
           })
         )}
       </section>
+
+      {!loading && (
+        <footer className={styles.pagination}>
+          <span className={styles.paginationInfo}>
+            {chats.length} de {totalCount}
+          </span>
+          {hasNext && (
+            <button
+              className={styles.loadMore}
+              onClick={loadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? 'Carregando...' : 'Carregar mais'}
+            </button>
+          )}
+        </footer>
+      )}
 
       {showNewChat && (
         <NewChatModal

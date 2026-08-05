@@ -1,5 +1,27 @@
 const MAX_DIMENSION = 800
 const JPEG_QUALITY = 0.7
+const MAX_CONCURRENT_TRANSFORMS = 3
+
+let activeTransforms = 0
+const transformQueue: (() => void)[] = []
+
+function acquireTransformSlot(): Promise<void> {
+  if (activeTransforms < MAX_CONCURRENT_TRANSFORMS) {
+    activeTransforms++
+    return Promise.resolve()
+  }
+  return new Promise<void>((resolve) => {
+    transformQueue.push(() => {
+      activeTransforms++
+      resolve()
+    })
+  })
+}
+
+function releaseTransformSlot() {
+  activeTransforms--
+  transformQueue.shift()?.()
+}
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -30,4 +52,13 @@ export async function transformToJpeg(rawBase64: string, mime: string | null): P
   ctx.drawImage(img, 0, 0, width, height)
 
   return canvas.toDataURL("image/jpeg", JPEG_QUALITY)
+}
+
+export async function transformToJpegQueued(rawBase64: string, mime: string | null): Promise<string> {
+  await acquireTransformSlot()
+  try {
+    return await transformToJpeg(rawBase64, mime)
+  } finally {
+    releaseTransformSlot()
+  }
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { Pencil, Save, X, Shield } from "lucide-react"
+import { Pencil, Save, UserCog, X, Shield } from "lucide-react"
 import { useUsers } from "./users.logic"
 import { ROLE_LABELS } from "../../../services/users.service"
 import styles from "./users.module.css"
@@ -138,9 +138,17 @@ export function UsersView({ embedded = false }: { embedded?: boolean }) {
     <div className={styles.page}>
       <header className={styles.header}>
         <div className={styles.headerRow}>
-          <div>
-            <h2>Usuários</h2>
-            <p className={styles.subtitle}>Gerencie nome, senha, perfil e status de cada usuário do sistema.</p>
+          <div className={styles.headerTitle}>
+            <div className={styles.headerIcon}>
+              <UserCog size={20} />
+            </div>
+            <div>
+              <h2>Usuários</h2>
+              <p className={styles.subtitle}>
+                Gerencie nome, senha, perfil e status de cada usuário do
+                sistema.
+              </p>
+            </div>
           </div>
         </div>
       </header>

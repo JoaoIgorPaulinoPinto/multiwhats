@@ -1,5 +1,7 @@
 import * as signalR from "@microsoft/signalr"
 import type { MessageResponse } from "../types/chat"
+import { ensureFreshAccessToken } from "./api"
+import { isJwtExpired } from "../utils/jwt"
 
 function resolveApiUrl(): string {
   if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL
@@ -41,10 +43,40 @@ class WsClient {
   private stateCallbacks = new Set<(state: WsConnectionState) => void>()
   private startPromise: Promise<void> | null = null
   private handlersRegistered = false
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  private reconnectAttempts = 0
+  private manualStop = false
+
+  constructor() {
+    if (typeof window !== "undefined") {
+      window.addEventListener("visibilitychange", this.onVisibilityChange)
+    }
+  }
 
   private getToken(): string | null {
     if (typeof window === "undefined") return null
     return localStorage.getItem("token")
+  }
+
+  private onVisibilityChange = () => {
+    if (document.visibilityState === "visible" && this._state === "disconnected" && this.getToken()) {
+      this.reconnectAttempts = 0
+      void this.start()
+    }
+  }
+
+  private scheduleReconnect() {
+    if (this.reconnectTimer) return
+    if (typeof window === "undefined") return
+    if (!this.getToken()) return
+
+    const delay = Math.min(1000 * 2 ** this.reconnectAttempts, 30000)
+    this.reconnectAttempts += 1
+    this.setState("reconnecting")
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null
+      void this.start()
+    }, delay)
   }
 
   get state(): WsConnectionState {
@@ -66,7 +98,15 @@ class WsClient {
 
     this.connection = new signalR.HubConnectionBuilder()
       .withUrl(`${BASE_URL}/whatsappHub`, {
-        accessTokenFactory: () => this.getToken() ?? "",
+        accessTokenFactory: async () => {
+          const token = this.getToken()
+          if (!token) return ""
+          if (isJwtExpired(token)) {
+            const fresh = await ensureFreshAccessToken()
+            return fresh ?? ""
+          }
+          return token
+        },
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
       .configureLogging(signalR.LogLevel.Warning)
@@ -88,6 +128,7 @@ class WsClient {
       this.connection = null
       this.handlersRegistered = false
       this.setState("disconnected")
+      if (!this.manualStop) this.scheduleReconnect()
     })
 
     return this.connection
@@ -145,6 +186,7 @@ class WsClient {
         await conn.start()
         this.registerHandlers()
         this.setState("connected")
+        this.reconnectAttempts = 0
         console.log("[WS] conectado")
       }
     } catch (err) {
@@ -152,6 +194,7 @@ class WsClient {
       this.connection = null
       this.handlersRegistered = false
       this.setState("disconnected")
+      this.scheduleReconnect()
     } finally {
       this.startPromise = null
     }
@@ -176,11 +219,17 @@ class WsClient {
   async stop() {
     this.startPromise = null
     this.handlersRegistered = false
+    this.manualStop = true
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
+    }
     if (this.connection) {
       await this.connection.stop()
       this.connection = null
-      this.setState("disconnected")
     }
+    this.manualStop = false
+    this.setState("disconnected")
   }
 
   async refreshToken() {

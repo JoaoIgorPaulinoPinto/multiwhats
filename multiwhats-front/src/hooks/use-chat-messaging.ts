@@ -7,6 +7,28 @@ import { toNumericStatus, toNumericType } from '../types'
 import type { MessageResponse, MessageType } from '../types/chat'
 import { detectMediaType, fileToBase64 } from '../utils/media'
 const cache = new Map<number, MessageResponse[]>()
+const lastAccessed = new Map<number, number>()
+const MAX_CACHED_CHATS = 5
+
+function touchCache(chatId: number) {
+  lastAccessed.set(chatId, Date.now())
+}
+
+function evictOldestCachedChat() {
+  if (cache.size <= MAX_CACHED_CHATS) return
+  let oldestId: number | null = null
+  let oldestTs = Infinity
+  lastAccessed.forEach((ts, id) => {
+    if (ts < oldestTs) {
+      oldestTs = ts
+      oldestId = id
+    }
+  })
+  if (oldestId !== null) {
+    cache.delete(oldestId)
+    lastAccessed.delete(oldestId)
+  }
+}
 
 export function useChatMessaging(
   chatId: number | null,
@@ -34,7 +56,10 @@ export function useChatMessaging(
         : m
     setMessages((prev) => prev.map(applyRead))
     const cached = cache.get(chatId)
-    if (cached) cache.set(chatId, cached.map(applyRead))
+    if (cached) {
+      touchCache(chatId)
+      cache.set(chatId, cached.map(applyRead))
+    }
     chatsService.markChatRead(chatId).catch((e: unknown) => {
       console.error(`[ChatMessages] erro ao marcar mensagens como lidas:`, e)
     })
@@ -54,7 +79,10 @@ export function useChatMessaging(
         if (duplicate) return prev
         return [...prev, msg]
       })
-      if (chatId !== null) cache.delete(chatId)
+      if (chatId !== null) {
+        cache.delete(chatId)
+        lastAccessed.delete(chatId)
+      }
       if (chatId !== null && msg.direction === 0 && canMarkRead)
         markChatAsRead(chatId)
     },
@@ -71,7 +99,10 @@ export function useChatMessaging(
       setMessages((prev) => prev.map(apply))
       if (chatId !== null) {
         const cached = cache.get(chatId)
-        if (cached) cache.set(chatId, cached.map(apply))
+        if (cached) {
+          touchCache(chatId)
+          cache.set(chatId, cached.map(apply))
+        }
       }
     },
     [chatId],
@@ -132,6 +163,7 @@ export function useChatMessaging(
 
     const cached = cache.get(chatId)
     if (cached) {
+      touchCache(chatId)
       setMessages(cached)
       if (canMarkRead) markChatAsRead(chatId)
       if (lastFetched.current === chatId) return
@@ -175,7 +207,6 @@ export function useChatMessaging(
       .getMessages(chatId)
       .then((res: { items: MessageResponse[] }) => {
         if (requestChatId !== lastFetched.current) return
-        console.log('[ChatMessages] payload:', res.items)
         const seenIds = new Set<number>()
         const seenMsgIds = new Set<string>()
         const newItems = res.items.filter((m: MessageResponse) => {
@@ -198,6 +229,8 @@ export function useChatMessaging(
               m.hasMedia === oldItems[i].hasMedia,
           )
         cache.set(chatId, newItems)
+        touchCache(chatId)
+        evictOldestCachedChat()
         if (!isSame) setMessages(newItems.slice())
         if (canMarkRead) markChatAsRead(chatId)
       })
@@ -269,6 +302,7 @@ export function useChatMessaging(
         await chatsService.sendMessage(jid, _inputValue.trim())
       }
       cache.delete(chatId)
+      lastAccessed.delete(chatId)
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Erro ao enviar mensagem'
       setSendError(message)

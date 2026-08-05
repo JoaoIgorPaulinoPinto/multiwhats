@@ -33,6 +33,20 @@ export interface SavedReport {
   limit: number
 }
 
+export interface ReportColumnRef {
+  entity: ReportEntityKey
+  label: string
+}
+
+export interface ResolvedCell {
+  text: string | number | null
+  isDate: boolean
+}
+
+export function getColumnKey(ref: ReportColumnRef): string {
+  return `${ref.entity}::${ref.label}`
+}
+
 export type ColumnType = "text" | "number" | "date"
 
 export type TextFilterOp = "contains" | "startsWith" | "endsWith" | "equals"
@@ -66,6 +80,15 @@ export const ENTITY_LABELS: Record<ReportEntityKey, string> = {
   messages: "Mensagens",
   occurrences: "Ocorrências",
   users: "Usuários",
+}
+
+export const RELATED_ENTITIES: Record<ReportEntityKey, ReportEntityKey[]> = {
+  chats: ["contacts", "companies", "messages", "occurrences"],
+  contacts: ["chats", "companies", "messages"],
+  companies: ["contacts", "chats"],
+  messages: ["chats", "contacts", "occurrences"],
+  occurrences: ["chats", "contacts"],
+  users: [],
 }
 
 function pad(n: number): string {
@@ -206,6 +229,34 @@ const NUMERIC_COLUMNS: Record<ReportEntityKey, string[]> = {
   users: [],
 }
 
+export function resolveRowCell(
+  row: ReportRow,
+  ref: ReportColumnRef,
+  mainEntity: ReportEntityKey,
+): ResolvedCell {
+  const idx = CONFIGS[ref.entity].columns.indexOf(ref.label)
+  const dateKey = DATE_COLUMN_KEYS[ref.entity][idx]
+  if (ref.entity === mainEntity) {
+    const cell = row.cells[idx] ?? null
+    if (cell === null && dateKey && row.dates[dateKey]) {
+      return { text: formatDateTime(row.dates[dateKey]), isDate: true }
+    }
+    return { text: cell, isDate: false }
+  }
+  const mainIdx = CONFIGS[mainEntity].columns.indexOf(ref.label)
+  if (mainIdx >= 0) {
+    const cell = row.cells[mainIdx] ?? null
+    if (cell === null) {
+      const mainDateKey = DATE_COLUMN_KEYS[mainEntity][mainIdx]
+      if (mainDateKey && row.dates[mainDateKey]) {
+        return { text: formatDateTime(row.dates[mainDateKey]), isDate: true }
+      }
+    }
+    return { text: cell, isDate: false }
+  }
+  return { text: null, isDate: false }
+}
+
 function getColumnType(entity: ReportEntityKey, label: string): ColumnType {
   const idx = CONFIGS[entity].columns.indexOf(label)
   if (DATE_COLUMN_KEYS[entity][idx]) return "date"
@@ -249,56 +300,89 @@ function buildInitialReports(): SavedReport[] {
 
 export function useReports() {
   const [entity, setEntity] = useState<ReportEntityKey>("messages")
+  const [relatedEntities, setRelatedEntities] = useState<ReportEntityKey[]>([])
+  const [columnEntity, setColumnEntity] = useState<ReportEntityKey>("messages")
   const [savedReports, setSavedReports] = useState<SavedReport[]>(() => buildInitialReports())
   const [savedReportId, setSavedReportId] = useState<number | null>(null)
   const [limit, setLimit] = useState(25)
   const [selectedByEntity, setSelectedByEntity] = useState<Partial<Record<ReportEntityKey, string[]>>>({})
   const [filters, setFilters] = useState<Record<string, ColumnFilter>>({})
 
-  const config = CONFIGS[entity]
+  const activeEntities = useMemo<ReportEntityKey[]>(
+    () => [entity, ...relatedEntities],
+    [entity, relatedEntities],
+  )
 
-  const visibleColumns = selectedByEntity[entity] ?? config.columns
+  const effectiveColumnEntity = activeEntities.includes(columnEntity)
+    ? columnEntity
+    : entity
+
+  const tableColumns = useMemo<ReportColumnRef[]>(
+    () =>
+      activeEntities.flatMap((e) =>
+        (selectedByEntity[e] ?? CONFIGS[e].columns).map((label) => ({
+          entity: e,
+          label,
+        })),
+      ),
+    [activeEntities, selectedByEntity],
+  )
+
+  const panelColumns = CONFIGS[effectiveColumnEntity].columns
+  const panelSelected = selectedByEntity[effectiveColumnEntity] ?? panelColumns
 
   function handleEntityChange(next: ReportEntityKey) {
     setEntity(next)
+    setRelatedEntities([])
+    setColumnEntity(next)
     setSavedReportId(null)
     setFilters({})
   }
 
+  function toggleRelatedEntity(key: ReportEntityKey) {
+    setRelatedEntities((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    )
+  }
+
   function toggleColumn(label: string) {
+    const e = effectiveColumnEntity
     setSelectedByEntity((prev) => {
-      const current = prev[entity] ?? config.columns
+      const current = prev[e] ?? CONFIGS[e].columns
       const next = current.includes(label)
         ? current.filter((l) => l !== label)
         : [...current, label]
-      return { ...prev, [entity]: next }
+      return { ...prev, [e]: next }
     })
   }
 
   function selectAllColumns() {
-    setSelectedByEntity((prev) => ({ ...prev, [entity]: [...config.columns] }))
+    const e = effectiveColumnEntity
+    setSelectedByEntity((prev) => ({ ...prev, [e]: [...CONFIGS[e].columns] }))
   }
 
   function clearColumns() {
-    setSelectedByEntity((prev) => ({ ...prev, [entity]: [] }))
+    const e = effectiveColumnEntity
+    setSelectedByEntity((prev) => ({ ...prev, [e]: [] }))
   }
 
-  function applyColumnFilter(label: string, filter: ColumnFilter) {
-    setFilters((prev) => ({ ...prev, [label]: filter }))
+  function applyColumnFilter(ref: ReportColumnRef, filter: ColumnFilter) {
+    setFilters((prev) => ({ ...prev, [getColumnKey(ref)]: filter }))
   }
 
-  function clearColumnFilter(label: string) {
+  function clearColumnFilter(ref: ReportColumnRef) {
     setFilters((prev) => {
       const next = { ...prev }
-      delete next[label]
+      delete next[getColumnKey(ref)]
       return next
     })
   }
 
-  const columnType = (label: string): ColumnType => getColumnType(entity, label)
+  const columnType = (ref: ReportColumnRef): ColumnType =>
+    getColumnType(ref.entity, ref.label)
 
-  const hasColumnFilter = (label: string): boolean => {
-    const filter = filters[label]
+  const hasColumnFilter = (ref: ReportColumnRef): boolean => {
+    const filter = filters[getColumnKey(ref)]
     return filter ? columnFilterActive(filter) : false
   }
 
@@ -308,6 +392,8 @@ export function useReports() {
     const report = savedReports.find((r) => r.id === id)
     if (!report) return
     setEntity(report.entity)
+    setRelatedEntities([])
+    setColumnEntity(report.entity)
     setLimit(report.limit)
   }
 
@@ -336,14 +422,19 @@ export function useReports() {
 
   const filtered = useMemo(() => {
     let rows = all
-    for (const [label, filter] of Object.entries(filters)) {
-      const idx = CONFIGS[entity].columns.indexOf(label)
+    for (const [key, filter] of Object.entries(filters)) {
+      const sep = key.indexOf("::")
+      if (sep < 0) continue
+      const filterEntity = key.slice(0, sep) as ReportEntityKey
+      const label = key.slice(sep + 2)
+      const idx = CONFIGS[filterEntity].columns.indexOf(label)
       if (idx < 0) continue
-      const type = getColumnType(entity, label)
+      const type = getColumnType(filterEntity, label)
+      const isMain = filterEntity === entity
       if (type === "text" && filter.textValue.trim() !== "") {
         const q = filter.textValue.trim().toLowerCase()
         rows = rows.filter((r) => {
-          const cell = r.cells[idx]
+          const cell = isMain ? r.cells[idx] : null
           if (cell === null || typeof cell === "number") return false
           const v = cell.toLowerCase()
           switch (filter.textOp) {
@@ -360,7 +451,7 @@ export function useReports() {
       } else if (type === "number" && filter.numberValue !== "") {
         const v = Number(filter.numberValue)
         rows = rows.filter((r) => {
-          const cell = r.cells[idx]
+          const cell = isMain ? r.cells[idx] : null
           if (typeof cell !== "number") return false
           switch (filter.numberOp) {
             case "gt":
@@ -376,14 +467,19 @@ export function useReports() {
           }
         })
       } else if (type === "date") {
-        const dateKey = DATE_COLUMN_KEYS[entity][idx]
+        const dateKey = DATE_COLUMN_KEYS[filterEntity][idx]
+        if (!dateKey) continue
         if (filter.dateFrom) {
           const from = `${filter.dateFrom}T00:00:00`
-          rows = rows.filter((r) => (r.dates[dateKey] ?? "") >= from)
+          rows = rows.filter((r) =>
+            (isMain ? r.dates[dateKey] ?? "" : "") >= from,
+          )
         }
         if (filter.dateTo) {
           const to = `${filter.dateTo}T23:59:59`
-          rows = rows.filter((r) => (r.dates[dateKey] ?? "") <= to)
+          rows = rows.filter((r) =>
+            (isMain ? r.dates[dateKey] ?? "" : "") <= to,
+          )
         }
       }
     }
@@ -396,13 +492,18 @@ export function useReports() {
     entities: ENTITY_OPTIONS,
     entity,
     handleEntityChange,
-    config,
-    columns: config.columns,
-    visibleColumns,
+    relatedEntities,
+    relatedOptions: RELATED_ENTITIES[entity],
+    toggleRelatedEntity,
+    activeEntities,
+    tableColumns,
+    columnEntity: effectiveColumnEntity,
+    setColumnEntity,
+    panelColumns,
+    panelSelected,
     toggleColumn,
     selectAllColumns,
     clearColumns,
-    dateColumnKeys: DATE_COLUMN_KEYS[entity],
     columnType,
     filters,
     applyColumnFilter,

@@ -2,7 +2,9 @@
 
 import {
   Check,
+  ChevronDown,
   FileChartColumn,
+  FileSpreadsheet,
   FileText,
   ListFilter,
   RotateCcw,
@@ -11,12 +13,17 @@ import {
   X,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { exportExcel, exportPdf } from './reports.export'
 import {
+  ENTITY_LABELS,
   createDefaultFilter,
-  formatDateTime,
+  getColumnKey,
+  resolveRowCell,
   useReports,
   type ColumnFilter,
   type ColumnType,
+  type ReportColumnRef,
+  type ReportEntityKey,
   type ReportRow,
 } from './reports.logic'
 import styles from './reports.module.css'
@@ -37,29 +44,24 @@ const NUMBER_OP_LABELS: Record<string, string> = {
 
 function renderCell(
   row: ReportRow,
-  cell: string | number | null,
-  index: number,
-  dateColumnKeys: string[],
+  ref: ReportColumnRef,
+  mainEntity: ReportEntityKey,
 ): React.ReactNode {
-  if (cell === null) {
-    const dateKey = dateColumnKeys[index]
-    if (dateKey) {
-      return (
-        <span className={styles.dateCell}>
-          {formatDateTime(row.dates[dateKey] ?? '')}
-        </span>
-      )
-    }
+  const resolved = resolveRowCell(row, ref, mainEntity)
+  if (resolved.isDate) {
+    return <span className={styles.dateCell}>{resolved.text}</span>
+  }
+  if (resolved.text === null) {
     return <span className={styles.muted}>—</span>
   }
-  if (typeof cell === 'number') {
-    return <span className={styles.numCell}>{cell}</span>
+  if (typeof resolved.text === 'number') {
+    return <span className={styles.numCell}>{resolved.text}</span>
   }
-  return <span className={styles.textCell}>{cell}</span>
+  return <span className={styles.textCell}>{resolved.text}</span>
 }
 
 interface DropdownProps {
-  column: string
+  column: ReportColumnRef
   type: ColumnType
   filter: ColumnFilter | null
   position: { top: number; left: number }
@@ -115,7 +117,9 @@ function ColumnFilterDropdown({
       style={{ top: position.top, left: position.left }}
     >
       <div className={styles.filterDropdownTitle}>
-        <span>{column}</span>
+        <span>
+          {ENTITY_LABELS[column.entity]} · {column.label}
+        </span>
         <span className={styles.filterDropdownType}>
           {type === 'date'
             ? 'Data e hora'
@@ -248,12 +252,18 @@ export function ReportsView() {
     entities,
     entity,
     handleEntityChange,
-    columns,
-    visibleColumns,
+    relatedEntities,
+    relatedOptions,
+    toggleRelatedEntity,
+    activeEntities,
+    tableColumns,
+    columnEntity,
+    setColumnEntity,
+    panelColumns,
+    panelSelected,
     toggleColumn,
     selectAllColumns,
     clearColumns,
-    dateColumnKeys,
     columnType,
     filters,
     applyColumnFilter,
@@ -273,13 +283,34 @@ export function ReportsView() {
     shown,
   } = useReports()
 
-  const [openColumn, setOpenColumn] = useState<string | null>(null)
+  const [openColumn, setOpenColumn] = useState<ReportColumnRef | null>(null)
   const [openPos, setOpenPos] = useState({ top: 0, left: 0 })
+  const [openRelated, setOpenRelated] = useState(false)
+  const relatedRef = useRef<HTMLDivElement>(null)
 
-  const visibleIndexes = visibleColumns.map((label) => columns.indexOf(label))
+  useEffect(() => {
+    if (!openRelated) return
+    function handleMouseDown(e: MouseEvent) {
+      if (relatedRef.current && !relatedRef.current.contains(e.target as Node))
+        setOpenRelated(false)
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpenRelated(false)
+    }
+    document.addEventListener('mousedown', handleMouseDown)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [openRelated])
 
-  function toggleColumnFilter(label: string, th: HTMLElement | null) {
-    if (openColumn === label) {
+  function toggleColumnFilter(ref: ReportColumnRef, th: HTMLElement | null) {
+    if (
+      openColumn !== null &&
+      openColumn.entity === ref.entity &&
+      openColumn.label === ref.label
+    ) {
       setOpenColumn(null)
       return
     }
@@ -292,7 +323,7 @@ export function ReportsView() {
       )
       setOpenPos({ top: rect.bottom + 4, left })
     }
-    setOpenColumn(label)
+    setOpenColumn(ref)
   }
 
   return (
@@ -311,14 +342,34 @@ export function ReportsView() {
               </p>
             </div>
           </div>
-          <button
-            className={styles.saveBtn}
-            onClick={saveCurrentReport}
-            title="Salvar a configuração atual como relatório"
-          >
-            <Save size={16} />
-            Salvar relatório
-          </button>
+          <div className={styles.headerActions}>
+            <button
+              className={styles.exportBtn}
+              onClick={() => exportExcel(rows, tableColumns, entity)}
+              disabled={rows.length === 0 || tableColumns.length === 0}
+              title="Exportar para Excel"
+            >
+              <FileSpreadsheet size={16} />
+              Excel
+            </button>
+            <button
+              className={styles.exportBtn}
+              onClick={() => exportPdf(rows, tableColumns, entity)}
+              disabled={rows.length === 0 || tableColumns.length === 0}
+              title="Exportar para PDF"
+            >
+              <FileText size={16} />
+              PDF
+            </button>
+            <button
+              className={styles.saveBtn}
+              onClick={saveCurrentReport}
+              title="Salvar a configuração atual como relatório"
+            >
+              <Save size={16} />
+              Salvar relatório
+            </button>
+          </div>
         </div>
       </header>
 
@@ -331,7 +382,8 @@ export function ReportsView() {
               value={entity}
               onChange={(e) => {
                 setOpenColumn(null)
-                handleEntityChange(e.target.value as typeof entity)
+                setOpenRelated(false)
+                handleEntityChange(e.target.value as ReportEntityKey)
               }}
             >
               {entities.map((opt) => (
@@ -340,6 +392,53 @@ export function ReportsView() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.label}>Entidades relacionadas</label>
+            <div className={styles.multiSelect} ref={relatedRef}>
+              <button
+                type="button"
+                className={`${styles.multiTrigger} ${relatedEntities.length > 0 ? styles.multiTriggerActive : ''}`}
+                onClick={() => setOpenRelated((v) => !v)}
+              >
+                <span className={styles.multiValue}>
+                  {relatedEntities.length === 0
+                    ? 'Nenhuma'
+                    : relatedEntities.map((k) => ENTITY_LABELS[k]).join(', ')}
+                </span>
+                <ChevronDown size={15} className={styles.multiChevron} />
+              </button>
+              {openRelated && (
+                <div className={styles.multiDropdown}>
+                  {relatedOptions.length === 0 ? (
+                    <p className={styles.multiEmpty}>
+                      Esta entidade não possui relacionamentos.
+                    </p>
+                  ) : (
+                    relatedOptions.map((opt) => {
+                      const checked = relatedEntities.includes(opt)
+                      return (
+                        <div key={opt} className={styles.columnItemRow}>
+                          <label
+                            className={`${styles.columnItem} ${checked ? styles.columnItemChecked : ''}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleRelatedEntity(opt)}
+                            />
+                            <span className={styles.columnItemLabel}>
+                              {ENTITY_LABELS[opt]}
+                            </span>
+                          </label>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className={styles.field}>
@@ -402,7 +501,7 @@ export function ReportsView() {
           </span>
           <span className={styles.summaryEntity}>
             <FileText size={14} />
-            {visibleColumns.join(' · ')}
+            {activeEntities.map((e) => ENTITY_LABELS[e]).join(' + ')}
           </span>
         </div>
 
@@ -411,23 +510,33 @@ export function ReportsView() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  {visibleColumns.map((col) => {
-                    const active = hasColumnFilter(col)
+                  {tableColumns.map((ref) => {
+                    const active = hasColumnFilter(ref)
                     return (
-                      <th key={col} className={styles.filterableTh}>
+                      <th
+                        key={getColumnKey(ref)}
+                        className={styles.filterableTh}
+                      >
                         <button
                           type="button"
                           className={`${styles.thBtn} ${active ? styles.thBtnActive : ''}`}
-                          title={`Filtrar ${col}`}
+                          title={`Filtrar ${ref.label}`}
                           onClick={(e) =>
                             toggleColumnFilter(
-                              col,
+                              ref,
                               e.currentTarget.parentElement,
                             )
                           }
                         >
-                          <span>{col}</span>
-                          <ListFilter size={13} />
+                          {ref.entity !== entity && (
+                            <span className={styles.thEntityBadge}>
+                              {ENTITY_LABELS[ref.entity]}
+                            </span>
+                          )}
+                          <span className={styles.thBtnRow}>
+                            <span>{ref.label}</span>
+                            <ListFilter size={13} />
+                          </span>
                         </button>
                       </th>
                     )
@@ -439,7 +548,7 @@ export function ReportsView() {
                   <tr>
                     <td
                       className={styles.emptyCell}
-                      colSpan={visibleColumns.length || 1}
+                      colSpan={tableColumns.length || 1}
                     >
                       Nenhum registro encontrado para os filtros selecionados.
                     </td>
@@ -447,15 +556,8 @@ export function ReportsView() {
                 ) : (
                   rows.map((row) => (
                     <tr key={row.id}>
-                      {visibleIndexes.map((i, idx) => (
-                        <td key={idx}>
-                          {renderCell(
-                            row,
-                            row.cells[i] ?? null,
-                            i,
-                            dateColumnKeys,
-                          )}
-                        </td>
+                      {tableColumns.map((ref, idx) => (
+                        <td key={idx}>{renderCell(row, ref, entity)}</td>
                       ))}
                     </tr>
                   ))
@@ -468,8 +570,24 @@ export function ReportsView() {
             <div className={styles.columnPanelHeader}>
               <h3>Colunas do relatório</h3>
               <span className={styles.columnCount}>
-                {visibleColumns.length} de {columns.length}
+                {panelSelected.length} de {panelColumns.length}
               </span>
+            </div>
+            <div className={styles.columnPanelEntity}>
+              <label className={styles.label}>Entidade</label>
+              <select
+                className={styles.select}
+                value={columnEntity}
+                onChange={(e) =>
+                  setColumnEntity(e.target.value as ReportEntityKey)
+                }
+              >
+                {activeEntities.map((e) => (
+                  <option key={e} value={e}>
+                    {ENTITY_LABELS[e]}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className={styles.columnPanelActions}>
               <button className={styles.panelAction} onClick={selectAllColumns}>
@@ -482,8 +600,8 @@ export function ReportsView() {
               </button>
             </div>
             <div className={styles.columnList}>
-              {columns.map((col) => {
-                const checked = visibleColumns.includes(col)
+              {panelColumns.map((col) => {
+                const checked = panelSelected.includes(col)
                 return (
                   <div key={col} className={styles.columnItemRow}>
                     <label
@@ -500,7 +618,7 @@ export function ReportsView() {
                 )
               })}
             </div>
-            {visibleColumns.length === 0 && (
+            {panelSelected.length === 0 && (
               <p className={styles.columnEmpty}>
                 Selecione ao menos uma coluna para exibir.
               </p>
@@ -513,7 +631,7 @@ export function ReportsView() {
         <ColumnFilterDropdown
           column={openColumn}
           type={columnType(openColumn)}
-          filter={filters[openColumn] ?? null}
+          filter={filters[getColumnKey(openColumn)] ?? null}
           position={openPos}
           onApply={(f) => {
             applyColumnFilter(openColumn, f)

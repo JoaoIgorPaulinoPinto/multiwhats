@@ -3,14 +3,17 @@
 import { useEffect, useState } from "react"
 import { contactsService, type ContactResponse } from "../../../services/contacts.service"
 import { companiesService, type ClientResponse } from "../../../services/companies.service"
+import { chatsService, type ChatListResponse } from "../../../services/chats.service"
 import { useToast } from "../../../components/toast/toast.provider"
 
 export function useContacts() {
   const { toast } = useToast()
   const [contacts, setContacts] = useState<ContactResponse[]>([])
   const [clients, setClients] = useState<ClientResponse[]>([])
+  const [chats, setChats] = useState<ChatListResponse[]>([])
   const [editing, setEditing] = useState<ContactResponse | null>(null)
   const [creating, setCreating] = useState(false)
+  const [formChatId, setFormChatId] = useState<number | "">("")
   const [formJid, setFormJid] = useState("")
   const [formPhone, setFormPhone] = useState("")
   const [formName, setFormName] = useState("")
@@ -25,9 +28,11 @@ export function useContacts() {
     Promise.all([
       contactsService.list(),
       companiesService.list(),
-    ]).then(([c, cl]) => {
+      chatsService.listAllChats().then((res) => res.items),
+    ]).then(([c, cl, chatItems]) => {
       setContacts(c)
       setClients(cl)
+      setChats(chatItems)
     })
 
   useEffect(() => {
@@ -40,6 +45,7 @@ export function useContacts() {
   })
 
   function resetForm() {
+    setFormChatId("")
     setFormJid("")
     setFormPhone("")
     setFormName("")
@@ -51,6 +57,25 @@ export function useContacts() {
     resetForm()
     setCreating(true)
     setEditing(null)
+  }
+
+  function selectChat(chatId: number | "") {
+    setFormChatId(chatId)
+    if (chatId === "") {
+      setFormJid("")
+      setFormPhone("")
+      setFormName("")
+      setFormPushName("")
+      setAssignClientId(null)
+      return
+    }
+    const chat = chats.find((c) => c.id === chatId)
+    if (!chat) return
+    setFormJid(chat.jid)
+    setFormPhone(chat.phoneNumber ?? "")
+    setFormName(chat.contactName ?? chat.name ?? "")
+    setFormPushName("")
+    setAssignClientId(chat.clientId)
   }
 
   function startEdit(contact: ContactResponse) {
@@ -94,14 +119,18 @@ export function useContacts() {
   }
 
   async function createContact() {
+    if (formChatId === "") return
     setSaving(true)
     try {
-      await contactsService.create({
+      const created = await contactsService.create({
         jid: formJid,
         phoneNumber: formPhone,
         name: formName || undefined,
         pushName: formPushName || undefined,
       })
+      if (assignClientId) {
+        await contactsService.assign(created.id, assignClientId)
+      }
       toast.success("Contato criado com sucesso")
       await loadData()
       cancelEdit()
@@ -133,6 +162,7 @@ export function useContacts() {
   return {
     contacts: filtered,
     clients,
+    chats,
     loading,
     saving,
     deleting,
@@ -140,11 +170,13 @@ export function useContacts() {
     setSearch,
     creating,
     editing,
+    formChatId,
     formJid,
     formPhone,
     formName,
     formPushName,
     assignClientId,
+    selectChat,
     setFormJid,
     setFormPhone,
     setFormName,

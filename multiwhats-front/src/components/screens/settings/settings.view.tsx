@@ -10,6 +10,7 @@ import {
   RotateCcw,
   Save,
   Search,
+  Settings,
   Settings2,
   TicketPlus,
   UserCog,
@@ -152,12 +153,16 @@ export function SettingsView() {
     <div className={styles.page}>
       <header className={styles.header}>
         <div className={styles.headerRow}>
-          <div>
-            <h2>Configurações</h2>
-            <p className={styles.subtitle}>
-              Gerencie parâmetros do sistema em tempo real e usuários com acesso
-              ao painel.
-            </p>
+          <div className={styles.headerTitle}>
+            <div className={styles.headerIcon}>
+              <Settings size={20} />
+            </div>
+            <div>
+              <h2>Configurações</h2>
+              <p className={styles.subtitle}>
+                Configure os parâmetros do sistema e gerencie os usuários.
+              </p>
+            </div>
           </div>
           {showParams && (
             <div className={styles.headerActions}>

@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  Kanban,
   Plus,
   User,
   X,
@@ -347,24 +348,36 @@ export function KanbanView() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <h2>Ocorrências</h2>
-        <div className={styles.headerActions}>
-          {closedCards.length > 0 && (
+        <div className={styles.headerRow}>
+          <div className={styles.headerTitle}>
+            <div className={styles.headerIcon}>
+              <Kanban size={20} />
+            </div>
+            <div>
+              <h2>Ocorrências</h2>
+              <p className={styles.subtitle}>
+                Acompanhe e movimente as ocorrências por etapa.
+              </p>
+            </div>
+          </div>
+          <div className={styles.headerActions}>
+            {closedCards.length > 0 && (
+              <button
+                className={styles.metricsBtn}
+                onClick={() => setShowMetrics(true)}
+              >
+                <AlertCircle size={14} />
+                Métricas
+              </button>
+            )}
             <button
-              className={styles.metricsBtn}
-              onClick={() => setShowMetrics(true)}
+              className={styles.addOccBtn}
+              onClick={() => setShowCreate(true)}
             >
-              <AlertCircle size={14} />
-              Métricas
+              <Plus size={16} />
+              Nova Ocorrência
             </button>
-          )}
-          <button
-            className={styles.addOccBtn}
-            onClick={() => setShowCreate(true)}
-          >
-            <Plus size={16} />
-            Nova Ocorrência
-          </button>
+          </div>
         </div>
       </header>
 

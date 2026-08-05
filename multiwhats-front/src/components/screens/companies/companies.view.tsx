@@ -1,6 +1,6 @@
 "use client"
 
-import { Pencil, Plus, Search, Trash2, X } from "lucide-react"
+import { Building2, Pencil, Plus, Search, Trash2, X } from "lucide-react"
 import { useCompanies } from "./companies.logic"
 import { AvatarView } from "../../../components/avatar/avatar.view"
 import styles from "./companies.module.css"
@@ -33,7 +33,17 @@ export function CompaniesView() {
     <div className={styles.page}>
       <header className={styles.header}>
         <div className={styles.headerRow}>
-          <h2>Empresas</h2>
+          <div className={styles.headerTitle}>
+            <div className={styles.headerIcon}>
+              <Building2 size={20} />
+            </div>
+            <div>
+              <h2>Empresas</h2>
+              <p className={styles.subtitle}>
+                Cadastre e gerencie as empresas do sistema.
+              </p>
+            </div>
+          </div>
           <button className={styles.newBtn} onClick={() => startEdit({ id: 0, name: "", mainPhoneNumber: null, status: "Active" } as never)}>
             <Plus size={18} />
             Nova empresa

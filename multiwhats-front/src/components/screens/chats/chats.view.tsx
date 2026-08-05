@@ -25,8 +25,21 @@ interface PendingSelection {
 }
 
 export function ChatsView() {
-  const { search, setSearch, chatType, setChatType, chats, loading, load } =
-    useChatSidebar()
+  const {
+    search,
+    setSearch,
+    chatType,
+    setChatType,
+    onlyMine,
+    setOnlyMine,
+    chats,
+    loading,
+    load,
+    loadMore,
+    loadingMore,
+    hasNext,
+    totalCount,
+  } = useChatSidebar()
   const currentUserId = useAuthStore((s) => s.user?.id)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [selectedName, setSelectedName] = useState<string>('')
@@ -75,21 +88,19 @@ export function ChatsView() {
     setPending(null)
     setAssignError(null)
   }
-  function showUnreadCountInTabName() {
+  useEffect(() => {
     const count = chats.filter(
       (chat) =>
         chat.lastMessage?.deliveryStatus === 0 &&
         chat.lastMessage?.direction === 1,
     ).length
-    const c = chats.map((c) => c)
     document.title = count > 0 ? `(${count}) MultiWhats` : 'MultiWhats'
-    console.log(c)
-  }
+  }, [chats])
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') clearSelection()
     }
-    showUnreadCountInTabName()
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
@@ -221,9 +232,15 @@ export function ChatsView() {
         setSearch={setSearch}
         chatType={chatType}
         setChatType={setChatType}
+        onlyMine={onlyMine}
+        setOnlyMine={setOnlyMine}
         chats={chats}
         loading={loading}
         load={load}
+        loadMore={loadMore}
+        loadingMore={loadingMore}
+        hasNext={hasNext}
+        totalCount={totalCount}
       />
       <div className={styles.chatAreaWrap}>
         <ChatAreaView

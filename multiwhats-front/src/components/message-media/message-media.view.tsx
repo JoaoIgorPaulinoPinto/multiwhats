@@ -24,8 +24,8 @@ function MediaIcon({ type }: { type: MessageType }) {
 }
 
 export function MessageImage({ raw, mime, alt, style, onClick }: { raw: string; mime: string | null; alt: string; style?: React.CSSProperties; onClick?: () => void }) {
-  const { src, loading } = useTransformedImage(raw, mime)
-  if (loading) return <div className="skeleton" style={{ width: 200, height: 150, borderRadius: 6 }} />
+  const { src, loading, ref } = useTransformedImage(raw, mime)
+  if (loading) return <div ref={ref} className="skeleton" style={{ width: 200, height: 150, borderRadius: 6 }} />
   if (!src) return null
   return <img src={src} alt={alt} loading="lazy" style={style} onClick={onClick} />
 }

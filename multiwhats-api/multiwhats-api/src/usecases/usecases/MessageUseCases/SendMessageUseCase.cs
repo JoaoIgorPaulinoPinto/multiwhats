@@ -70,7 +70,6 @@ public class SendMessageUseCase : ISendMessageUseCase
 
             var response = await _httpClient.PostAsync(GetMessageriaUrl(), jsonContent);
             var responseBody = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"[ASP.NET] Resposta do Node.js -> Status: {response.StatusCode} | Corpo: {responseBody}");
 
             if (!response.IsSuccessStatusCode)
                 return false;
@@ -102,11 +101,6 @@ public class SendMessageUseCase : ISendMessageUseCase
             var device = await _deviceRepository.GetCurrentAsync();
             var deviceJid = device?.Jid;
 
-            if (deviceJid == null)
-            {
-                Console.WriteLine("[SendMessage] Aviso: Dispositivo não encontrado. fromJid usará o JID da requisição como fallback.");
-            }
-
             // Dedup: se o webhook já salvou esta mensagem com o mesmo messageId,
             // corrige a origem para System (o message_create do Node pode ter
             // classificado como "phone" por causa da corrida) e não salva de novo.
@@ -115,7 +109,6 @@ public class SendMessageUseCase : ISendMessageUseCase
                 var existing = await _messageRepository.GetByMessageIdAsync(messageId);
                 if (existing != null)
                 {
-                    Console.WriteLine($"[SendMessage] Duplicata encontrada msgId={messageId} (já existe id={existing.Id}); corrigindo origem para System");
                     await _messageRepository.MarkAsSystemAsync(messageId);
                     return true;
                 }

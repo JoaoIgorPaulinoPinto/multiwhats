@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { Hydrator } from "./hydrator";
 import { Providers } from "./providers";
+import { ErrorCatcher } from "./error-catcher";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -39,6 +40,7 @@ export default function RootLayout({
       <body>
         <Providers>
           <Hydrator />
+          <ErrorCatcher />
           {children}
         </Providers>
       </body>

@@ -61,7 +61,6 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
             var existing = await _messageRepository.GetByMessageIdAsync(payload.MessageId);
             if (existing != null)
             {
-                Console.WriteLine($"[SaveIncomingMessage] Duplicata ignorada msgId={payload.MessageId} (já existe id={existing.Id})");
                 return false;
             }
         }
@@ -116,7 +115,6 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
 
         if (chat == null)
         {
-            Console.WriteLine($"[SaveIncomingMessage] Ignorando mensagem auto-enviada (From: {payload.From}) sem chat conhecido.");
             return false;
         }
 
@@ -137,48 +135,35 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
 
         var timestamp = payload.Timestamp;
 
-        // Block unsupported incoming media (audio always blocked; other media blocked when not in Media:AllowedTypes).
-        // Pulada durante sincronização inicial (mensagens antigas não devem gerar respostas automáticas).
+        // Mídia não aceita (áudio sempre; demais tipos fora de Media:AllowedTypes):
+        // em vez de ignorar silenciosamente, salva uma mensagem de texto avisando o tipo,
+        // para que o frontend exiba o aviso em tempo real.
         var allowedMedia = await _config.GetListAsync("Media:AllowedTypes", new List<string> { "Image", "Audio", "Video", "Document", "Sticker" });
-        if (!payload.IsSync && IsMediaType(messageType) && !isSelfSent &&
-            (messageType == MessageType.Audio || !allowedMedia.Contains(messageType.ToString())))
+        if (IsMediaType(messageType) && !isSelfSent &&
+            (!allowedMedia.Contains(messageType.ToString())))
         {
-            Console.WriteLine($"[SaveIncomingMessage] Mídia não suportada bloqueada de {payload.From} (msgId={payload.MessageId}, type={messageType})");
+            var ignoredType = messageType.ToString().ToLowerInvariant();
 
-            /// Removido manualmente logica de aviso automatico de mensagens de alguns tipos de midia
-            /*if (userId != null)
+            messageType = MessageType.Text;
+            payload = payload with
             {
-                try
-                {
-                    var unsupportedMsg = await _config.GetStringAsync(
-                        "Media:UnsupportedMessage",
-                        "Desculpe, não consigo processar este tipo de mídia. Por favor, envie apenas texto, imagens, vídeos ou documentos.");
+                Body = $"midia:{ignoredType}|ignorado",
+                HasMedia = false,
+                MediaUrl = null,
+                MediaMimeType = null,
+                MediaFilename = null,
+                MediaSize = null,
+                MediaCaption = null
+            };
 
-                    var reply = new SendMessageRequest
-                    {
-                        Jid = payload.From,
-                        Text = unsupportedMsg,
-                        Type = MessageType.Text,
-                        SenderName = await GetAutoReplySenderNameAsync()
-                    };
-                    await _sendMessageUseCase.Execute(reply, userId.Value);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[SaveIncomingMessage] Erro ao enviar resposta de mídia não suportada: {ex.Message}");
-                }
-            }
-9*/
             await _useCaseLogger.LogAsync(
                 action: "SaveIncomingMessage",
                 entityType: "Message",
                 entityId: null,
-                description: $"Unsupported media blocked from {payload.From} (msgId={payload.MessageId}, type={messageType})",
+                description: $"Unsupported media {ignoredType} ignored from {payload.From} (msgId={payload.MessageId})",
                 explicitUserId: userId,
                 explicitUserName: user?.Name
             );
-
-            return true;
         }
 
         // Auto-reply outside business hours/days (message is still saved so agents see it later).
@@ -247,10 +232,7 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
             message.UpdateDeliveryStatus(DeliveryStatus.Delivered);
         }
 
-        Console.WriteLine(messageType);
         await _messageRepository.AddAsync(message);
-
-        Console.WriteLine($"[SaveIncomingMessage] Salvo msgId={payload.MessageId} type={messageType} hasMedia={payload.HasMedia} mediaUrlLen={payload.MediaUrl?.Length ?? 0} chatId={chat.Id}");
 
         var sentAt = DateTimeOffset.FromUnixTimeSeconds(timestamp).UtcDateTime;
         chat.UpdateLastMessage(sentAt, message);

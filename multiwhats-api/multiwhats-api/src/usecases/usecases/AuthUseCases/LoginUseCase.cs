@@ -45,6 +45,7 @@ public class LoginUseCase : ILoginUseCase
         }
 
         var token = _tokenService.GenerateToken(user);
+        var refreshToken = _tokenService.GenerateRefreshToken(user);
 
         await _useCaseLogger.LogAsync(
             action: "Login",
@@ -56,6 +57,7 @@ public class LoginUseCase : ILoginUseCase
         return new LoginResponse
         {
             Token = token,
+            RefreshToken = refreshToken,
             User = new UserResponse
             {
                 Id = user.Id,

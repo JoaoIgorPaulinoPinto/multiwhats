@@ -10,6 +10,7 @@ export interface UserResponse {
 
 export interface LoginResponse {
   token: string
+  refreshToken: string
   user: UserResponse
 }
 
@@ -41,7 +42,8 @@ export const authService = {
   },
 
   logout() {
-    return api.post('/api/auth/logout')
+    const refreshToken = localStorage.getItem("refreshToken")
+    return api.post('/api/auth/logout', refreshToken ? { refreshToken } : undefined)
   },
 
   me() {

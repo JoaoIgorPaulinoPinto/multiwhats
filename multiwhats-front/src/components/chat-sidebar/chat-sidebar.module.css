@@ -67,9 +67,64 @@ align-items: center;
   font-weight: 600;
 }
 
+.onlyMine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+}
+
+.onlyMine input {
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
 .chatList {
   flex: 1;
   overflow-y: auto;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.paginationInfo {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.loadMore {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.loadMore:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.loadMore:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .chatItem {
