@@ -78,22 +78,46 @@ const apiSentMessageIds = new Set()
 // real (message/message_create) a foto é sempre consultada de novo, então a
 // URL fica atualizada quando o contato troca a imagem.
 const profilePicCache = new Map()
-
-// Captura a URL da foto de perfil do contato via
-// chat.getContact().then(c => c.getProfilePicUrl()): em 1:1 o contato
-// resolvido por chat.getContact() é o do interlocutor (remetente em mensagens
-// recebidas, destinatário nas enviadas), e getProfilePicUrl() consulta o
-// WhatsApp Web. Se o chat não estiver disponível, cai para o contato direto.
+/*
+async function getUcfromLid(chatId) {
+  if (chatId.endsWith('@lid')) {
+    try {
+      // Fetch mapping info using the built-in library utility
+      const lidMapping = await client.getContactLidAndPhone(chatId)
+      if (lidMapping && lidMapping.phone) {
+        // Construct the valid @c.us JID
+        const cUsJid = `${lidMapping.phone}@c.us`
+        console.log(`Successfully mapped ${chatId} to ${cUsJid}`)
+        // You can now safely use cUsJid to track, store, or communicate
+      }
+    } catch (error) {
+      console.error('Failed to exchange LID to JID:', error.message)
+    }
+  }
+}
 async function resolverProfilePic(chat, contato, jid, { isSync = false } = {}) {
   if (!jid) return null
+
   if (isSync && profilePicCache.has(jid)) return profilePicCache.get(jid)
+
   try {
-    const url =
-      (await (chat
-        ? chat.getContact().then((c) => c.getProfilePicUrl())
-        : contato?.getProfilePicUrl())) ?? null
-    profilePicCache.set(jid, url)
-    console.log('Foto de perfil: ' + url)
+    let url = null
+
+    if (chat?.chatId?.endsWith('@lid')) {
+      const cUsJid = await getUcfromLid(chat.chatId)
+
+      if (cUsJid) {
+        const contact = await client.getContactById(cUsJid)
+        url = await contact.getProfilePicUrl()
+      }
+    } else if (contato) {
+      url = await contato.getProfilePicUrl()
+    }
+
+    profilePicCache.set(jid, url ?? null)
+
+    console.log('Foto:', url)
+
     return url
   } catch (err) {
     log('GETPROFILEPIC_ERRO', {
@@ -101,17 +125,14 @@ async function resolverProfilePic(chat, contato, jid, { isSync = false } = {}) {
       isSync,
       error: err.message || String(err),
     })
+
     profilePicCache.set(jid, null)
+
     return null
   }
 }
+*/
 
-// Fila de envios aguardando o ID real da mensagem. O objeto retornado pelo
-// sendMessage nem sempre expõe o id serializado (resposta.id sem _serialized /
-// remote / id), o que fazia o /api/enviar devolver um "fallback-<ts>" e o
-// webhook salvar a MESMA mensagem de novo com o id real (duplicação no banco).
-// Aqui correlacionamos o envio com o evento message_create (que sempre traz o
-// id real) por JID + janela de tempo.
 const sendsAguardandoId = new Map()
 
 // Evita que duas sincronizações iniciais rodem ao mesmo tempo.
@@ -277,12 +298,12 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
     }
 
     // Foto de perfil do contato via
-    // chat.getContact().then(c => c.getProfilePicUrl()). O envio ao backend
+    // chat.getContact().then(c => c.getProfilePicUrl()). O envio ao backend    < --- precisa de um @c.us - só recebo @lid
     // persiste a URL no contato salvo, exibindo-a na lista de chats e no
     // cabeçalho.
-    contatoProfilePicUrl = await resolverProfilePic(chat, contato, targetJid, {
-      isSync,
-    })
+    // contatoProfilePicUrl = await resolverProfilePic(chat, contato, targetJid, {
+    //   isSync,
+    // })
 
     const rawNumber = targetJid.split('@')[0]
     const numeroReal = rawNumber ? rawNumber.replace(/\D/g, '') : null
@@ -337,10 +358,6 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
       isSync,
       userId: 1,
     }
-    console.log(contact)
-    console.log('____________________________________')
-    console.log(payload)
-    console.log('____________________________________')
     await postWebhook(payload)
   } catch (err) {
     log('WEBHOOK_ERRO', {
