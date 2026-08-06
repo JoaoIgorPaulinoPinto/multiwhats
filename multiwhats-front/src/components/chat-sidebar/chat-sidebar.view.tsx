@@ -41,6 +41,7 @@ interface Props {
     lastMessageAt: string | null,
     assignedToUserId: number | null,
     hasUnread: boolean,
+    contactProfilePicUrl: string | null,
   ) => void
   search: string
   setSearch: (v: string) => void
@@ -115,7 +116,7 @@ export function ChatSidebarView({
 
   function handleNewChatStart(phone: string, name: string) {
     const jid = `${phone}@s.whatsapp.net`
-    onSelect(-1, name, null, phone, jid, null, '', null, null, false)
+    onSelect(-1, name, null, phone, jid, null, '', null, null, false, null)
     setShowNewChat(false)
   }
 
@@ -219,11 +220,16 @@ export function ChatSidebarView({
                     chat.lastMessageAt,
                     chat.assignedToUserId,
                     isUnread,
+                    chat.contactProfilePicUrl,
                   )
                 }
               >
                 <div className={styles.avatarWrap}>
-                  <AvatarView name={displayName} size={42} />
+                  <AvatarView
+                    name={displayName}
+                    size={42}
+                    src={chat.contactProfilePicUrl}
+                  />
                 </div>
                 <div className={styles.chatInfo}>
                   <div className={styles.chatTop}>

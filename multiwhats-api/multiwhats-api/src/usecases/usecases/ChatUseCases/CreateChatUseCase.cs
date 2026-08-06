@@ -30,7 +30,8 @@ public class CreateChatUseCase : ICreateChatUseCase
             request.PhoneNumber,
             request.Name,
             request.ContactId,
-            request.ClientId
+            request.ClientId,
+            profilePicUrl: request.ProfilePicUrl
         );
 
         var created = await _chatRepository.AddAsync(chat);
@@ -55,6 +56,7 @@ public class CreateChatUseCase : ICreateChatUseCase
             Name = chat.Name ?? chat.Contact?.Name ?? chat.PhoneNumber,
             ContactId = chat.ContactId,
             ContactName = chat.Contact?.Name,
+            ContactProfilePicUrl = chat.ProfilePicUrl ?? chat.Contact?.ProfilePicUrl,
             ClientId = chat.ClientId,
             ClientName = chat.Client?.Name,
             LastMessageAt = chat.LastMessageAt,

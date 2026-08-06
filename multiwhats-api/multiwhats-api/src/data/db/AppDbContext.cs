@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using multiwhats_api.src.data;
 using multiwhats_api.src.data.entities;
 using multiwhats_api.src.data.enums;
 using System.Text.Json;
@@ -43,6 +44,7 @@ public class AppDbContext : DbContext
             entity.ToTable("chats");
             entity.HasIndex(e => e.Jid).IsUnique();
             entity.HasIndex(e => e.PhoneNumber);
+            entity.Property(e => e.ProfilePicUrl).HasMaxLength(EntityConstraints.ChatProfilePicUrlMaxLength);
             entity.HasOne(e => e.Contact)
                   .WithOne(c => c.Chat)
                   .HasForeignKey<Chat>(e => e.ContactId)

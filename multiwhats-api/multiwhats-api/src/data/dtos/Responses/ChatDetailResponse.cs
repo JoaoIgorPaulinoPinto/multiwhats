@@ -10,6 +10,7 @@ public record ChatDetailResponse
     public string? Name { get; init; }
     public int? ContactId { get; init; }
     public string? ContactName { get; init; }
+    public string? ContactProfilePicUrl { get; init; }
     public int? ClientId { get; init; }
     public string? ClientName { get; init; }
     public DateTime? LastMessageAt { get; init; }

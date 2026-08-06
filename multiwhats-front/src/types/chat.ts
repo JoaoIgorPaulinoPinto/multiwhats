@@ -10,6 +10,7 @@ export interface ChatListResponse {
   phoneNumber: string | null
   contactId: number | null
   contactName: string | null
+  contactProfilePicUrl: string | null
   clientId: number | null
   clientName: string | null
   lastMessageAt: string | null
@@ -34,6 +35,7 @@ export interface ChatDetailResponse {
   name: string | null
   contactId: number | null
   contactName: string | null
+  contactProfilePicUrl: string | null
   clientId: number | null
   clientName: string | null
   lastMessageAt: string | null

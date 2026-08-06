@@ -19,6 +19,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "MultiWhats",
   description: "MultiWhats App",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

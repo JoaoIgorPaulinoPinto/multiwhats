@@ -24,6 +24,10 @@ public class Chat : BaseEntity
     [Column("name")]
     public string? Name { get; private set; }
 
+    [MaxLength(500)]
+    [Column("profile_pic_url")]
+    public string? ProfilePicUrl { get; private set; }
+
     [Column("contact_id")]
     public int? ContactId { get; private set; }
 
@@ -64,7 +68,8 @@ public class Chat : BaseEntity
         string? name = null,
         int? contactId = null,
         int? clientId = null,
-        int? assignedToUserId = null)
+        int? assignedToUserId = null,
+        string? profilePicUrl = null)
     {
         Jid = jid ?? throw new ArgumentNullException(nameof(jid));
         PhoneNumber = phoneNumber;
@@ -72,6 +77,7 @@ public class Chat : BaseEntity
         ContactId = contactId;
         ClientId = clientId;
         AssignedToUserId = assignedToUserId;
+        ProfilePicUrl = profilePicUrl;
     }
 
     public void LinkToContact(int contactId, int? clientId = null)
@@ -104,5 +110,10 @@ public class Chat : BaseEntity
     public void UpdateName(string? name)
     {
         if (name != null) Name = name;
+    }
+
+    public void UpdateProfilePicUrl(string? profilePicUrl)
+    {
+        if (profilePicUrl != null) ProfilePicUrl = profilePicUrl;
     }
 }

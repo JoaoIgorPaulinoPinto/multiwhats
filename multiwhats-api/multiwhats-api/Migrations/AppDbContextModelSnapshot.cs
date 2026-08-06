@@ -149,6 +149,11 @@ namespace multiwhats_api.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("phone_number");
 
+                    b.Property<string>("ProfilePicUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("profile_pic_url");
+
                     b.Property<int?>("lastMessageId")
                         .HasColumnType("integer")
                         .HasColumnName("last_message_id");

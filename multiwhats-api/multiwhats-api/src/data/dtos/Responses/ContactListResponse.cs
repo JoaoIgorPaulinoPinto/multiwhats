@@ -6,6 +6,7 @@ public record ContactListResponse
     public string Name { get; init; } = null!;
     public string PhoneNumber { get; init; } = null!;
     public string? PushName { get; init; }
+    public string? ProfilePicUrl { get; init; }
     public bool IsBlocked { get; init; }
     public bool IsGroup { get; init; }
     public int? ClientId { get; init; }

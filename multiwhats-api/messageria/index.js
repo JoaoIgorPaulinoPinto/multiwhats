@@ -73,6 +73,39 @@ const ASPNET_STATUS_URL =
 // (source="system") ou do celular (source="phone").
 const apiSentMessageIds = new Set()
 
+// Cache em memória das fotos de perfil por JID: evita chamar
+// getProfilePicUrl() repetidamente durante a sincronização inicial. Em tempo
+// real (message/message_create) a foto é sempre consultada de novo, então a
+// URL fica atualizada quando o contato troca a imagem.
+const profilePicCache = new Map()
+
+// Captura a URL da foto de perfil do contato via
+// chat.getContact().then(c => c.getProfilePicUrl()): em 1:1 o contato
+// resolvido por chat.getContact() é o do interlocutor (remetente em mensagens
+// recebidas, destinatário nas enviadas), e getProfilePicUrl() consulta o
+// WhatsApp Web. Se o chat não estiver disponível, cai para o contato direto.
+async function resolverProfilePic(chat, contato, jid, { isSync = false } = {}) {
+  if (!jid) return null
+  if (isSync && profilePicCache.has(jid)) return profilePicCache.get(jid)
+  try {
+    const url =
+      (await (chat
+        ? chat.getContact().then((c) => c.getProfilePicUrl())
+        : contato?.getProfilePicUrl())) ?? null
+    profilePicCache.set(jid, url)
+    console.log('Foto de perfil: ' + url)
+    return url
+  } catch (err) {
+    log('GETPROFILEPIC_ERRO', {
+      jid,
+      isSync,
+      error: err.message || String(err),
+    })
+    profilePicCache.set(jid, null)
+    return null
+  }
+}
+
 // Fila de envios aguardando o ID real da mensagem. O objeto retornado pelo
 // sendMessage nem sempre expõe o id serializado (resposta.id sem _serialized /
 // remote / id), o que fazia o /api/enviar devolver um "fallback-<ts>" e o
@@ -205,18 +238,35 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
 
     const targetJid = enviadaPorMim ? msg.to : msg.from
 
-    // Obtém o contato do destinatário ou remetente real. Consulta não
-    // essencial: se falhar (ex.: author LID não resolvível), seguimos sem
-    // o pushname em vez de descartar a mensagem inteira.
-    // IMPORTANTE: para mensagens enviadas (fromMe), msg.getContact() retorna o
-    // contato do PRÓPRIO dono da conta (Message.getContact usa author||from e,
-    // em 1:1, from é o JID de quem envia). Por isso, quando a mensagem foi
-    // enviada por nós, buscamos o contato do destinatário real (msg.to).
-    let contatoPushname = null
+    // Obtém o chat da mensagem. Consulta não essencial: se falhar (ex.: chat
+    // LID não resolvível), seguimos com o fallback abaixo.
+    let chat = null
     try {
-      const contato = enviadaPorMim
-        ? await client.getContactById(msg.to)
-        : await msg.getContact()
+      chat = await msg.getChat()
+    } catch (err) {
+      log('GETCHAT_ERRO', {
+        messageId: serializedId(msg),
+        source: source || '?',
+        error: err.message || String(err),
+      })
+    }
+
+    // Obtém o contato do interlocutor real. Em 1:1, chat.getContact() retorna
+    // o contato da OUTRA ponta da conversa — remetente em mensagens recebidas,
+    // destinatário nas enviadas — o que é mais confiável que msg.getContact(),
+    // que em mensagens enviadas (fromMe) retorna o contato do PRÓPRIO dono da
+    // conta (Message.getContact usa author||from e, em 1:1, from é o JID de
+    // quem envia). Se o chat não pôde ser resolvido, cai para a resolução
+    // direta: para mensagens enviadas buscamos o destinatário real (msg.to).
+    let contato = null
+    let contatoPushname = null
+    let contatoProfilePicUrl = null
+    try {
+      contato = chat
+        ? await chat.getContact()
+        : enviadaPorMim
+          ? await client.getContactById(msg.to)
+          : await msg.getContact()
       contatoPushname = contato?.pushname ?? null
     } catch (err) {
       log('GETCONTACT_ERRO', {
@@ -225,6 +275,14 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
         error: err.message || String(err),
       })
     }
+
+    // Foto de perfil do contato via
+    // chat.getContact().then(c => c.getProfilePicUrl()). O envio ao backend
+    // persiste a URL no contato salvo, exibindo-a na lista de chats e no
+    // cabeçalho.
+    contatoProfilePicUrl = await resolverProfilePic(chat, contato, targetJid, {
+      isSync,
+    })
 
     const rawNumber = targetJid.split('@')[0]
     const numeroReal = rawNumber ? rawNumber.replace(/\D/g, '') : null
@@ -260,7 +318,11 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
       phoneNumber: numeroReal,
       body: msg.body,
       timestamp: msg.timestamp,
-      notifyName: (enviadaPorMim ? null : msg._data?.notifyName) || contatoPushname || null,
+      notifyName:
+        (enviadaPorMim ? null : msg._data?.notifyName) ||
+        contatoPushname ||
+        null,
+      profilePicUrl: contatoProfilePicUrl,
       messageType,
       hasMedia,
       mediaUrl,
@@ -275,7 +337,10 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
       isSync,
       userId: 1,
     }
-
+    console.log(contact)
+    console.log('____________________________________')
+    console.log(payload)
+    console.log('____________________________________')
     await postWebhook(payload)
   } catch (err) {
     log('WEBHOOK_ERRO', {

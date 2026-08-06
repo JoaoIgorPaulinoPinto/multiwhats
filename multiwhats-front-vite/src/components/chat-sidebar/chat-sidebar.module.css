@@ -1,0 +1,361 @@
+.sidebar {
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+}
+
+.search {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--input);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.search input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  outline: none;
+  font-size: 13px;
+}
+
+.search input::placeholder {
+  color: var(--text-muted);
+}
+.chatTypes{
+display: flex;
+flex-direction: row;
+justify-content: space-around;
+align-items: center;
+}
+.chatTypes button
+{
+  background-color: var(--sidebar);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  justify-content: stretch;
+  width: 100%;
+  color: var(--text-muted);
+  padding: 10px;
+  text-wrap: nowrap;
+  overflow-x: hidden;
+  font-size: small;
+}
+.chatTypes button:hover
+{
+  background-color: var(--surface-hover);
+  border-radius: 10px 10px 0 0;
+  color: var(--text);
+}
+.chatTypesActive{
+  background-color: var(--surface-hover) !important;
+  border-radius: 10px 10px 0 0 !important;
+  color: var(--text) !important;
+  font-weight: 600;
+}
+
+.onlyMine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+}
+
+.onlyMine input {
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.chatList {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.paginationInfo {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.loadMore {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.loadMore:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.loadMore:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.chatItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid #ffffff07;
+}
+
+.chatItem:hover {
+  background: var(--surface-hover);
+}
+
+.chatInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chatTop {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chatTop strong {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.chatTop label {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.chatTime {
+  display: flex;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.lastMsg {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.status {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.statusRead {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.statusPending {
+  color: var(--text-muted);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.statusFailed {
+  color: var(--danger, #e53e3e);
+  flex-shrink: 0;
+}
+
+.clientName {
+  font-size: 11px;
+  color: var(--primary);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assignedName {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .assignedName,
+:root[data-theme="dark"] .assignedName {
+  color: #6ee7b7;
+}
+
+.occurrences {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.occItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  border-left: 2px solid;
+  padding-left: 5px;
+  line-height: 1.3;
+}
+
+.occTitle {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.occStatus {
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+.occMore {
+  font-size: 10px;
+  color: var(--text-muted);
+  padding-left: 7px;
+}
+
+.occBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 8px;
+  background: #fef3c7;
+  color: #d97706;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.avatarWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.dateAndDot{
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+.unreadBadge {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  align-items: center;
+  justify-content: center;
+  padding: 7px;
+  border: 3px solid var(--border);
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .occBadge,
+:root[data-theme="dark"] .occBadge {
+  background: #451a03;
+  color: #fbbf24;
+}
+
+.active {
+  background: var(--surface-hover);
+}
+
+.skeletonItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+}
+
+.syncButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: var(--input);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.syncButton:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

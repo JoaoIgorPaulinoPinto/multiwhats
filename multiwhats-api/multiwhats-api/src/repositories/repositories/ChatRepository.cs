@@ -159,6 +159,13 @@ public class ChatRepository : IChatRepository
             destination.LinkToContact(source.Contact.Id, destination.ClientId ?? source.ClientId);
         }
 
+        // Preserva a foto de perfil: se o destino não tem, aproveita a do
+        // chat de origem (que pode ter sido capturada via getProfilePicUrl).
+        if (destination.ProfilePicUrl is null && source.ProfilePicUrl is not null)
+        {
+            destination.UpdateProfilePicUrl(source.ProfilePicUrl);
+        }
+
         _context.Chats.Remove(source);
         await _context.SaveChangesAsync();
 

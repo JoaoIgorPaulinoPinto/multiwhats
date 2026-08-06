@@ -8,6 +8,7 @@ public static class EntityConstraints
     public const int ChatJidMaxLength = 100;
     public const int ChatPhoneNumberMaxLength = 20;
     public const int ChatNameMaxLength = 150;
+    public const int ChatProfilePicUrlMaxLength = 500;
 
     public const int ContactJidMaxLength = 100;
     public const int ContactPhoneNumberMaxLength = 20;

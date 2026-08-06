@@ -48,6 +48,16 @@ public class CreateContactUseCase : ICreateContactUseCase
         if (existingChat != null)
         {
             existingChat.LinkToContact(created.Id, created.ClientId);
+            if (!string.IsNullOrWhiteSpace(created.Name))
+                existingChat.UpdateName(created.Name);
+            // Se o chat já tinha foto (capturada pelo messageria antes do
+            // contato ser salvo) e o contato ainda não tem, repassa a URL.
+            if (string.IsNullOrWhiteSpace(created.ProfilePicUrl)
+                && !string.IsNullOrWhiteSpace(existingChat.ProfilePicUrl))
+            {
+                created.UpdateInfo(name: null, pushName: null, profilePicUrl: existingChat.ProfilePicUrl, isBlocked: null);
+                await _contactRepository.UpdateAsync(created);
+            }
             await _chatRepository.UpdateAsync(existingChat);
         }
 
@@ -70,6 +80,7 @@ public class CreateContactUseCase : ICreateContactUseCase
             Name = contact.Name,
             PhoneNumber = contact.PhoneNumber,
             PushName = contact.PushName,
+            ProfilePicUrl = contact.ProfilePicUrl,
             IsBlocked = contact.IsBlocked,
             IsGroup = contact.IsGroup,
             ClientId = contact.ClientId,

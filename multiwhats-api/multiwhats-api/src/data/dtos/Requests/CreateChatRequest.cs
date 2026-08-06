@@ -5,6 +5,7 @@ public record CreateChatRequest
     public string Jid { get; init; } = null!;
     public string? PhoneNumber { get; init; }
     public string? Name { get; init; }
+    public string? ProfilePicUrl { get; init; }
     public int? ContactId { get; init; }
     public int? ClientId { get; init; }
 }

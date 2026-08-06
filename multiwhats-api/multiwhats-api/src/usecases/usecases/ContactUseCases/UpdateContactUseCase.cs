@@ -9,13 +9,16 @@ namespace multiwhats_api.src.usecases.usecases.ContactUseCases;
 public class UpdateContactUseCase : IUpdateContactUseCase
 {
     private readonly IContactRepository _contactRepository;
+    private readonly IChatRepository _chatRepository;
     private readonly UseCaseLogger _useCaseLogger;
 
     public UpdateContactUseCase(
         IContactRepository contactRepository,
+        IChatRepository chatRepository,
         UseCaseLogger useCaseLogger)
     {
         _contactRepository = contactRepository;
+        _chatRepository = chatRepository;
         _useCaseLogger = useCaseLogger;
     }
 
@@ -27,6 +30,18 @@ public class UpdateContactUseCase : IUpdateContactUseCase
         contact.UpdateInfo(request.Name, request.PushName, null, request.IsBlocked);
 
         var updated = await _contactRepository.UpdateAsync(contact);
+
+        // Mantém o nome do chat sincronizado com o nome salvo no contato: o
+        // nome cadastrado do contato é a fonte de verdade do nome do chat.
+        if (!string.IsNullOrWhiteSpace(contact.Name))
+        {
+            var chat = await _chatRepository.GetByJidAsync(contact.Jid);
+            if (chat != null && chat.Name != contact.Name)
+            {
+                chat.UpdateName(contact.Name);
+                await _chatRepository.UpdateAsync(chat);
+            }
+        }
 
         await _useCaseLogger.LogAsync(
             action: "UpdateContact",

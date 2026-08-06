@@ -22,6 +22,7 @@ interface PendingSelection {
   lastMessageAt: string | null
   assignedToUserId: number | null
   hasUnread: boolean
+  contactProfilePicUrl: string | null
 }
 
 export function ChatsView() {
@@ -58,6 +59,9 @@ export function ChatsView() {
   const [selectedAssignedToUserId, setSelectedAssignedToUserId] = useState<
     number | null
   >(null)
+  const [selectedProfilePicUrl, setSelectedProfilePicUrl] = useState<
+    string | null
+  >(null)
 
   const [pending, setPending] = useState<PendingSelection | null>(null)
   const [assigning, setAssigning] = useState(false)
@@ -73,6 +77,7 @@ export function ChatsView() {
     setSelectedLastMessage(sel.lastMessage)
     setSelectedLastMessageAt(sel.lastMessageAt)
     setSelectedAssignedToUserId(sel.assignedToUserId)
+    setSelectedProfilePicUrl(sel.contactProfilePicUrl)
   }
 
   function clearSelection() {
@@ -85,6 +90,7 @@ export function ChatsView() {
     setSelectedLastMessage('')
     setSelectedLastMessageAt(null)
     setSelectedAssignedToUserId(null)
+    setSelectedProfilePicUrl(null)
     setPending(null)
     setAssignError(null)
   }
@@ -116,6 +122,7 @@ export function ChatsView() {
     lastMessageAt: string | null,
     assignedToUserId: number | null,
     hasUnread: boolean,
+    contactProfilePicUrl: string | null,
   ) {
     const sel: PendingSelection = {
       id,
@@ -128,6 +135,7 @@ export function ChatsView() {
       lastMessageAt,
       assignedToUserId,
       hasUnread,
+      contactProfilePicUrl,
     }
     if (hasUnread && assignedToUserId !== currentUserId) {
       setAssignError(null)
@@ -193,6 +201,7 @@ export function ChatsView() {
     setSelectedLastMessage('')
     setSelectedLastMessageAt(null)
     setSelectedAssignedToUserId(null)
+    setSelectedProfilePicUrl(null)
   }
 
   function handleMerged(result: {
@@ -217,6 +226,7 @@ export function ChatsView() {
         s.lastMessage.direction === 0 &&
         toNumericStatus(s.lastMessage.deliveryStatus ?? 2) < 3
       ),
+      s.contactProfilePicUrl,
     )
   }
 
@@ -250,6 +260,7 @@ export function ChatsView() {
           phoneNumber={selectedPhone}
           jid={selectedJid}
           chatContactId={selectedContactId}
+          contactProfilePicUrl={selectedProfilePicUrl}
           lastMessage={selectedLastMessage}
           lastMessageAt={selectedLastMessageAt}
           canMarkRead={canMarkRead}

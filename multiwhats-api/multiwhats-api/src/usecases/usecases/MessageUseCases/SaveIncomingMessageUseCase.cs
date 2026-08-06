@@ -83,34 +83,58 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         var actualToJid = isSelfSent ? payload.From : deviceJid;
 
         var chat = await _chatRepository.GetByJidAsync(payload.From);
+        var contact = await _contactRepository.GetByJidAsync(payload.From);
 
         if (chat == null)
         {
             // Cria o chat tanto para mensagens recebidas quanto para auto-enviadas
             // (ex.: mensagem enviada pelo celular para um contato sem chat no banco).
-            var contact = await _contactRepository.GetByJidAsync(payload.From);
-
+            // Prioriza o nome salvo no contato: se o contato existe no banco, o nome
+            // cadastrado é o mais confiável e é usado no lugar do pushname (notifyName).
             chat = new Chat(
                 payload.From,
                 phoneNumber,
-                payload.NotifyName ?? contact?.Name,
+                contact?.Name ?? payload.NotifyName,
                 contactId: contact?.Id,
-                clientId: contact?.ClientId
+                clientId: contact?.ClientId,
+                profilePicUrl: payload.ProfilePicUrl
             );
 
             chat = await _chatRepository.AddAsync(chat);
         }
-        else if (chat != null && !isSelfSent)
+        else if (!isSelfSent && chat.ContactId == null && contact != null)
         {
-            if (chat.ContactId == null)
+            chat.LinkToContact(contact.Id, contact.ClientId);
+            // Prioriza o nome salvo no contato: ao vincular o contato, o nome
+            // cadastrado dele passa a ser o nome do chat (substitui o
+            // notifyName usado quando o chat foi criado sem contato).
+            if (!string.IsNullOrWhiteSpace(contact.Name))
+                chat.UpdateName(contact.Name);
+            // Se o chat já tinha foto (capturada antes do contato ser salvo)
+            // e o contato ainda não tem, repassa a URL para o contato.
+            if (string.IsNullOrWhiteSpace(contact.ProfilePicUrl)
+                && !string.IsNullOrWhiteSpace(chat.ProfilePicUrl))
             {
-                var contact = await _contactRepository.GetByJidAsync(payload.From);
-                if (contact != null)
-                {
-                    chat.LinkToContact(contact.Id, contact.ClientId);
-                    await _chatRepository.UpdateAsync(chat);
-                }
+                contact.UpdateInfo(name: null, pushName: null, profilePicUrl: chat.ProfilePicUrl, isBlocked: null);
+                await _contactRepository.UpdateAsync(contact);
             }
+            await _chatRepository.UpdateAsync(chat);
+        }
+
+        // Captura da foto de perfil: quando o messageria reporta a URL (via
+        // getProfilePicUrl), atualiza o contato salvo e o chat para que a foto
+        // apareça na lista de contatos, na lista de chats e no cabeçalho do chat.
+        if (contact != null && !string.IsNullOrWhiteSpace(payload.ProfilePicUrl)
+            && contact.ProfilePicUrl != payload.ProfilePicUrl)
+        {
+            contact.UpdateInfo(name: null, pushName: null, profilePicUrl: payload.ProfilePicUrl, isBlocked: null);
+            await _contactRepository.UpdateAsync(contact);
+        }
+        if (chat != null && !string.IsNullOrWhiteSpace(payload.ProfilePicUrl)
+            && chat.ProfilePicUrl != payload.ProfilePicUrl)
+        {
+            chat.UpdateProfilePicUrl(payload.ProfilePicUrl);
+            await _chatRepository.UpdateAsync(chat);
         }
 
         if (chat == null)

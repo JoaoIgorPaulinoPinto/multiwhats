@@ -45,6 +45,7 @@ interface Props {
   lastMessage: string
   lastMessageAt?: string | null
   chatContactId?: number | null
+  contactProfilePicUrl?: string | null
   canMarkRead?: boolean
   canOpenOccurrence?: boolean
   onStartChat?: (phone: string, name: string) => void
@@ -79,6 +80,7 @@ export function ChatAreaView({
   phoneNumber,
   jid,
   chatContactId,
+  contactProfilePicUrl,
   lastMessage,
   lastMessageAt,
   canMarkRead = false,
@@ -188,7 +190,11 @@ export function ChatAreaView({
     >
       <header className={styles.chatHeader}>
         {chatId ? (
-          <AvatarView name={contactName ?? `Contato ${chatId}`} size={36} />
+          <AvatarView
+            name={contactName ?? `Contato ${chatId}`}
+            size={36}
+            src={contactProfilePicUrl}
+          />
         ) : (
           <AvatarView name="?" size={36} />
         )}

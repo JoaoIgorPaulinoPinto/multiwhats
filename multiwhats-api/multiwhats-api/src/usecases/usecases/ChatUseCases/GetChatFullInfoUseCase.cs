@@ -100,7 +100,7 @@ public class GetChatFullInfoUseCase : IGetChatFullInfoUseCase
             ContactId = chat.ContactId,
             ContactName = chat.Contact?.Name,
             ContactPushName = chat.Contact?.PushName,
-            ContactProfilePicUrl = chat.Contact?.ProfilePicUrl,
+            ContactProfilePicUrl = chat.ProfilePicUrl ?? chat.Contact?.ProfilePicUrl,
             ContactIsBlocked = chat.Contact?.IsBlocked ?? false,
             ContactIsGroup = chat.Contact?.IsGroup ?? false,
             ClientId = chat.ClientId ?? chat.Contact?.ClientId,

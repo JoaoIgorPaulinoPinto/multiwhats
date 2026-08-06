@@ -9,6 +9,7 @@ public record WhatsAppWebhookDto
     public string? Body { get; init; }
     public long Timestamp { get; init; }
     public string? NotifyName { get; init; }
+    public string? ProfilePicUrl { get; init; }
     public string? MessageType { get; init; }
     public bool HasMedia { get; init; }
     public string? MediaUrl { get; init; }
