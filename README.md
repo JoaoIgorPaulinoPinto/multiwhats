@@ -40,15 +40,17 @@ O MultiWhats é um sistema composto por 3 partes que trabalham juntas:
 
 ```
 
-1. **Frontend (Next.js)** - Interface visual que o operador usa no navegador. Roda na porta 3000.
+1. **Frontend (Next.js e Vite)** - Interface visual que o operador usa no navegador.
 
-2. **Backend (ASP.NET Core)** - "Cérebro" do sistema. Recebe pedidos do frontend, gerencia dados no banco MySQL, e envia/recebe mensagens do WhatsApp. Roda na porta 5261.
+2. **Backend (ASP.NET Core)** - "Cérebro" do sistema. Recebe pedidos do frontend, gerencia dados no banco MySQL, e envia/recebe mensagens do WhatsApp.
 
-3. **Messageria (Node.js)** - Ponte com o WhatsApp. Usa Puppeteer (um navegador automatizado) para se conectar ao WhatsApp Web. Roda na porta 3333.
+3. **Messageria (Node.js)** - Ponte com o WhatsApp. Usa Puppeteer (um navegador automatizado) para se conectar ao WhatsApp Web. 
+ 
+4. **LegacyDataBaseAdapter (Node.js)** - Middleware que intercepta requisições e sincroniza dados do banco de dados legado em MySql 4.1 e PostgresSql 18.
 
 **Fluxo simplificado de uma mensagem:**
-- Operador digita no Frontend → Frontend pede ao Backend → Backend salva no Postgresql e pede à Messageria → Messageria envia pelo WhatsApp
-- Cliente responde no WhatsApp → Messageria recebe → Envia para o Backend (webhook) → Backend salva e avisa o Frontend em tempo real (SignalR)
+- Operador digita no Frontend → Frontend pede ao Backend → Backend salva no Postgresql (legacy database adapter sincroniza), e pede à Messageria → Messageria envia pelo WhatsApp
+- Cliente responde no WhatsApp → Messageria recebe → Envia para o Backend (webhook) → Backend salva (legacy database adapter sincroniza), e avisa o Frontend em tempo real (SignalR)
 
 ---
 
@@ -68,7 +70,7 @@ Use Case (executa regra de negócio)
 Repository (acessa o banco de dados)
     │
     ▼
-MySQL (armazena os dados)
+PostgreSql (armazena os dados)
 ```
 
 **Camadas:**
@@ -78,6 +80,7 @@ MySQL (armazena os dados)
 - **Entities** (`src/data/entities/`) - Representam as tabelas do banco. Cada entidade é uma tabela.
 - **DTOs** (`src/data/dtos/`) - "Transfer objects" - formatos de dados que entram (Request) e saem (Response) da API.
 - **Services** (`src/services/`) - Serviços auxiliares como autenticação JWT, auditoria, e comunicação em tempo real (SignalR).
+- **Helpers** (`src/helpers/`) - Metodos auxiliares com formatadores e Hasher de senhas.
 
 ### Padrões de Design Utilizados
 
@@ -104,8 +107,8 @@ MySQL (armazena os dados)
 | Tempo Real | SignalR | - |
 | Documentação | Swagger/OpenAPI | 7.3 |
 | Messageria | Node.js + WhatsApp Web.js | - |
-| Frontend | Next.js | - |
-| Containerização | Docker + Docker Compose | - |
+| Frontend | Next.js e Vite | - |
+| Containerização | Docker + Docker Compose | - | - Previa
 
 ---
 
