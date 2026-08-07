@@ -11,6 +11,7 @@ export interface ChatListResponse {
   contactId: number | null
   contactName: string | null
   contactProfilePicUrl: string | null
+  isGroup: boolean
   clientId: number | null
   clientName: string | null
   lastMessageAt: string | null
@@ -35,6 +36,7 @@ export interface ChatDetailResponse {
   name: string | null
   contactId: number | null
   contactName: string | null
+  isGroup: boolean
   clientId: number | null
   clientName: string | null
   lastMessageAt: string | null
@@ -59,7 +61,10 @@ export interface MessageResponse {
   messageId: string | null
   fromJid: string
   toJid: string | null
-  phoneNumber: string
+  authorJid: string | null
+  authorName: string | null
+  isGroup: boolean
+  phoneNumber: string | null
   body: string | null
   direction: MessageDirection
   type: MessageType

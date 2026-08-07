@@ -96,6 +96,11 @@ public class GetMessagesUseCase : IGetMessagesUseCase
         {
             Id = message.Id,
             MessageId = message.WhatssAppMessageId,
+            FromJid = message.FromJid,
+            ToJid = message.ToJid,
+            AuthorJid = message.AuthorJid,
+            AuthorName = message.AuthorName,
+            IsGroup = IsGroupJid(message),
             Body = message.Body,
             Direction = message.Direction,
             Type = message.Type,
@@ -124,6 +129,9 @@ public class GetMessagesUseCase : IGetMessagesUseCase
             MessageId = message.WhatssAppMessageId,
             FromJid = message.FromJid,
             ToJid = message.ToJid,
+            AuthorJid = message.AuthorJid,
+            AuthorName = message.AuthorName,
+            IsGroup = IsGroupJid(message),
             PhoneNumber = message.PhoneNumber,
             Body = message.Body,
             Direction = message.Direction,
@@ -147,5 +155,11 @@ public class GetMessagesUseCase : IGetMessagesUseCase
             ReplyToId = message.ReplyToId,
             CreatedAt = message.CreatedAt
         };
+    }
+
+    private static bool IsGroupJid(Message message)
+    {
+        return message.FromJid?.EndsWith("@g.us") == true
+            || message.ToJid?.EndsWith("@g.us") == true;
     }
 }

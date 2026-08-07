@@ -23,6 +23,7 @@ public class AppDbContext : DbContext
     public DbSet<Device> Devices { get; set; }
     public DbSet<RegistrationCode> RegistrationCodes { get; set; }
     public DbSet<SystemParameter> SystemParameters { get; set; }
+    public DbSet<ChatHistory> ChatHistory { get; set; }
 
     // Set by the controller before SaveChanges to track who created/modified/deleted.
     public int? CurrentUserId { get; set; }
@@ -70,6 +71,21 @@ public class AppDbContext : DbContext
                   .HasForeignKey(e => e.ClientId)
                   .OnDelete(DeleteBehavior.SetNull);
             entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        modelBuilder.Entity<ChatHistory>(entity =>
+        {
+            entity.ToTable("chat_history");
+            entity.HasOne(e => e.Chat)
+                  .WithMany()
+                  .HasForeignKey(e => e.ChatId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.AssignedToUser)
+                  .WithMany()
+                  .HasForeignKey(e => e.AssignedToUserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => e.ChatId);
+            entity.HasIndex(e => e.AssignedToUserId);
         });
 
         modelBuilder.Entity<Message>(entity =>

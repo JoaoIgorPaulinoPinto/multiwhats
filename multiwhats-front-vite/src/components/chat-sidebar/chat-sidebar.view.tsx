@@ -1,4 +1,3 @@
-
 import { formatTime } from '@/utils/date-format'
 import {
   AlertCircle,
@@ -7,10 +6,11 @@ import {
   MessageSquarePlus,
   RefreshCw,
   Search,
+  Users,
   X,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import {
   OCCURRENCE_STATUS_COLORS,
   OCCURRENCE_STATUS_LABELS,
@@ -26,6 +26,8 @@ import { AvatarView } from '../avatar/avatar.view'
 import type { ChatTypeFilter } from './chat-sidebar.logic'
 import styles from './chat-sidebar.module.css'
 import { NewChatModal } from './new-chat-modal'
+
+const SCROLL_THRESHOLD = 120
 
 interface Props {
   selectedId: number | null
@@ -109,9 +111,17 @@ export function ChatSidebarView({
   loadMore,
   loadingMore,
   hasNext,
-  totalCount,
 }: Props) {
   const [showNewChat, setShowNewChat] = useState(false)
+  const listRef = useRef<HTMLElement>(null)
+
+  const handleChatListScroll = useCallback(() => {
+    const el = listRef.current
+    if (!el || loadingMore || !hasNext) return
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - SCROLL_THRESHOLD) {
+      loadMore()
+    }
+  }, [loadingMore, hasNext, loadMore])
 
   function handleNewChatStart(phone: string, name: string) {
     const jid = `${phone}@s.whatsapp.net`
@@ -129,6 +139,12 @@ export function ChatSidebarView({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <div
+            className={styles.clearSearchInput}
+            onClick={() => setSearch('')}
+          >
+            <X size={13} color="#667781" className={styles.Xicon} />
+          </div>
         </div>
         <button
           className={styles.syncButton}
@@ -178,7 +194,11 @@ export function ChatSidebarView({
         </label>
       )}
 
-      <section className={styles.chatList}>
+      <section
+        className={styles.chatList}
+        ref={listRef}
+        onScroll={handleChatListScroll}
+      >
         {loading ? (
           <>
             <SkeletonChatItem />
@@ -233,6 +253,14 @@ export function ChatSidebarView({
                 <div className={styles.chatInfo}>
                   <div className={styles.chatTop}>
                     <strong>{displayName}</strong>
+                    {chat.isGroup && (
+                      <span
+                        className={styles.groupBadge}
+                        title="Grupo do WhatsApp"
+                      >
+                        <Users size={12} />
+                      </span>
+                    )}
                     {occCount > 0 && (
                       <span className={styles.occBadge}>
                         <AlertCircle size={11} />
@@ -317,23 +345,6 @@ export function ChatSidebarView({
           })
         )}
       </section>
-
-      {!loading && (
-        <footer className={styles.pagination}>
-          <span className={styles.paginationInfo}>
-            {chats.length} de {totalCount}
-          </span>
-          {hasNext && (
-            <button
-              className={styles.loadMore}
-              onClick={loadMore}
-              disabled={loadingMore}
-            >
-              {loadingMore ? 'Carregando...' : 'Carregar mais'}
-            </button>
-          )}
-        </footer>
-      )}
 
       {showNewChat && (
         <NewChatModal

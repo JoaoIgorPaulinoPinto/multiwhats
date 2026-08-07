@@ -339,3 +339,17 @@ C:\Users\User\AppData\Local\Temp\opencode\mw-build5\multiwhats-api.deps.json
 C:\Users\User\AppData\Local\Temp\opencode\mw-build5\multiwhats-api.runtimeconfig.json
 C:\Users\User\AppData\Local\Temp\opencode\mw-build5\multiwhats-api.dll
 C:\Users\User\AppData\Local\Temp\opencode\mw-build5\multiwhats-api.pdb
+C:\Users\User\AppData\Local\Temp\opencode\build-check\appsettings.Development.json
+C:\Users\User\AppData\Local\Temp\opencode\build-check\appsettings.json
+C:\Users\User\AppData\Local\Temp\opencode\build-check\multiwhats-api.staticwebassets.endpoints.json
+C:\Users\User\AppData\Local\Temp\opencode\build-check\multiwhats-api.deps.json
+C:\Users\User\AppData\Local\Temp\opencode\build-check\multiwhats-api.runtimeconfig.json
+C:\Users\User\AppData\Local\Temp\opencode\build-check\multiwhats-api.dll
+C:\Users\User\AppData\Local\Temp\opencode\build-check\multiwhats-api.pdb
+C:\Users\User\AppData\Local\Temp\opencode\build-check2\appsettings.Development.json
+C:\Users\User\AppData\Local\Temp\opencode\build-check2\appsettings.json
+C:\Users\User\AppData\Local\Temp\opencode\build-check2\multiwhats-api.staticwebassets.endpoints.json
+C:\Users\User\AppData\Local\Temp\opencode\build-check2\multiwhats-api.deps.json
+C:\Users\User\AppData\Local\Temp\opencode\build-check2\multiwhats-api.runtimeconfig.json
+C:\Users\User\AppData\Local\Temp\opencode\build-check2\multiwhats-api.dll
+C:\Users\User\AppData\Local\Temp\opencode\build-check2\multiwhats-api.pdb

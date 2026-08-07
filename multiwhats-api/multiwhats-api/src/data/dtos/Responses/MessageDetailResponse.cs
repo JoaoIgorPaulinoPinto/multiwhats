@@ -8,6 +8,9 @@ public record MessageDetailResponse
     public string? MessageId { get; init; }
     public string FromJid { get; init; } = null!;
     public string? ToJid { get; init; }
+    public string? AuthorJid { get; init; }
+    public string? AuthorName { get; init; }
+    public bool IsGroup { get; init; }
     public string? PhoneNumber { get; init; }
     public string? Body { get; init; }
     public MessageDirection Direction { get; init; }

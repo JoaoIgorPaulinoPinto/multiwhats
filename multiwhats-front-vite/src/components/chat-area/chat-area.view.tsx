@@ -1,4 +1,3 @@
-
 import {
   Check,
   CheckCheck,
@@ -13,7 +12,13 @@ import {
   UserPlus,
   X,
 } from 'lucide-react'
-import { useCallback, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import type { ChatListResponse } from '../../services/chats.service'
 import {
   DELIVERY_STATUS_LABELS,
@@ -34,6 +39,9 @@ import { OccurrenceModal, SaveContactModal } from './chat-area-modals'
 import { useChatArea } from './chat-area.logic'
 import styles from './chat-area.module.css'
 import { ChatInfoPanel } from './chat-info-panel'
+import { EmojiPicker } from './emoji-picker'
+
+const SCROLL_THRESHOLD = 80
 
 interface Props {
   chatId: number | null
@@ -96,6 +104,9 @@ export function ChatAreaView({
     sendingCount,
     sendError,
     sendMessage,
+    loadingMore,
+    hasMore,
+    loadMoreMessages,
     selectedFile,
     mediaPreview,
     mediaType,
@@ -118,7 +129,34 @@ export function ChatAreaView({
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
   const [lightboxAlt, setLightboxAlt] = useState<string>('')
   const [isDragging, setIsDragging] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const dragCounter = useRef(0)
+  const messagesRef = useRef<HTMLElement>(null)
+  const restoreTopRef = useRef(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const pickerRef = useRef<HTMLDivElement>(null)
+
+  const handleMessagesScroll = useCallback(() => {
+    const el = messagesRef.current
+    if (!el || loadingMore || !hasMore) return
+    if (el.scrollTop >= el.scrollHeight - el.clientHeight - SCROLL_THRESHOLD) {
+      restoreTopRef.current = true
+      loadMoreMessages()
+    }
+  }, [loadingMore, hasMore, loadMoreMessages])
+
+  useLayoutEffect(() => {
+    const el = messagesRef.current
+    if (!restoreTopRef.current) return
+    restoreTopRef.current = false
+    if (el) el.scrollTop = el.scrollHeight - el.clientHeight
+  }, [messages])
+
+  useEffect(() => {
+    if (messages.length === 0 && messagesRef.current) {
+      messagesRef.current.scrollTop = 0
+    }
+  }, [messages])
 
   const items = messages
     .map((msg, idx) => ({ msg, prev: idx > 0 ? messages[idx - 1] : undefined }))
@@ -178,6 +216,54 @@ export function ChatAreaView({
     [handleFileDrop],
   )
 
+  const handleEmojiSelect = useCallback(
+    (emoji: string) => {
+      const el = textareaRef.current
+      if (el) {
+        const start = el.selectionStart ?? inputValue.length
+        const end = el.selectionEnd ?? inputValue.length
+        const next = inputValue.slice(0, start) + emoji + inputValue.slice(end)
+        setInputValue(next)
+        requestAnimationFrame(() => {
+          const pos = start + emoji.length
+          el.focus()
+          el.setSelectionRange(pos, pos)
+        })
+      } else {
+        setInputValue((prev) => prev + emoji)
+      }
+    },
+    [inputValue, setInputValue],
+  )
+
+  useEffect(() => {
+    if (!showEmojiPicker) return
+    const onPointerDown = (e: MouseEvent | TouchEvent) => {
+      if (
+        pickerRef.current &&
+        !pickerRef.current.contains(e.target as Node) &&
+        !(e.target as HTMLElement).closest('[data-emoji-toggle]')
+      ) {
+        setShowEmojiPicker(false)
+      }
+    }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowEmojiPicker(false)
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('touchstart', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('touchstart', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [showEmojiPicker])
+
+  useEffect(() => {
+    if (!chatId) setShowEmojiPicker(false)
+  }, [chatId])
+
   return (
     <main
       className={styles.chat}
@@ -187,7 +273,10 @@ export function ChatAreaView({
       onDrop={onDrop}
       onPaste={onPaste}
     >
-      <header className={styles.chatHeader}>
+      <header
+        className={styles.chatHeader}
+        onClick={() => chatId && setShowInfoPanel(true)}
+      >
         {chatId ? (
           <AvatarView
             name={contactName ?? `Contato ${chatId}`}
@@ -199,7 +288,6 @@ export function ChatAreaView({
         )}
         <div
           className={styles.data}
-          onClick={() => chatId && setShowInfoPanel(true)}
           style={{ cursor: chatId ? 'pointer' : undefined }}
         >
           <strong>
@@ -233,8 +321,11 @@ export function ChatAreaView({
           </button>
         )}
       </header>
-
-      <section className={styles.messages}>
+      <section
+        className={styles.messages}
+        ref={messagesRef}
+        onScroll={handleMessagesScroll}
+      >
         {sendingCount > 0 &&
           Array.from({ length: sendingCount }).map((_, i) => (
             <div key={`sending-${i}`} className={styles.sent}>
@@ -288,6 +379,13 @@ export function ChatAreaView({
                           : styles.bubble
                       }
                     >
+                      {msg.isGroup &&
+                        msg.direction === 0 &&
+                        msg.authorName && (
+                          <span className={styles.author}>
+                            {msg.authorName}
+                          </span>
+                        )}
                       {msg.mediaUrl || isContactType(msg.type) ? (
                         <MessageMedia
                           msg={msg}
@@ -316,8 +414,13 @@ export function ChatAreaView({
             )
           })
         )}
+        {loadingMore && (
+          <div className={styles.loadingOlder}>
+            <span className="spinner spinnerDark" />
+            Carregando mensagens...
+          </div>
+        )}
       </section>
-
       {mediaPreview && (
         <div className={styles.mediaPreviewBar}>
           <div className={styles.mediaPreviewContent}>
@@ -343,10 +446,21 @@ export function ChatAreaView({
           </div>
         </div>
       )}
-
       {chatId != null && (
         <footer className={styles.inputArea}>
-          <button>
+          {showEmojiPicker && (
+            <EmojiPicker
+              pickerRef={pickerRef}
+              onSelect={handleEmojiSelect}
+              onClose={() => setShowEmojiPicker(false)}
+            />
+          )}
+          <button
+            data-emoji-toggle
+            className={showEmojiPicker ? styles.emojiToggleActive : undefined}
+            onClick={() => setShowEmojiPicker((v) => !v)}
+            title="Emojis"
+          >
             <Smile size={20} />
           </button>
           <input
@@ -360,6 +474,7 @@ export function ChatAreaView({
             <Paperclip size={20} />
           </button>
           <textarea
+            ref={textareaRef}
             placeholder="Digite uma mensagem..."
             rows={1}
             value={inputValue}
@@ -394,7 +509,6 @@ export function ChatAreaView({
           </div>
         </div>
       )}
-
       {lightboxSrc && (
         <Lightbox
           src={lightboxSrc}
@@ -402,9 +516,7 @@ export function ChatAreaView({
           onClose={() => setLightboxSrc(null)}
         />
       )}
-
       {sendError && <div className={styles.error}>{sendError}</div>}
-
       {saveContact.showModal && (
         <SaveContactModal
           formJid={saveContact.formJid}
@@ -422,7 +534,6 @@ export function ChatAreaView({
           onSave={saveContact.createContact}
         />
       )}
-
       {occurrence.showModal && (
         <OccurrenceModal
           title={occurrence.title}
@@ -437,7 +548,6 @@ export function ChatAreaView({
           onSave={occurrence.createOccurrence}
         />
       )}
-
       {showInfoPanel && chatId && (
         <ChatInfoPanel
           chatId={chatId}

@@ -23,4 +23,8 @@ public record WhatsAppWebhookDto
     public bool FromMe { get; init; }
     public string? Source { get; init; }
     public bool IsSync { get; init; }
+    public bool IsGroup { get; init; }
+    public string? AuthorJid { get; init; }
+    public string? AuthorName { get; init; }
+    public string? GroupName { get; init; }
 }

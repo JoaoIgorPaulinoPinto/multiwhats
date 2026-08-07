@@ -46,3 +46,28 @@ export function formatRelativeToNow(dateStr: string): string {
   if (isNaN(date.getTime())) return ""
   return formatRelativeTime(Math.max(0, (Date.now() - date.getTime()) / 1000))
 }
+
+export function formatDateTime(dateStr: string): string {
+  if (!dateStr) return ""
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return ""
+  return date.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
+
+export function formatDuration(totalSeconds: number): string {
+  if (!totalSeconds || totalSeconds < 60) return "menos de 1 min"
+  const totalMinutes = Math.floor(totalSeconds / 60)
+  if (totalMinutes < 60) return `${totalMinutes} min`
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  if (hours < 24) return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`
+  const days = Math.floor(hours / 24)
+  const remHours = hours % 24
+  return remHours > 0 ? `${days}d ${remHours}h` : `${days}d`
+}

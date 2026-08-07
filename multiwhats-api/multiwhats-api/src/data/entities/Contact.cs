@@ -68,7 +68,8 @@ public class Contact : BaseEntity
         string? pushName,
         int? createdByUserId = null,
         int? clientId = null,
-        int? groupId = null)
+        int? groupId = null,
+        bool isGroup = false)
     {
         Jid = jid ?? throw new ArgumentNullException(nameof(jid));
         PhoneNumber = phoneNumber ?? throw new ArgumentNullException(nameof(phoneNumber));
@@ -77,6 +78,7 @@ public class Contact : BaseEntity
         ClientId = clientId;
         GroupId = groupId;
         CreatedByUserId = createdByUserId;
+        IsGroup = isGroup;
     }
 
     public void AssignToClient(int clientId)

@@ -180,6 +180,8 @@ public class ChatRepository : IChatRepository
         if (chat == null) return null;
 
         chat.AssignUser(userId);
+
+        await _context.ChatHistory.AddAsync( new ChatHistory (chatId, userId));
         await _context.SaveChangesAsync();
         return chat;
     }
@@ -192,6 +194,15 @@ public class ChatRepository : IChatRepository
         if (chat == null || chat.AssignedToUserId != userId) return null;
 
         chat.UnassignUser();
+
+        var openHistory = await _context.ChatHistory
+            .Where(h => h.ChatId == chatId && h.UnassignedAt == null)
+            .OrderByDescending(h => h.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (openHistory != null)
+            openHistory.Finalize();
+
         await _context.SaveChangesAsync();
         return chat;
     }

@@ -21,7 +21,7 @@ function chatHasUnreadLastMessage(chat: ChatListResponse): boolean {
 
 export function UnreadTracker() {
   const user = useAuthStore((s) => s.user)
-  const total = useUnreadStore((s) => s.total)
+  const total = useUnreadStore((s) => s.chatCount)
   const addIncoming = useUnreadStore((s) => s.addIncoming)
   const removeRead = useUnreadStore((s) => s.removeRead)
   const seed = useUnreadStore((s) => s.seed)

@@ -53,7 +53,11 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
 
     public async Task<bool> Execute(WhatsAppWebhookDto payload)
     {
-        var phoneNumber = PhoneNumberHelper.Sanitize(payload.PhoneNumber);
+        var isGroup = payload.IsGroup || payload.From?.EndsWith("@g.us") == true;
+        // Grupo não tem número de telefone: o JID é {groupId}@g.us. Em chats de
+        // grupo o PhoneNumber fica nulo para não colidir com buscas por telefone.
+        var rawPhone = isGroup ? payload.From.Split('@')[0] : payload.PhoneNumber;
+        var phoneNumber = string.IsNullOrWhiteSpace(rawPhone) ? null : PhoneNumberHelper.Sanitize(rawPhone);
 
         // Deduplication: ignore messages already processed
         if (!string.IsNullOrEmpty(payload.MessageId))
@@ -85,22 +89,48 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
         var chat = await _chatRepository.GetByJidAsync(payload.From);
         var contact = await _contactRepository.GetByJidAsync(payload.From);
 
+        // Para grupos, cria um contato que representa o próprio grupo
+        // (IsGroup=true, JID @g.us). Ele é a fonte da flag ContactIsGroup que o
+        // frontend usa para exibir o badge de grupo na lista de chats.
+        if (isGroup && contact == null)
+        {
+            contact = new Contact(
+                jid: payload.From,
+                phoneNumber: payload.From.Split('@')[0],
+                name: payload.GroupName,
+                pushName: payload.GroupName,
+                isGroup: true);
+            contact = await _contactRepository.AddAsync(contact);
+        }
+
         if (chat == null)
         {
             // Cria o chat tanto para mensagens recebidas quanto para auto-enviadas
             // (ex.: mensagem enviada pelo celular para um contato sem chat no banco).
             // Prioriza o nome salvo no contato: se o contato existe no banco, o nome
             // cadastrado é o mais confiável e é usado no lugar do pushname (notifyName).
+            // Em grupos, o nome vem do GroupName (o notifyName é o nome do autor).
             chat = new Chat(
                 payload.From,
                 phoneNumber,
-                contact?.Name ?? payload.NotifyName,
+                contact?.Name ?? payload.GroupName ?? payload.NotifyName,
                 contactId: contact?.Id,
                 clientId: contact?.ClientId,
                 profilePicUrl: payload.ProfilePicUrl
             );
 
             chat = await _chatRepository.AddAsync(chat);
+        }
+        else if (isGroup && !string.IsNullOrWhiteSpace(payload.GroupName)
+            && chat.Name != payload.GroupName)
+        {
+            chat.UpdateName(payload.GroupName);
+            if (contact != null && contact.Name != payload.GroupName)
+            {
+                contact.UpdateInfo(name: payload.GroupName, pushName: null, profilePicUrl: null, isBlocked: null);
+                await _contactRepository.UpdateAsync(contact);
+            }
+            await _chatRepository.UpdateAsync(chat);
         }
         else if (!isSelfSent && chat.ContactId == null && contact != null)
         {
@@ -239,6 +269,8 @@ public class SaveIncomingMessageUseCase : ISaveIncomingMessageUseCase
             userId: userId,
             messageId: payload.MessageId,
             notifyName: isSelfSent ? null : payload.NotifyName,
+            authorJid: payload.AuthorJid,
+            authorName: payload.AuthorName,
             hasMedia: payload.HasMedia,
             mediaUrl: payload.MediaUrl,
             mediaMimeType: payload.MediaMimeType,

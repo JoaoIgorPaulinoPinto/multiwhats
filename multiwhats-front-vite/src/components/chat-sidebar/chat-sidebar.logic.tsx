@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   chatsService,
@@ -149,12 +148,7 @@ export function useChatSidebar() {
       toNumericStatus(c.lastMessage.deliveryStatus ?? 2) < 3
 
     if (chatType === 'open')
-      return (
-        lastIncoming &&
-        lastUnread &&
-        !isAssigned &&
-        !assignedByMe
-      )
+      return lastIncoming && lastUnread && !isAssigned && !assignedByMe
     if (chatType === 'mine')
       return onlyMine
         ? assignedByMe || myOccurrence
@@ -162,6 +156,9 @@ export function useChatSidebar() {
     return true
   })
 
+  const clearSearchInput = () => {
+    setSearch('')
+  }
   return {
     search,
     setSearch,
@@ -176,5 +173,6 @@ export function useChatSidebar() {
     loadingMore,
     hasNext,
     totalCount,
+    clearSearchInput,
   }
 }

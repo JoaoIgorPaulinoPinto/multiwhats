@@ -23,6 +23,7 @@ public class ChatsController : ControllerBase
     private readonly IMarkChatMessagesAsReadUseCase _markChatMessagesAsReadUseCase;
     private readonly IAssignChatUseCase _assignChatUseCase;
     private readonly IUnassignChatUseCase _unassignChatUseCase;
+    private readonly IGetChatHistoryUseCase _getChatHistoryUseCase;
 
     // Extrai o ID do usuário do token JWT
     private int UserId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -36,7 +37,8 @@ public class ChatsController : ControllerBase
         IGetChatFullInfoUseCase getChatFullInfoUseCase,
         IMarkChatMessagesAsReadUseCase markChatMessagesAsReadUseCase,
         IAssignChatUseCase assignChatUseCase,
-        IUnassignChatUseCase unassignChatUseCase)
+        IUnassignChatUseCase unassignChatUseCase,
+        IGetChatHistoryUseCase getChatHistoryUseCase)
     {
         _mergeChatsUseCase = mergeChatsUseCase;
         _getChatsUseCase = getChatsUseCase;
@@ -47,6 +49,7 @@ public class ChatsController : ControllerBase
         _markChatMessagesAsReadUseCase = markChatMessagesAsReadUseCase;
         _assignChatUseCase = assignChatUseCase;
         _unassignChatUseCase = unassignChatUseCase;
+        _getChatHistoryUseCase = getChatHistoryUseCase;
     }
 
     // GET /api/chats - Listar conversas (paginado)
@@ -90,6 +93,16 @@ public class ChatsController : ControllerBase
         if (chat == null)
             return NotFound(new { message = "Chat não encontrado." });
         return Ok(chat);
+    }
+
+    // GET /api/chats/{id}/history - Histórico da conversa (atendimentos, ocorrências e linha do tempo)
+    [HttpGet("{id}/history")]
+    public async Task<IActionResult> GetHistory(int id)
+    {
+        var history = await _getChatHistoryUseCase.Execute(id);
+        if (history == null)
+            return NotFound(new { message = "Chat não encontrado." });
+        return Ok(history);
     }
 
     // PATCH /api/chats/merge?mergeJid=xxx&toJid=yyy - Merge duas conversas

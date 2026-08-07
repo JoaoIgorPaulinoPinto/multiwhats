@@ -3,6 +3,7 @@ import { create } from "zustand"
 interface UnreadState {
   counted: Record<string, number>
   total: number
+  chatCount: number
   perChat: Record<number, number>
   addIncoming: (messageKey: string, chatId: number) => void
   removeRead: (messageKey: string) => void
@@ -18,12 +19,14 @@ function compute(counted: Record<string, number>) {
     perChat[chatId] = (perChat[chatId] ?? 0) + 1
     total += 1
   }
-  return { total, perChat }
+  const chatCount = Object.keys(perChat).length
+  return { total, chatCount, perChat }
 }
 
 export const useUnreadStore = create<UnreadState>((set) => ({
   counted: {},
   total: 0,
+  chatCount: 0,
   perChat: {},
 
   addIncoming: (messageKey, chatId) => {
@@ -70,5 +73,5 @@ export const useUnreadStore = create<UnreadState>((set) => ({
     })
   },
 
-  clearAll: () => set({ counted: {}, total: 0, perChat: {} }),
+  clearAll: () => set({ counted: {}, total: 0, chatCount: 0, perChat: {} }),
 }))

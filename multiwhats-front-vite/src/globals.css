@@ -24,6 +24,7 @@
 [data-theme="dark"] {
   --background: #0b141a;
   --surface: #111b21;
+  --surface-2: #171f24;
   --surface-hover: #202c33;
   --sidebar: #111b21;
   --chat: #0b141a;

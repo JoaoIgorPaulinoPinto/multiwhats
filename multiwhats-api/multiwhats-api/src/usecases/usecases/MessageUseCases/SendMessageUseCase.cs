@@ -80,9 +80,24 @@ public class SendMessageUseCase : ISendMessageUseCase
             var chat = await _chatRepository.GetByJidAsync(request.Jid);
             if (chat == null)
             {
-                var phoneNumber = request.Jid.Split('@')[0];
+                var isGroup = request.Jid.EndsWith("@g.us");
+                // Grupo não tem telefone: JID é {groupId}@g.us.
+                var phoneNumber = isGroup ? null : request.Jid.Split('@')[0];
 
                 var contact = await _contactRepository.GetByJidAsync(request.Jid);
+
+                // Cria o contato que representa o grupo quando o envio parte do
+                // sistema antes de qualquer mensagem recebida do grupo.
+                if (isGroup && contact == null)
+                {
+                    contact = new Contact(
+                        jid: request.Jid,
+                        phoneNumber: request.Jid.Split('@')[0],
+                        name: request.Jid.Split('@')[0],
+                        pushName: null,
+                        isGroup: true);
+                    contact = await _contactRepository.AddAsync(contact);
+                }
 
                 chat = new Chat(
                     request.Jid,
@@ -96,7 +111,9 @@ public class SendMessageUseCase : ISendMessageUseCase
             }
 
             var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            var phoneNumberFromJid = request.Jid.Split('@')[0];
+            var phoneNumberFromJid = request.Jid.EndsWith("@g.us")
+                ? null
+                : request.Jid.Split('@')[0];
 
             var device = await _deviceRepository.GetCurrentAsync();
             var deviceJid = device?.Jid;
@@ -133,6 +150,7 @@ public class SendMessageUseCase : ISendMessageUseCase
                 mediaFilename: fields.mediaFilename,
                 mediaSize: fields.mediaSize,
                 mediaCaption: fields.mediaCaption,
+                authorJid: request.Jid.EndsWith("@g.us") ? deviceJid : null,
                 source: MessageSource.System,
                 fromMe: true
             );

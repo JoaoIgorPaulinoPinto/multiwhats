@@ -168,7 +168,7 @@
   color: var(--text);
   padding: 7px;
   border-radius: 10px;
-  max-width: 100%;
+  max-width: 300px;
   font-size: 13.5px;
   line-height: 1.45;
   word-wrap: break-word;
@@ -217,6 +217,15 @@
 
 .received .bubble {
   border-top-left-radius: 2px;
+}
+
+.author {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 2px;
+  word-break: break-word;
 }
 
 .bubbleMediaOnly {
@@ -280,6 +289,7 @@
   padding: 10px 16px;
   background: var(--surface);
   border-top: 1px solid var(--border);
+  position: relative;
 }
 
 .inputArea textarea {
@@ -319,6 +329,11 @@
   background: var(--surface-hover);
 }
 
+.emojiToggleActive {
+  color: var(--primary) !important;
+  background: var(--surface-hover) !important;
+}
+
 .send {
   background: var(--primary) !important;
   color: white !important;
@@ -346,6 +361,16 @@
   gap: 10px;
   color: var(--text-muted);
   font-size: 13px;
+}
+
+.loadingOlder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 0;
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 .error {

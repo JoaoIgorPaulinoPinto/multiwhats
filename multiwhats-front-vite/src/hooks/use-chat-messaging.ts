@@ -9,6 +9,7 @@ import { detectMediaType, fileToBase64 } from '../utils/media'
 const cache = new Map<number, MessageResponse[]>()
 const lastAccessed = new Map<number, number>()
 const MAX_CACHED_CHATS = 5
+const MESSAGES_PAGE_SIZE = 100
 
 function touchCache(chatId: number) {
   lastAccessed.set(chatId, Date.now())
@@ -42,7 +43,15 @@ export function useChatMessaging(
   const [loading, setLoading] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
   const [sendingCount, setSendingCount] = useState(0)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const lastFetched = useRef<number | null>(null)
+  const messagesRef = useRef<MessageResponse[]>([])
+
+  useEffect(() => {
+    messagesRef.current = messages
+  }, [messages])
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [mediaPreview, setMediaPreview] = useState<string | null>(null)
@@ -126,6 +135,9 @@ export function useChatMessaging(
     setSelectedFile(null)
     setMediaPreview(null)
     setMediaType(null)
+    setPage(1)
+    setHasMore(false)
+    setLoadingMore(false)
 
     if (!chatId || chatId === -1) {
       setMessages([])
@@ -136,6 +148,9 @@ export function useChatMessaging(
             messageId: null,
             fromJid: '',
             toJid: null,
+            authorJid: null,
+            authorName: null,
+            isGroup: false,
             phoneNumber: '',
             body: lastMessage,
             direction: 0 as const,
@@ -177,6 +192,9 @@ export function useChatMessaging(
           messageId: null,
           fromJid: '',
           toJid: null,
+          authorJid: null,
+          authorName: null,
+          isGroup: false,
           phoneNumber: '',
           body: lastMessage,
           direction: 0 as const,
@@ -206,35 +224,43 @@ export function useChatMessaging(
     setLoading(true)
     chatsService
       .getMessages(chatId)
-      .then((res: { items: MessageResponse[] }) => {
-        if (requestChatId !== lastFetched.current) return
-        const seenIds = new Set<number>()
-        const seenMsgIds = new Set<string>()
-        const newItems = res.items.filter((m: MessageResponse) => {
-          if (seenIds.has(m.id)) return false
-          seenIds.add(m.id)
-          if (m.messageId) {
-            if (seenMsgIds.has(m.messageId)) return false
-            seenMsgIds.add(m.messageId)
-          }
-          return true
-        })
-        const oldItems = cache.get(chatId) ?? []
-        const isSame =
-          newItems.length === oldItems.length &&
-          newItems.every(
-            (m: MessageResponse, i: number) =>
-              m.id === oldItems[i].id &&
-              m.body === oldItems[i].body &&
-              m.mediaUrl === oldItems[i].mediaUrl &&
-              m.hasMedia === oldItems[i].hasMedia,
-          )
-        cache.set(chatId, newItems)
-        touchCache(chatId)
-        evictOldestCachedChat()
-        if (!isSame) setMessages(newItems.slice())
-        if (canMarkRead) markChatAsRead(chatId)
-      })
+      .then(
+        (res: {
+          items: MessageResponse[]
+          page: number
+          hasNext: boolean
+        }) => {
+          if (requestChatId !== lastFetched.current) return
+          const seenIds = new Set<number>()
+          const seenMsgIds = new Set<string>()
+          const newItems = res.items.filter((m: MessageResponse) => {
+            if (seenIds.has(m.id)) return false
+            seenIds.add(m.id)
+            if (m.messageId) {
+              if (seenMsgIds.has(m.messageId)) return false
+              seenMsgIds.add(m.messageId)
+            }
+            return true
+          })
+          const oldItems = cache.get(chatId) ?? []
+          const isSame =
+            newItems.length === oldItems.length &&
+            newItems.every(
+              (m: MessageResponse, i: number) =>
+                m.id === oldItems[i].id &&
+                m.body === oldItems[i].body &&
+                m.mediaUrl === oldItems[i].mediaUrl &&
+                m.hasMedia === oldItems[i].hasMedia,
+            )
+          cache.set(chatId, newItems)
+          touchCache(chatId)
+          evictOldestCachedChat()
+          setPage(res.page)
+          setHasMore(res.hasNext)
+          if (!isSame) setMessages(newItems.slice())
+          if (canMarkRead) markChatAsRead(chatId)
+        },
+      )
       .catch((e: unknown) => {
         console.error(`[ChatArea] erro ao carregar mensagens:`, e)
         if (requestChatId === lastFetched.current && !cached) setMessages([])
@@ -243,6 +269,55 @@ export function useChatMessaging(
         if (requestChatId === lastFetched.current) setLoading(false)
       })
   }, [chatId, canMarkRead, markChatAsRead])
+
+  const loadMoreMessages = useCallback(() => {
+    if (!chatId || chatId === -1 || loadingMore || !hasMore) return
+    setLoadingMore(true)
+    const requestChatId = chatId
+    const nextPage = page + 1
+    chatsService
+      .getMessages(chatId, nextPage, MESSAGES_PAGE_SIZE)
+      .then(
+        (res: {
+          items: MessageResponse[]
+          page: number
+          hasNext: boolean
+        }) => {
+          if (requestChatId !== lastFetched.current) return
+          const seenIds = new Set<number>()
+          const seenMsgIds = new Set<string>()
+          const merged = [...res.items, ...messagesRef.current]
+          const deduped: MessageResponse[] = []
+          for (const m of merged) {
+            if (seenIds.has(m.id)) continue
+            seenIds.add(m.id)
+            if (m.messageId) {
+              if (seenMsgIds.has(m.messageId)) continue
+              seenMsgIds.add(m.messageId)
+            }
+            deduped.push(m)
+          }
+          deduped.sort(
+            (a, b) => a.sentAt.localeCompare(b.sentAt) || a.id - b.id,
+          )
+          messagesRef.current = deduped
+          setMessages(deduped.slice())
+          setPage(res.page)
+          setHasMore(res.hasNext)
+          cache.set(chatId, deduped)
+          touchCache(chatId)
+        },
+      )
+      .catch((e: unknown) => {
+        console.error(
+          `[ChatArea] erro ao carregar mensagens mais antigas:`,
+          e,
+        )
+      })
+      .finally(() => {
+        if (requestChatId === lastFetched.current) setLoadingMore(false)
+      })
+  }, [chatId, page, hasMore, loadingMore])
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -321,6 +396,10 @@ export function useChatMessaging(
     sendingCount,
     sendError,
     sendMessage,
+    page,
+    hasMore,
+    loadingMore,
+    loadMoreMessages,
     selectedFile,
     mediaPreview,
     mediaType,

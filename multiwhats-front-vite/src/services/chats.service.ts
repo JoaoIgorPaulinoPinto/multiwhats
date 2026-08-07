@@ -70,6 +70,56 @@ export interface ChatFullInfoResponse {
   lastUpdate: string
 }
 
+export interface ChatHistoryAtendimento {
+  id: number
+  startedAt: string
+  endedAt: string | null
+  isOpen: boolean
+  startedByUserId: number | null
+  startedByName: string | null
+  endedByUserId: number | null
+  endedByName: string | null
+  durationSeconds: number | null
+}
+
+export interface ChatHistoryOccurrence {
+  id: number
+  title: string
+  description: string | null
+  status: number
+  priority: number
+  createdByUserId: number | null
+  createdByName: string | null
+  assignedToUserId: number | null
+  assignedToName: string | null
+  createdAt: string
+  lastUpdate: string
+}
+
+export type ChatHistoryTimelineType =
+  | "AtendimentoIniciado"
+  | "AtendimentoFinalizado"
+  | "OcorrenciaCriada"
+  | "OcorrenciaAtualizada"
+  | "OcorrenciaExcluida"
+
+export interface ChatHistoryTimelineItem {
+  type: ChatHistoryTimelineType
+  title: string
+  description: string
+  timestamp: string
+  userId: number | null
+  userName: string | null
+  occurrenceId: number | null
+}
+
+export interface ChatHistoryResponse {
+  chatId: number
+  atendimentos: ChatHistoryAtendimento[]
+  occurrences: ChatHistoryOccurrence[]
+  timeline: ChatHistoryTimelineItem[]
+}
+
 export const chatsService = {
   listChats(page = 1, pageSize = 30) {
     return api.get<PaginatedResponse<ChatListResponse>>(
@@ -89,6 +139,10 @@ export const chatsService = {
 
   getFullInfo(id: number) {
     return api.get<ChatFullInfoResponse>(`/api/chats/${id}/full-info`)
+  },
+
+  getHistory(id: number) {
+    return api.get<ChatHistoryResponse>(`/api/chats/${id}/history`)
   },
 
   getMessages(chatId: number, page = 1, pageSize = 100) {

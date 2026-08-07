@@ -16,7 +16,7 @@ const items: { path: string; icon: React.ReactNode; label: string }[] = [
 export function NavBarView() {
   const pathname = useLocation().pathname
   const navigate = useNavigate()
-  const unread = useUnreadStore((s) => s.total)
+  const unread = useUnreadStore((s) => s.chatCount)
 
   return (
     <nav className={styles.nav}>

@@ -25,6 +25,16 @@ public class Message : BaseEntity
     [Column("to_jid")]
     public string? ToJid { get; private set; }
 
+    // Em mensagens de grupo (@g.us), o autor real é o participante que enviou
+    // (msg.author). Em 1:1 fica nulo (o autor é a outra ponta do FromJid/ToJid).
+    [MaxLength(100)]
+    [Column("author_jid")]
+    public string? AuthorJid { get; private set; }
+
+    [MaxLength(150)]
+    [Column("author_name")]
+    public string? AuthorName { get; private set; }
+
     [MaxLength(20)]
     [Column("phone_number")]
     public string? PhoneNumber { get; private set; }
@@ -120,6 +130,8 @@ public class Message : BaseEntity
         string? toJid = null,
         string? messageId = null,
         string? notifyName = null,
+        string? authorJid = null,
+        string? authorName = null,
         bool hasMedia = false,
         string? mediaUrl = null,
         string? mediaMimeType = null,
@@ -144,6 +156,8 @@ public class Message : BaseEntity
         ToJid = toJid;
         WhatssAppMessageId = messageId;
         NotifyName = notifyName;
+        AuthorJid = authorJid;
+        AuthorName = authorName;
         HasMedia = hasMedia;
         MediaUrl = mediaUrl;
         MediaMimeType = mediaMimeType;

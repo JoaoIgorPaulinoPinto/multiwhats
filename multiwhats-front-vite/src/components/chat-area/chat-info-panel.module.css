@@ -206,3 +206,182 @@
   background: var(--surface-hover);
   border-color: var(--primary);
 }
+
+.assignBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  border: none;
+  background: var(--primary);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.assignBtn:hover {
+  background: var(--primary-hover);
+}
+
+.assignBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirmText {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.confirmText strong {
+  color: var(--text);
+}
+
+.assignActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.cancelBtn {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cancelBtn:hover {
+  background: var(--surface-hover);
+}
+
+.assignConfirmBtn {
+  border: none;
+  background: var(--primary);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.assignConfirmBtn:hover {
+  background: var(--primary-hover);
+}
+
+.assignConfirmBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.historySubBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  background: var(--surface);
+    max-height: 300px;
+  overflow-y: scroll;
+}
+
+.historySubTitle {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-top: 10px;
+}
+
+.historyAtendList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.historyAtendCard {
+  background: var(--input);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-left: 3px solid var(--primary);
+}
+
+.historyAtendRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.historyAtendLabel {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.historyAtendValue {
+  color: var(--text);
+  text-align: right;
+  word-break: break-all;
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.historyItem {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.historyDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.historyContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.historyTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.historyDesc {
+  font-size: 11px;
+  color: var(--text-muted);
+  word-break: break-word;
+}
+
+.historyMeta {
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0.8;
+}

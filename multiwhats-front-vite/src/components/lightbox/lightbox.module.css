@@ -10,21 +10,25 @@
   animation: fadeIn 0.15s ease;
 }
 
-.content {
+.stage {
   position: relative;
   max-width: 90vw;
   max-height: 90vh;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  touch-action: none;
 }
 
-.content img {
+.img {
   max-width: 90vw;
   max-height: 85vh;
   object-fit: contain;
   border-radius: 4px;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+  user-select: none;
+  transform-origin: center;
 }
 
 .closeBtn {
@@ -47,6 +51,47 @@
 
 .closeBtn:hover {
   background: rgba(255, 255, 255, 0.25);
+}
+
+.toolbar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+  z-index: 202;
+}
+
+.toolbar button {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.toolbar button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.zoomLabel {
+  min-width: 52px;
+  text-align: center;
+  color: white;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
 }
 
 @keyframes fadeIn {

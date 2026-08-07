@@ -246,10 +246,11 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
   try {
     if (
       msg.from.includes('@newsletter') ||
-      msg.from.includes('@g.us') ||
-      msg.to?.includes('@g.us') ||
       msg.from.includes('@broadcast') ||
-      msg.from.includes('status@broadcast')
+      msg.from.includes('status@broadcast') ||
+      msg.to?.includes('@broadcast') ||
+      msg.to?.includes('@newsletter') ||
+      msg.to?.includes('status@broadcast')
     ) {
       log('FILTRO_IGNORADO', describeMsg(msg, { event: source || '?' }))
       return
@@ -308,6 +309,34 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
     const rawNumber = targetJid.split('@')[0]
     const numeroReal = rawNumber ? rawNumber.replace(/\D/g, '') : null
 
+    // ==========================================
+    // DETECÇÃO DE GRUPOS
+    // ==========================================
+    // Em mensagens de grupo (@g.us), o targetJid é o JID do grupo e o
+    // autor real da mensagem vem em msg.author (participante). O notifyName
+    // do WhatsApp Web em mensagens de grupo é o nome do AUTOR, não do grupo,
+    // então resolvemos o nome do grupo pelo chat e o nome do autor pelo contato.
+    const isGroup = targetJid.includes('@g.us')
+    let authorJid = null
+    let authorName = null
+    let groupName = null
+    if (isGroup) {
+      authorJid = msg.author || null
+      try {
+        const authorContact = msg.author
+          ? await client.getContactById(msg.author)
+          : null
+        authorName =
+          authorContact?.pushname ||
+          authorContact?.name ||
+          (!enviadaPorMim ? msg._data?.notifyName || null : null) ||
+          null
+      } catch (err) {
+        authorName = !enviadaPorMim ? msg._data?.notifyName || null : null
+      }
+      groupName = chat?.name || chat?.subject || null
+    }
+
     let messageType = msg.type
     let hasMedia = false
     let mediaUrl = null
@@ -336,13 +365,17 @@ async function processarEMandarParaAspNet(msg, enviadaPorMim, options = {}) {
 
     const payload = {
       from: targetJid, // ✅ Agora sempre conterá o JID do Cliente (ex: 5511999999999@c.us)
-      phoneNumber: numeroReal,
+      phoneNumber: isGroup ? null : numeroReal,
       body: msg.body,
       timestamp: msg.timestamp,
-      notifyName:
-        (enviadaPorMim ? null : msg._data?.notifyName) ||
-        contatoPushname ||
-        null,
+      notifyName: isGroup
+        ? authorName
+        : (enviadaPorMim ? null : msg._data?.notifyName) ||
+          contatoPushname ||
+          null,
+      groupName: isGroup ? groupName : null,
+      authorJid: isGroup ? authorJid : null,
+      isGroup,
       profilePicUrl: contatoProfilePicUrl,
       messageType,
       hasMedia,
@@ -622,17 +655,16 @@ app.post('/api/sync', async (req, res) => {
   try {
     const chats = await client.getChats()
 
-    const chatsPrivados = chats.filter((c) => {
+    const chatsRelevantes = chats.filter((c) => {
       const jid = c.id?._serialized || ''
       return (
-        !jid.includes('@g.us') &&
         !jid.includes('@newsletter') &&
         !jid.includes('@broadcast') &&
         !jid.includes('status@broadcast')
       )
     })
 
-    const alvo = chatsPrivados.slice(0, chatsLimit)
+    const alvo = chatsRelevantes.slice(0, chatsLimit)
 
     for (const chat of alvo) {
       let mensagens = []

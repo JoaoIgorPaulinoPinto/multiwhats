@@ -89,6 +89,7 @@ builder.Services.AddScoped<ICreateChatUseCase, CreateChatUseCase>();
 builder.Services.AddScoped<IGetChatsUseCase, GetChatsUseCase>();
 builder.Services.AddScoped<IMergeChatsUseCase, MergeChatsUseCase>();
 builder.Services.AddScoped<IGetChatFullInfoUseCase, GetChatFullInfoUseCase>();
+builder.Services.AddScoped<IGetChatHistoryUseCase, GetChatHistoryUseCase>();
 builder.Services.AddScoped<IAssignChatUseCase, AssignChatUseCase>();
 builder.Services.AddScoped<IUnassignChatUseCase, UnassignChatUseCase>();
 

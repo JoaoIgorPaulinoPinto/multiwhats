@@ -10,6 +10,11 @@ public record MessageSummaryResponse
     public MessageDirection Direction { get; init; }
     public MessageType Type { get; init; }
     public DateTime SentAt { get; init; }
+    public string? FromJid { get; init; }
+    public string? ToJid { get; init; }
+    public string? AuthorJid { get; init; }
+    public string? AuthorName { get; init; }
+    public bool IsGroup { get; init; }
     public string? PhoneNumber { get; init; }
     public string? NotifyName { get; init; }
     public bool HasMedia { get; init; }

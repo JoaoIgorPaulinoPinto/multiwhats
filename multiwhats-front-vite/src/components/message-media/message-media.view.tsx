@@ -92,7 +92,10 @@ function formatFileSize(bytes: number | null): string {
   return `${(bytes / 1048576).toFixed(1)} MB`
 }
 
-export function MessageMedia({ msg, onStartChat }: MessageMediaProps) {
+export function MessageMedia({ msg, onStartChat, onImageClick }: MessageMediaProps) {
+  const handleImageClick = onImageClick
+    ? () => onImageClick(toDataUrl(msg.mediaUrl!, msg.mediaMimeType), msg.mediaCaption || "Imagem")
+    : undefined
   if (isContactType(msg.type)) {
     return <VCardContact raw={msg.mediaUrl} body={msg.body} onStartChat={onStartChat} />
   }
@@ -124,7 +127,7 @@ export function MessageMedia({ msg, onStartChat }: MessageMediaProps) {
   if (isSticker) {
     return (
       <div className={styles.mediaSticker}>
-        <MessageImage raw={msg.mediaUrl} mime={msg.mediaMimeType} alt="Sticker" style={{ maxWidth: 180, maxHeight: 180 }} />
+        <MessageImage raw={msg.mediaUrl} mime={msg.mediaMimeType} alt="Sticker" style={{ maxWidth: 180, maxHeight: 180 }} onClick={handleImageClick} />
       </div>
     )
   }
@@ -132,7 +135,7 @@ export function MessageMedia({ msg, onStartChat }: MessageMediaProps) {
   if (isImage) {
     return (
       <div className={styles.mediaImage}>
-        <MessageImage raw={msg.mediaUrl} mime={msg.mediaMimeType} alt={msg.mediaCaption || "Imagem"} style={{ maxWidth: 600, maxHeight: 600, borderRadius: 6 }} />
+        <MessageImage raw={msg.mediaUrl} mime={msg.mediaMimeType} alt={msg.mediaCaption || "Imagem"} style={{ maxWidth: 600, maxHeight: 600, borderRadius: 6 }} onClick={handleImageClick} />
       </div>
     )
   }

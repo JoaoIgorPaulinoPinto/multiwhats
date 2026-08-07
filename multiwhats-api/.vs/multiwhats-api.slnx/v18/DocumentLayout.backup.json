@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\projetos\\novo\\multiwhats\\multiwhats-api\\multiwhats-api\\docs.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|solutionrelative:multiwhats-api\\docs.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|c:\\projetos\\novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\usecases\\usecases\\authusecases\\generateregistrationcodeusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{1F6C3737-56E3-6D58-70BB-71A3C48D4D15}|multiwhats-api\\multiwhats-api.csproj|solutionrelative:multiwhats-api\\src\\usecases\\usecases\\authusecases\\generateregistrationcodeusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -50,11 +54,36 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 3,
           "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:2:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:3:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "Docs.txt",
+              "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\Docs.txt",
+              "RelativeDocumentMoniker": "multiwhats-api\\Docs.txt",
+              "ToolTip": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\Docs.txt",
+              "RelativeToolTip": "multiwhats-api\\Docs.txt",
+              "ViewState": "AgIAAPwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2026-08-03T20:43:14.598Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "GenerateRegistrationCodeUseCase.cs",
               "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\usecases\\usecases\\AuthUseCases\\GenerateRegistrationCodeUseCase.cs",
               "RelativeDocumentMoniker": "multiwhats-api\\src\\usecases\\usecases\\AuthUseCases\\GenerateRegistrationCodeUseCase.cs",
@@ -67,7 +96,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "launchSettings.json",
               "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\Properties\\launchSettings.json",
               "RelativeDocumentMoniker": "multiwhats-api\\Properties\\launchSettings.json",
@@ -75,24 +104,22 @@
               "RelativeToolTip": "multiwhats-api\\Properties\\launchSettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-07-31T12:25:27.625Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T12:25:27.625Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "multiwhats-api",
               "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\multiwhats-api.csproj",
               "RelativeDocumentMoniker": "multiwhats-api\\multiwhats-api.csproj",
               "ToolTip": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\multiwhats-api.csproj",
               "RelativeToolTip": "multiwhats-api\\multiwhats-api.csproj",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-07-31T12:25:27.084Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T12:25:27.084Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\appsettings.json",
               "RelativeDocumentMoniker": "multiwhats-api\\appsettings.json",
@@ -100,12 +127,11 @@
               "RelativeToolTip": "multiwhats-api\\appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-07-31T12:25:22.349Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T12:25:22.349Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "SaveIncomingMessageUseCase.cs",
               "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\usecases\\usecases\\MessageUseCases\\SaveIncomingMessageUseCase.cs",
               "RelativeDocumentMoniker": "multiwhats-api\\src\\usecases\\usecases\\MessageUseCases\\SaveIncomingMessageUseCase.cs",
@@ -117,7 +143,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "SystemConfigController.cs",
               "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\SystemConfigController.cs",
               "RelativeDocumentMoniker": "multiwhats-api\\src\\controllers\\SystemConfigController.cs",
@@ -125,12 +151,11 @@
               "RelativeToolTip": "multiwhats-api\\src\\controllers\\SystemConfigController.cs",
               "ViewState": "AgIAACAAAAAAAAAAAAAwwAoAAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-31T01:29:33.344Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T01:29:33.344Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "ChatDetailResponse.cs",
               "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\data\\dtos\\Responses\\ChatDetailResponse.cs",
               "RelativeDocumentMoniker": "multiwhats-api\\src\\data\\dtos\\Responses\\ChatDetailResponse.cs",
@@ -142,7 +167,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "OccurrencesController.cs",
               "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\OccurrencesController.cs",
               "RelativeDocumentMoniker": "multiwhats-api\\src\\controllers\\OccurrencesController.cs",
@@ -153,16 +178,8 @@
               "WhenOpened": "2026-07-31T00:32:11.265Z"
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:2:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:3:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
-            },
-            {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "ChatsController.cs",
               "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\ChatsController.cs",
               "RelativeDocumentMoniker": "multiwhats-api\\src\\controllers\\ChatsController.cs",
@@ -174,7 +191,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "ContactsController.cs",
               "DocumentMoniker": "C:\\Projetos\\Novo\\multiwhats\\multiwhats-api\\multiwhats-api\\src\\controllers\\ContactsController.cs",
               "RelativeDocumentMoniker": "multiwhats-api\\src\\controllers\\ContactsController.cs",
@@ -183,10 +200,6 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-07-31T00:32:09.09Z"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:1:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
             }
           ]
         },
